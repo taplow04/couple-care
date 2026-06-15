@@ -14,6 +14,11 @@ app.use(
 );
 
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.status(200).json({ success: true, message: "CoupleCare API is running" });
+});
+
 app.use("/api/v1", routes);
 app.use(errorHandler);
 
