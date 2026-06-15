@@ -1,0 +1,34 @@
+.pair-code-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 2px dashed var(--primary-light);
+}
+
+.pair-code-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.pair-code-card__code {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  font-family: "Courier New", Courier, monospace;
+  line-height: 1.1;
+  margin-bottom: 12px;
+  user-select: all;
+}
+
+.pair-code-card__hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}

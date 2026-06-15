@@ -1,4 +1,4 @@
-const { createCouple, joinCouple, getDashboard } = require("./couple.service");
+const { createCouple, joinCouple, getDashboard, getMyCouple } = require("./couple.service");
 
 const create = async (req, res, next) => {
   try {
@@ -39,8 +39,18 @@ const dashboard = async (req, res, next) => {
   }
 };
 
+const me = async (req, res, next) => {
+  try {
+    const couple = await getMyCouple(req.user._id);
+    res.status(200).json({ success: true, data: couple });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   create,
   join,
   dashboard,
+  me,
 };

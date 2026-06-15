@@ -1,0 +1,104 @@
+.join-code-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.join-code-form__input-wrap {
+  position: relative;
+}
+
+.join-code-form__input {
+  width: 100%;
+  padding: 18px 20px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  font-family: "Courier New", Courier, monospace;
+  text-align: center;
+  border: 2px solid #e0e0e0;
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.join-code-form__input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.join-code-form__input--error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.1);
+}
+
+.join-code-form__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.join-code-form__counter {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.join-code-form__error {
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.join-code-form__btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+}
+
+.join-code-form__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.join-code-form__btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(255, 92, 138, 0.35);
+}
+
+.join-code-form__btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.join-code-form__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: jcf-spin 0.7s linear infinite;
+}
+
+@keyframes jcf-spin {
+  to { transform: rotate(360deg); }
+}

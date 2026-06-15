@@ -1,0 +1,42 @@
+.share-code-card {
+  display: flex;
+  gap: 12px;
+}
+
+.share-code-card__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+.share-code-card__btn--copy {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.share-code-card__btn--copy:hover {
+  background: rgba(255, 92, 138, 0.18);
+}
+
+.share-code-card__btn--copied {
+  background: rgba(50, 195, 108, 0.12);
+  color: var(--success);
+}
+
+.share-code-card__btn--share {
+  background: var(--secondary-light);
+  color: var(--secondary);
+}
+
+.share-code-card__btn--share:hover {
+  background: rgba(124, 92, 255, 0.18);
+}

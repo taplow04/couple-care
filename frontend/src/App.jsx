@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -20,6 +20,10 @@ import SettingsPage from "./pages/Settings/SettingsPage/SettingsPage";
 import JourneyPage from "./pages/Journey/JourneyPage/JourneyPage";
 import MoodAnalyticsPage from "./pages/MoodAnalytics/MoodAnalyticsPage/MoodAnalyticsPage";
 import AICenterPage from "./pages/AICenter/AICenterPage/AICenterPage";
+import CoupleLanding from "./pages/Couple/CoupleLanding/CoupleLanding";
+import CreateCouple from "./pages/Couple/CreateCouple/CreateCouple";
+import JoinCouple from "./pages/Couple/JoinCouple/JoinCouple";
+import CoupleSuccess from "./pages/Couple/CoupleSuccess/CoupleSuccess";
 
 function App() {
   return (
@@ -33,7 +37,21 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* Protected routes — all authenticated pages live here */}
+        {/* Couple onboarding — protected, no bottom nav */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <Outlet />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/couple" element={<CoupleLanding />} />
+          <Route path="/couple/create" element={<CreateCouple />} />
+          <Route path="/couple/join" element={<JoinCouple />} />
+          <Route path="/couple/success" element={<CoupleSuccess />} />
+        </Route>
+
+        {/* Main app — protected, with bottom nav */}
         <Route
           element={
             <ProtectedRoute>
@@ -53,7 +71,6 @@ function App() {
           <Route path="/journey" element={<JourneyPage />} />
           <Route path="/mood-analytics" element={<MoodAnalyticsPage />} />
           <Route path="/ai-center" element={<AICenterPage />} />
-          {/* Safety net: authenticated users hitting any unregistered path stay in-app */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

@@ -104,8 +104,20 @@ const getDashboard = async (userId) => {
   };
 };
 
+const getMyCouple = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user || !user.currentCoupleId) return null;
+
+  const couple = await Couple.findById(user.currentCoupleId)
+    .populate("partnerOneId", "name profilePhoto")
+    .populate("partnerTwoId", "name profilePhoto");
+
+  return couple;
+};
+
 module.exports = {
   createCouple,
   joinCouple,
   getDashboard,
+  getMyCouple,
 };
