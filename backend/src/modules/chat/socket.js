@@ -340,6 +340,47 @@ const initializeSocket = (io) => {
 
     /*
     ==========================
+    DELETE MESSAGE
+    ==========================
+    */
+
+    socket.on("message:delete", async (payload, ack) => {
+      try {
+        if (!payload || typeof payload !== "object") {
+          throw new Error("Invalid payload");
+        }
+
+        const { coupleId, messageId } = payload;
+
+        if (!mongoose.Types.ObjectId.isValid(messageId)) {
+          throw new Error("Invalid message");
+        }
+
+        await validateCoupleRoom(socket.user._id, coupleId);
+
+        const message = await Message.findOne({
+          _id: messageId,
+          coupleId,
+        });
+
+        if (!message) throw new Error("Message not found");
+        if (String(message.senderId) !== String(socket.user._id)) {
+          throw new Error("Not authorized to delete this message");
+        }
+
+        await Message.deleteOne({ _id: messageId });
+
+        io.to(coupleId).emit("message:deleted", { messageId, coupleId });
+
+        sendAck(ack, { success: true, messageId });
+      } catch (error) {
+        emitSocketError(socket, error.message);
+        sendAck(ack, { success: false, message: error.message });
+      }
+    });
+
+    /*
+    ==========================
     DISCONNECT
     ==========================
     */

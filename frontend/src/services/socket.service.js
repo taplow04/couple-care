@@ -61,3 +61,8 @@ export const emitMessageSeen = (coupleId, messageId) => {
   if (!coupleId || !messageId || !socket?.connected) return;
   socket.emit("message:seen", { coupleId, messageId });
 };
+
+export const emitMessageDelete = (coupleId, messageId, ack) => {
+  if (!coupleId || !messageId || !socket?.connected) return;
+  socket.emit("message:delete", { coupleId, messageId }, ack);
+};

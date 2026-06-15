@@ -36,6 +36,22 @@ const getMessages = async (userId, page = 1, limit = 50) => {
     .limit(limit);
 };
 
+const deleteMessage = async (userId, messageId) => {
+  const couple = await getCoupleByUser(userId);
+
+  const message = await Message.findOne({
+    _id: messageId,
+    coupleId: couple._id,
+  });
+
+  if (!message) throw new Error("Message not found");
+  if (String(message.senderId) !== String(userId)) throw new Error("Not authorized to delete this message");
+
+  await Message.deleteOne({ _id: messageId });
+
+  return { messageId: String(messageId), coupleId: String(couple._id) };
+};
+
 const markSeen = async (userId, messageId) => {
   const couple = await getCoupleByUser(userId);
 
@@ -59,4 +75,5 @@ module.exports = {
   sendMessage,
   getMessages,
   markSeen,
+  deleteMessage,
 };

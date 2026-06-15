@@ -1,6 +1,6 @@
 const asyncHandler = require("../../utils/asyncHandler");
 
-const { sendMessage, getMessages, markSeen } = require("./chat.service");
+const { sendMessage, getMessages, markSeen, deleteMessage } = require("./chat.service");
 
 const send = asyncHandler(async (req, res) => {
   const message = await sendMessage(req.user._id, req.body.text);
@@ -33,8 +33,14 @@ const seen = asyncHandler(async (req, res) => {
   });
 });
 
+const remove = asyncHandler(async (req, res) => {
+  const result = await deleteMessage(req.user._id, req.params.id);
+  res.status(200).json({ success: true, data: result });
+});
+
 module.exports = {
   send,
   getAll,
   seen,
+  remove,
 };

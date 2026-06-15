@@ -14,3 +14,8 @@ export const markMessageSeen = async (messageId) => {
   const response = await api.patch(`/chat/messages/${messageId}/seen`);
   return response.data;
 };
+
+export const deleteMessage = async (messageId) => {
+  const response = await api.delete(`/chat/messages/${messageId}`);
+  return response.data;
+};

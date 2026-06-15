@@ -1,4 +1,8 @@
+import { useState, useRef, useCallback } from "react";
+import MessageOptions from "../MessageOptions/MessageOptions";
 import "./MessageBubble.css";
+
+const LONG_PRESS_MS = 500;
 
 const formatTime = (d) =>
   new Intl.DateTimeFormat("en-US", {
@@ -29,7 +33,24 @@ const TickIcon = ({ seen, failed, pending }) => {
   );
 };
 
-const MessageBubble = ({ message, isMine }) => {
+const MessageBubble = ({ message, isMine, onDelete }) => {
+  const [showOptions, setShowOptions] = useState(false);
+  const pressTimer = useRef(null);
+
+  const startPress = useCallback(() => {
+    if (!isMine) return;
+    pressTimer.current = setTimeout(() => setShowOptions(true), LONG_PRESS_MS);
+  }, [isMine]);
+
+  const cancelPress = useCallback(() => {
+    clearTimeout(pressTimer.current);
+  }, []);
+
+  const handleDeleteClick = useCallback(() => {
+    setShowOptions(false);
+    onDelete(message);
+  }, [message, onDelete]);
+
   const cls = [
     "msg-bubble",
     isMine ? "msg-bubble--mine" : "msg-bubble--theirs",
@@ -40,18 +61,35 @@ const MessageBubble = ({ message, isMine }) => {
     .join(" ");
 
   return (
-    <div className={`msg-bubble-row ${isMine ? "msg-bubble-row--mine" : ""}`}>
-      <div className={cls}>
-        <p className="msg-bubble__text">{message.text}</p>
-        <div className="msg-bubble__meta">
-          <span className="msg-bubble__time">{formatTime(message.createdAt)}</span>
-          {isMine && (
-            <TickIcon
-              seen={message.seen}
-              failed={message.failed}
-              pending={message.pending}
-            />
-          )}
+    <div
+      className={`msg-bubble-row ${isMine ? "msg-bubble-row--mine" : ""}`}
+      onTouchStart={startPress}
+      onTouchEnd={cancelPress}
+      onTouchMove={cancelPress}
+      onMouseDown={startPress}
+      onMouseUp={cancelPress}
+      onMouseLeave={cancelPress}
+    >
+      <div className="msg-bubble-wrap">
+        {showOptions && (
+          <MessageOptions
+            isMine={isMine}
+            onDelete={handleDeleteClick}
+            onClose={() => setShowOptions(false)}
+          />
+        )}
+        <div className={cls}>
+          <p className="msg-bubble__text">{message.text}</p>
+          <div className="msg-bubble__meta">
+            <span className="msg-bubble__time">{formatTime(message.createdAt)}</span>
+            {isMine && (
+              <TickIcon
+                seen={message.seen}
+                failed={message.failed}
+                pending={message.pending}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

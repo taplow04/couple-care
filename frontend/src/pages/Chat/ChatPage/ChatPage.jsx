@@ -9,14 +9,20 @@ import {
   emitTypingStop,
   emitMessageSend,
   emitMessageSeen,
+  emitMessageDelete,
 } from "../../../services/socket.service";
 import ChatHeader from "../../../components/chat/ChatHeader/ChatHeader";
 import MessageBubble from "../../../components/chat/MessageBubble/MessageBubble";
 import MessageInput from "../../../components/chat/MessageInput/MessageInput";
 import TypingIndicator from "../../../components/chat/TypingIndicator/TypingIndicator";
+import DeleteConfirmModal from "../../../components/chat/DeleteConfirmModal/DeleteConfirmModal";
 import "./ChatPage.css";
 
 const TYPING_STOP_DELAY = 2000;
+
+// Normalizes senderId to a flat string regardless of whether it's populated or raw
+const flatSenderId = (senderId) =>
+  senderId?._id ? String(senderId._id) : String(senderId);
 
 const ChatPage = () => {
   const { user } = useAuth();
@@ -28,6 +34,7 @@ const ChatPage = () => {
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const bottomRef = useRef(null);
   const typingStopRef = useRef(null);
@@ -45,7 +52,12 @@ const ChatPage = () => {
 
     Promise.allSettled([getMessages(), getDashboard()]).then(([msgRes, dashRes]) => {
       if (msgRes.status === "fulfilled") {
-        setMessages((msgRes.value.data || []).slice().reverse());
+        // Normalize senderId to flat string — fixes ownership after refresh
+        const normalized = (msgRes.value.data || [])
+          .slice()
+          .reverse()
+          .map((msg) => ({ ...msg, senderId: flatSenderId(msg.senderId) }));
+        setMessages(normalized);
       }
       if (dashRes.status === "fulfilled") {
         setPartner(dashRes.value.data?.partner ?? null);
@@ -70,37 +82,37 @@ const ChatPage = () => {
     const onDisconnect = () => setSocketConnected(false);
 
     const onMessageReceive = (msg) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m._id === msg._id)) return prev;
+      // Normalize incoming socket message senderId
+      const normalized = { ...msg, senderId: flatSenderId(msg.senderId) };
 
-        const isMine = String(msg.senderId) === String(user?._id);
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === normalized._id)) return prev;
+
+        const isMine = flatSenderId(normalized.senderId) === String(user?._id);
         if (isMine) {
-          // Replace the oldest pending optimistic message from me
           const pendingIdx = prev.findIndex(
-            (m) => m.pending && String(m.senderId) === String(user?._id)
+            (m) => m.pending && flatSenderId(m.senderId) === String(user?._id)
           );
           if (pendingIdx !== -1) {
             const next = [...prev];
-            next[pendingIdx] = { ...msg, pending: false };
+            next[pendingIdx] = { ...normalized, pending: false };
             return next;
           }
         } else {
-          // Mark partner's incoming message as seen immediately
-          if (!seenRef.current.has(msg._id)) {
-            seenRef.current.add(msg._id);
-            emitMessageSeen(coupleId, msg._id);
-            markMessageSeen(msg._id).catch(() => {});
+          if (!seenRef.current.has(normalized._id)) {
+            seenRef.current.add(normalized._id);
+            emitMessageSeen(coupleId, normalized._id);
+            markMessageSeen(normalized._id).catch(() => {});
           }
         }
 
-        return [...prev, msg];
+        return [...prev, normalized];
       });
     };
 
     const onTypingStart = () => {
       setIsPartnerTyping(true);
       clearTimeout(typingStopRef.current);
-      // Auto-hide if partner's typing:stop never arrives
       typingStopRef.current = setTimeout(() => setIsPartnerTyping(false), 4000);
     };
 
@@ -115,7 +127,10 @@ const ChatPage = () => {
       );
     };
 
-    // Handle already-connected socket (navigating back to chat)
+    const onMessageDeleted = ({ messageId }) => {
+      setMessages((prev) => prev.filter((m) => String(m._id) !== String(messageId)));
+    };
+
     if (socket.connected) {
       setSocketConnected(true);
       joinCoupleRoom(coupleId);
@@ -127,6 +142,7 @@ const ChatPage = () => {
     socket.on("typing:start", onTypingStart);
     socket.on("typing:stop", onTypingStop);
     socket.on("message:seen", onMessageSeen);
+    socket.on("message:deleted", onMessageDeleted);
 
     return () => {
       socket.off("connect", onConnect);
@@ -135,6 +151,7 @@ const ChatPage = () => {
       socket.off("typing:start", onTypingStart);
       socket.off("typing:stop", onTypingStop);
       socket.off("message:seen", onMessageSeen);
+      socket.off("message:deleted", onMessageDeleted);
       clearTimeout(typingStopRef.current);
       clearTimeout(typingEmitRef.current);
     };
@@ -165,7 +182,6 @@ const ChatPage = () => {
     (text) => {
       if (!text || !coupleId) return;
 
-      // Stop typing indicator before sending
       clearTimeout(typingEmitRef.current);
       if (isTypingRef.current) {
         isTypingRef.current = false;
@@ -176,7 +192,7 @@ const ChatPage = () => {
       const optimistic = {
         _id: tempId,
         text,
-        senderId: user._id,
+        senderId: String(user._id),
         coupleId,
         seen: false,
         createdAt: new Date().toISOString(),
@@ -195,11 +211,29 @@ const ChatPage = () => {
           );
           setSendError(ack?.message || "Failed to send. Tap to retry.");
         }
-        // On success: message:receive replaces the optimistic entry
       });
     },
     [coupleId, user?._id]
   );
+
+  const handleDeleteRequest = useCallback((message) => {
+    setDeleteTarget(message);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!deleteTarget || !coupleId) return;
+    const messageId = String(deleteTarget._id);
+
+    // Optimistic removal
+    setMessages((prev) => prev.filter((m) => String(m._id) !== messageId));
+    setDeleteTarget(null);
+
+    emitMessageDelete(coupleId, messageId, (ack) => {
+      if (!ack?.success) {
+        console.error("Delete failed:", ack?.message);
+      }
+    });
+  }, [deleteTarget, coupleId]);
 
   // ─── No partner state ─────────────────────────────────────────────────────
 
@@ -244,7 +278,8 @@ const ChatPage = () => {
               <MessageBubble
                 key={msg._id}
                 message={msg}
-                isMine={String(msg.senderId) === String(user?._id)}
+                isMine={flatSenderId(msg.senderId) === String(user?._id)}
+                onDelete={handleDeleteRequest}
               />
             ))}
             {isPartnerTyping && (
@@ -266,6 +301,14 @@ const ChatPage = () => {
         onTyping={handleTyping}
         disabled={false}
       />
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          message={deleteTarget}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 };
