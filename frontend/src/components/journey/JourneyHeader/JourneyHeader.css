@@ -1,0 +1,205 @@
+.jh {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ff5c8a 0%, #c94bcc 50%, #7c5cff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 24px 36px;
+  user-select: none;
+}
+
+/* Decorative orbs */
+.jh__orb {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+.jh__orb--tl { width: 220px; height: 220px; top: -80px; left: -70px; }
+.jh__orb--br { width: 180px; height: 180px; bottom: -60px; right: -50px; }
+
+/* Floating emojis */
+.jh__floating {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.jh__float {
+  position: absolute;
+  font-size: 18px;
+  animation: jh-float 4s ease-in-out infinite;
+  opacity: 0.7;
+}
+.jh__float--1 { top: 12%; left: 8%;  animation-delay: 0s;    animation-duration: 3.8s; }
+.jh__float--2 { top: 20%; right: 10%; animation-delay: 1.2s; animation-duration: 4.4s; }
+.jh__float--3 { bottom: 18%; left: 15%; animation-delay: 2s; animation-duration: 3.5s; }
+
+@keyframes jh-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-8px) rotate(8deg); }
+}
+
+/* Eyebrow */
+.jh__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Avatar stack */
+.jh__couple {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.jh__avatar-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.jh__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.jh__avatar-init {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Heart between avatars */
+.jh__heart-wrap {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 2;
+  margin: 0 -6px;
+  animation: jh-heartbeat 1.6s ease-in-out infinite;
+}
+
+.jh__heart-svg {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.35));
+}
+
+@keyframes jh-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14%       { transform: scale(1.18); }
+  28%       { transform: scale(1); }
+  42%       { transform: scale(1.12); }
+  70%       { transform: scale(1); }
+}
+
+/* Names */
+.jh__names {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.jh__name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.jh__amp {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 400;
+}
+
+/* Days counter */
+.jh__duration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.jh__duration-num {
+  font-size: 52px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -2px;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+}
+
+.jh__duration-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.04em;
+}
+
+.jh__duration-alt {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+/* Status pill */
+.jh__status {
+  padding: 6px 16px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+}
+
+.jh__status--active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.jh__status--paused {
+  background: rgba(255, 170, 0, 0.25);
+  color: #fff;
+}
+
+.jh__status--broken_up {
+  background: rgba(255, 82, 82, 0.25);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .jh { padding: 56px 32px 44px; }
+  .jh__duration-num { font-size: 64px; }
+}

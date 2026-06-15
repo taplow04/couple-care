@@ -1,0 +1,124 @@
+.map {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+/* ── Header ── */
+.map__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 16px 16px;
+  position: sticky;
+  top: 0;
+  background: var(--background);
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+
+.map__back {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.map__back:hover  { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+.map__back:active { transform: scale(0.93); }
+
+.map__title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.map__sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 2px 0 0;
+  font-weight: 500;
+}
+
+/* ── Body ── */
+.map__body {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px calc(var(--bottom-nav-height) + 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Skeleton ── */
+.map-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.map-sk {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: map-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes map-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── No partner ── */
+.map__no-partner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 32px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+.map__np-emoji {
+  font-size: 56px;
+  line-height: 1;
+  animation: map-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes map-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+
+.map__np-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.map__np-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 260px;
+  margin: 0;
+}
+
+/* ── Desktop ── */
+@media (min-width: 768px) {
+  .map__header { padding: 24px 24px 18px; }
+  .map__body   { padding: 24px 24px calc(var(--bottom-nav-height) + 40px); gap: 28px; }
+}

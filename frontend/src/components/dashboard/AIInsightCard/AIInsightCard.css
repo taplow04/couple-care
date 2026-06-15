@@ -1,0 +1,132 @@
+.aic-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 18px 20px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.aic-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff5c8a, #7c5cff, #32c36c);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.aic-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.aic-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.aic-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.aic-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.aic-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--secondary);
+  background: var(--secondary-light);
+  padding: 2px 7px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+.aic-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.aic-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aic-arrow {
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aic-action-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.aic-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.aic-skeleton-line {
+  height: 13px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: aic-shimmer 1.6s infinite;
+}
+
+.aic-skeleton-line--60 {
+  width: 60%;
+}
+
+.aic-skeleton-line--80 {
+  width: 80%;
+}
+
+.aic-skeleton-line--100 {
+  width: 100%;
+}
+
+@keyframes aic-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (min-width: 768px) {
+  .aic-card {
+    padding: 22px 22px 24px;
+  }
+
+  .aic-text {
+    font-size: 14.5px;
+  }
+}

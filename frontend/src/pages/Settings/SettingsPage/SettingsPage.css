@@ -1,0 +1,181 @@
+.settings-pg {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.settings-pg__content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px calc(var(--bottom-nav-height) + 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Header ── */
+
+.settings-pg__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.settings-pg__back {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-pg__back:hover  { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+.settings-pg__back:active { transform: scale(0.93); }
+
+.settings-pg__title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.15;
+}
+
+.settings-pg__sub {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Loading skeletons ── */
+
+.settings-pg__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-sk { display: flex; flex-direction: column; gap: 8px; }
+
+.settings-sk__title {
+  height: 12px;
+  width: 120px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+.settings-sk__card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 0 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.settings-sk__row {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
+.settings-sk__row:last-child { border-bottom: none; }
+
+@keyframes sk-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── Privacy note ── */
+
+.settings-pg__privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(124, 92, 255, 0.06);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(124, 92, 255, 0.12);
+}
+
+.settings-pg__privacy-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+.settings-pg__privacy-text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Save error ── */
+
+.settings-pg__save-err {
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 600;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Save button ── */
+
+.settings-pg__save-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  box-shadow: 0 6px 20px rgba(255, 92, 138, 0.32);
+  min-height: 52px;
+}
+
+.settings-pg__save-btn:not(:disabled):hover  { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255, 92, 138, 0.42); }
+.settings-pg__save-btn:not(:disabled):active { transform: scale(0.98); }
+.settings-pg__save-btn:disabled              { opacity: 0.7; cursor: not-allowed; }
+
+.settings-pg__save-btn--saved {
+  background: linear-gradient(135deg, var(--success), #28a85a);
+  box-shadow: 0 6px 20px rgba(50, 195, 108, 0.28);
+}
+
+/* Spinner */
+.settings-pg__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sp-spin 0.75s linear infinite;
+}
+
+@keyframes sp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Desktop ── */
+
+@media (min-width: 768px) {
+  .settings-pg__content { padding: 32px 24px calc(var(--bottom-nav-height) + 40px); }
+}

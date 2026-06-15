@@ -1,0 +1,178 @@
+.pf {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Field ── */
+
+.pf__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pf__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pf__field-err {
+  font-size: 12px;
+  color: var(--danger);
+  font-weight: 600;
+  margin: 0;
+}
+
+.pf__field-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0;
+  text-align: right;
+}
+
+/* ── Text input ── */
+
+.pf__input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text);
+  background: var(--background);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pf__input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.12);
+}
+
+.pf__input--err {
+  border-color: var(--danger);
+}
+
+.pf__input--err:focus {
+  box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.12);
+}
+
+/* ── Textarea ── */
+
+.pf__textarea {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14.5px;
+  color: var(--text);
+  background: var(--background);
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.6;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.pf__textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.12);
+}
+
+/* ── Tag input ── */
+
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  min-height: 48px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: text;
+}
+
+.tag-input:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 92, 138, 0.12);
+}
+
+.tag-input__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  animation: chip-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes chip-pop {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.tag-input--primary .tag-input__chip {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.tag-input--secondary .tag-input__chip {
+  background: var(--secondary-light);
+  color: var(--secondary);
+}
+
+.tag-input--muted .tag-input__chip {
+  background: rgba(136, 136, 153, 0.12);
+  color: var(--muted);
+}
+
+.tag-input__chip-del {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  color: inherit;
+  font-weight: 400;
+}
+
+.tag-input__chip-del:hover { opacity: 1; }
+
+.tag-input__field {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  padding: 2px 4px;
+}
+
+.tag-input__field::placeholder {
+  color: var(--muted);
+}

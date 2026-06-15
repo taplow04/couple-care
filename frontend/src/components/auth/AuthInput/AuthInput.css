@@ -1,0 +1,35 @@
+.auth-input-group {
+  display: flex;
+
+  flex-direction: column;
+
+  margin-bottom: 16px;
+}
+
+.auth-input-group label {
+  margin-bottom: 8px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #444;
+}
+
+.auth-input-group input {
+  height: 54px;
+
+  border: 2px solid #f0f0f0;
+
+  border-radius: 16px;
+
+  padding: 0 16px;
+
+  font-size: 16px;
+
+  transition: 0.3s;
+}
+
+.auth-input-group input:focus {
+  border-color: #ff5c8a;
+}

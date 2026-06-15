@@ -1,0 +1,61 @@
+.msg-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.msg-input__field {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--background);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  min-width: 0;
+}
+
+.msg-input__field::placeholder {
+  color: var(--muted);
+}
+
+.msg-input__field:focus {
+  border-color: var(--primary);
+}
+
+.msg-input__field:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.msg-input__send {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(255, 92, 138, 0.35);
+}
+
+.msg-input__send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.msg-input__send:not(:disabled):hover  { transform: scale(1.07); }
+.msg-input__send:not(:disabled):active { transform: scale(0.93); }

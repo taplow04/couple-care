@@ -1,0 +1,55 @@
+.verify-content {
+  display: flex;
+
+  flex-direction: column;
+}
+
+.verify-loading {
+  text-align: center;
+
+  padding: 20px;
+
+  color: #666;
+}
+
+.verify-success {
+  background: #e7fff0;
+
+  color: #18a558;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  text-align: center;
+
+  margin-bottom: 20px;
+}
+
+.verify-error {
+  background: #ffe5e5;
+
+  color: #ff3b3b;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  text-align: center;
+
+  margin-bottom: 20px;
+}
+
+.verify-link {
+  background: none;
+
+  border: none;
+
+  margin-top: 16px;
+
+  color: #ff5c8a;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}

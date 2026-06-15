@@ -1,0 +1,103 @@
+.msg-bubble-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.msg-bubble-row--mine {
+  justify-content: flex-end;
+}
+
+/* Base bubble */
+.msg-bubble {
+  max-width: 74%;
+  padding: 9px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: opacity 0.2s;
+}
+
+.msg-bubble--theirs {
+  background: var(--card);
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.msg-bubble--mine {
+  background: linear-gradient(135deg, var(--primary) 0%, #e34a78 100%);
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 4px 14px rgba(255, 92, 138, 0.28);
+}
+
+.msg-bubble--pending {
+  opacity: 0.6;
+}
+
+.msg-bubble--failed {
+  background: linear-gradient(135deg, #ff5252, #cc2222) !important;
+  box-shadow: 0 4px 14px rgba(255, 82, 82, 0.28) !important;
+}
+
+/* Text */
+.msg-bubble__text {
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+  color: var(--text);
+}
+
+.msg-bubble--mine .msg-bubble__text {
+  color: #fff;
+}
+
+/* Meta row (time + tick) */
+.msg-bubble__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.msg-bubble__time {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.msg-bubble--mine .msg-bubble__time {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Tick icons */
+.msg-bubble__tick {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.msg-bubble__tick--sent {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.msg-bubble__tick--seen {
+  color: #ffe0ec;
+}
+
+.msg-bubble__tick--pending {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1;
+}
+
+.msg-bubble__tick--failed {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .msg-bubble {
+    max-width: 60%;
+  }
+}

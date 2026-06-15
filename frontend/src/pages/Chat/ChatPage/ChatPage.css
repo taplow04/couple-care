@@ -1,0 +1,119 @@
+.chat-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--bottom-nav-height);
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  z-index: 1;
+}
+
+/* ── Scrollable message area ─────────────────────── */
+
+.chat-page__body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 16px 4px;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Message thread ──────────────────────────────── */
+
+.chat-page__thread {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 4px;
+}
+
+/* ── Loading skeletons ───────────────────────────── */
+
+.chat-page__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+  flex: 1;
+}
+
+.chat-page__sk {
+  height: 46px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #efefef 25%, #e4e4e4 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: chat-shimmer 1.6s infinite;
+  max-width: 68%;
+}
+
+.chat-page__sk--left  { align-self: flex-start; }
+.chat-page__sk--right { align-self: flex-end; }
+
+@keyframes chat-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── Empty / no-partner states ───────────────────── */
+
+.chat-page__empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 10px;
+  padding: 40px 28px;
+}
+
+.chat-page__empty-emoji {
+  font-size: 52px;
+  line-height: 1;
+}
+
+.chat-page__empty-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.chat-page__empty-sub {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 260px;
+}
+
+/* No-partner variant fills the whole screen */
+.chat-page--no-partner {
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Send error banner ───────────────────────────── */
+
+.chat-page__send-err {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--danger);
+  font-weight: 600;
+  padding: 4px 18px 0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Desktop centering ───────────────────────────── */
+
+@media (min-width: 640px) {
+  .chat-page {
+    left: 50%;
+    right: auto;
+    width: 640px;
+    transform: translateX(-50%);
+  }
+}

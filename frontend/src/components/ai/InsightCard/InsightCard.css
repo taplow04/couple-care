@@ -1,0 +1,141 @@
+.ic-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 30, 0.72);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+  padding: 20px;
+  animation: ic-fade 0.2s ease both;
+}
+
+@keyframes ic-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.ic-modal {
+  width: 100%;
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  animation: ic-rise 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes ic-rise {
+  from { transform: translateY(28px) scale(0.94); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+
+.ic-close {
+  position: absolute;
+  top: -12px;
+  right: 0;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.ic-close:hover { background: rgba(255, 255, 255, 0.32); }
+
+/* Card */
+.ic-card {
+  border-radius: 24px;
+  overflow: hidden;
+  min-height: 260px;
+}
+
+.ic-card__body {
+  padding: 28px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 99px;
+  width: fit-content;
+}
+
+.ic-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.18);
+}
+
+.ic-content {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.74;
+  margin: 0;
+}
+
+.ic-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 6px;
+}
+
+.ic-brand {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.05em;
+}
+
+.ic-date {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Action buttons */
+.ic-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ic-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+  backdrop-filter: blur(8px);
+  text-align: center;
+}
+.ic-btn:hover  { background: rgba(255, 255, 255, 0.26); }
+.ic-btn:active { transform: scale(0.97); }
+.ic-btn--done  { color: #6ffaab; border-color: rgba(111, 250, 171, 0.35); }
+.ic-btn--share { }

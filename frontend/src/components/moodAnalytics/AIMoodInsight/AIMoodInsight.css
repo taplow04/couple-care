@@ -1,0 +1,123 @@
+.ami {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ami__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.ami__card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ami__card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7c5cff, #ff5c8a, #ffaa00);
+}
+
+/* Top row */
+.ami__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ami__label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ami__badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, rgba(124,92,255,0.12), rgba(255,92,138,0.12));
+  color: var(--secondary);
+  border: 1px solid rgba(124,92,255,0.2);
+}
+
+.ami__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.ami__powered {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Body */
+.ami__body {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin: 0;
+}
+
+.ami__empty {
+  font-size: 13.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.65;
+}
+
+/* Footer */
+.ami__footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.ami__footer-icon { font-size: 13px; }
+
+.ami__footer-text {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Shimmer */
+.ami-shimmer {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ami-shimmer__line {
+  height: 12px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+  background-size: 200% 100%;
+  animation: ami-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes ami-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}

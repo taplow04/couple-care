@@ -1,0 +1,17 @@
+.auth-footer {
+  text-align: center;
+
+  margin-top: 20px;
+
+  font-size: 14px;
+
+  color: #666;
+}
+
+.auth-footer a {
+  margin-left: 6px;
+
+  color: #ff5c8a;
+
+  font-weight: 600;
+}

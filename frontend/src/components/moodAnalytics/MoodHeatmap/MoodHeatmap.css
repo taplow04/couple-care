@@ -1,0 +1,147 @@
+.mhm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mhm__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.mhm__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.mhm__sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 0;
+}
+
+.mhm__card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Grid */
+.mhm__grid-wrap {
+  display: grid;
+  grid-template-columns: 32px repeat(7, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+
+.mhm__corner { width: 32px; }
+
+.mhm__day-header {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mhm__row-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mhm__row-emoji {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Cell */
+.mhm__cell {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  transition: transform 0.15s ease;
+  min-height: 26px;
+}
+
+.mhm__cell--active:hover {
+  transform: scale(1.15);
+  z-index: 1;
+}
+
+.mhm__cell-count {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+/* Legend */
+.mhm__legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mhm__legend-text {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.mhm__legend-scale {
+  display: flex;
+  gap: 3px;
+}
+
+.mhm__legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Empty */
+.mhm__empty {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.mhm__empty-emoji { font-size: 36px; line-height: 1; }
+
+.mhm__empty-text {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 240px;
+}
+
+@media (min-width: 400px) {
+  .mhm__cell { min-height: 32px; }
+  .mhm__cell-count { font-size: 10px; }
+}
+
+@media (min-width: 768px) {
+  .mhm__grid-wrap { gap: 6px; }
+  .mhm__cell { min-height: 38px; border-radius: 7px; }
+}

@@ -1,0 +1,43 @@
+.login-form {
+  display: flex;
+
+  flex-direction: column;
+}
+
+.login-error {
+  background: #ffe5e5;
+
+  color: #ff3b3b;
+
+  padding: 12px;
+
+  border-radius: 12px;
+
+  margin-bottom: 16px;
+
+  font-size: 14px;
+
+  text-align: center;
+}
+
+.forgot-link {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-bottom: 18px;
+}
+
+.forgot-link button {
+  background: none;
+
+  border: none;
+
+  color: #ff5c8a;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}

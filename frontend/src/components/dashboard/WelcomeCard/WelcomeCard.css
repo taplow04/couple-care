@@ -1,0 +1,157 @@
+.wc-card {
+  background: linear-gradient(135deg, #ff5c8a 0%, #c94bcc 55%, #7c5cff 100%);
+  border-radius: var(--radius-lg);
+  padding: 24px 22px 26px;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.wc-blob {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wc-blob--1 {
+  width: 160px;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.08);
+  top: -60px;
+  right: -40px;
+}
+
+.wc-blob--2 {
+  width: 100px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.06);
+  bottom: -30px;
+  right: 80px;
+}
+
+.wc-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.wc-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.wc-date {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.wc-greeting {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.wc-partner {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.wc-heart {
+  font-size: 14px;
+}
+
+.wc-message {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+  max-width: 200px;
+}
+
+.wc-right {
+  flex-shrink: 0;
+}
+
+.wc-avatars {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: -12px;
+  position: relative;
+}
+
+.wc-avatar {
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+.wc-avatar--initials {
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.02em;
+}
+
+.wc-avatar--you {
+  position: relative;
+  z-index: 2;
+}
+
+.wc-avatar--partner {
+  margin-top: -16px;
+  margin-left: 20px;
+  z-index: 1;
+  position: relative;
+}
+
+.wc-avatar--empty {
+  border-radius: 50%;
+  border: 2.5px dashed rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: -16px;
+  margin-left: 20px;
+}
+
+@media (min-width: 400px) {
+  .wc-greeting {
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .wc-card {
+    padding: 30px 28px 32px;
+  }
+
+  .wc-greeting {
+    font-size: 26px;
+  }
+
+  .wc-message {
+    max-width: 280px;
+  }
+}
