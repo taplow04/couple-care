@@ -6,12 +6,14 @@ const ChatHeader = ({ partner, socketConnected }) => {
 
   return (
     <div className="chat-header">
-      <div className="chat-header__avatar">
-        {partner?.profilePhoto ? (
-          <img src={partner.profilePhoto} alt={partner.name} className="chat-header__avatar-img" />
-        ) : (
-          <span className="chat-header__avatar-initial">{initial}</span>
-        )}
+      <div className="chat-header__avatar-ring">
+        <div className="chat-header__avatar">
+          {partner?.profilePhoto ? (
+            <img src={partner.profilePhoto} alt={partner.name} className="chat-header__avatar-img" />
+          ) : (
+            <span className="chat-header__avatar-initial">{initial}</span>
+          )}
+        </div>
       </div>
 
       <div className="chat-header__info">
@@ -19,7 +21,9 @@ const ChatHeader = ({ partner, socketConnected }) => {
         <OnlineStatus connected={socketConnected} />
       </div>
 
-      <div className="chat-header__heart" aria-hidden="true">💕</div>
+      <div className="chat-header__actions">
+        <button className="chat-header__icon-btn" aria-label="Love">💕</button>
+      </div>
     </div>
   );
 };

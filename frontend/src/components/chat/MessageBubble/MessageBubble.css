@@ -1,6 +1,7 @@
 .msg-bubble-row {
   display: flex;
   justify-content: flex-start;
+  padding: 1px 16px;
 }
 
 .msg-bubble-row--mine {
@@ -11,67 +12,73 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  max-width: 75%;
 }
 
 /* Base bubble */
 .msg-bubble {
-  max-width: 74%;
-  padding: 9px 13px;
-  display: flex;
+  padding: 10px 14px;
+  display: inline-flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  word-break: break-word;
   transition: opacity 0.2s;
 }
 
+/* Partner bubble — Instagram light gray */
 .msg-bubble--theirs {
-  background: var(--card);
-  border-radius: 18px 18px 18px 4px;
-  box-shadow: var(--shadow-sm);
+  background: #efefef;
+  border-radius: 22px 22px 22px 4px;
+  color: #262626;
 }
 
+/* Own bubble — brand gradient */
 .msg-bubble--mine {
   background: linear-gradient(135deg, var(--primary) 0%, #e34a78 100%);
-  border-radius: 18px 18px 4px 18px;
-  box-shadow: 0 4px 14px rgba(255, 92, 138, 0.28);
+  border-radius: 22px 22px 4px 22px;
+  color: #fff;
 }
 
 .msg-bubble--pending {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .msg-bubble--failed {
-  background: linear-gradient(135deg, #ff5252, #cc2222) !important;
-  box-shadow: 0 4px 14px rgba(255, 82, 82, 0.28) !important;
+  background: #ed4956 !important;
 }
 
 /* Text */
 .msg-bubble__text {
-  font-size: 14px;
-  line-height: 1.5;
-  word-break: break-word;
-  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.msg-bubble--theirs .msg-bubble__text {
+  color: #262626;
 }
 
 .msg-bubble--mine .msg-bubble__text {
   color: #fff;
 }
 
-/* Meta row (time + tick) */
+/* Meta row */
 .msg-bubble__meta {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 3px;
+  margin-top: 1px;
 }
 
 .msg-bubble__time {
   font-size: 10px;
-  font-weight: 500;
-  color: var(--muted);
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.35);
 }
 
 .msg-bubble--mine .msg-bubble__time {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 /* Tick icons */
@@ -82,16 +89,16 @@
 }
 
 .msg-bubble__tick--sent {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .msg-bubble__tick--seen {
-  color: #ffe0ec;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .msg-bubble__tick--pending {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.5);
   line-height: 1;
 }
 
@@ -100,10 +107,4 @@
   font-weight: 800;
   color: #fff;
   line-height: 1;
-}
-
-@media (min-width: 768px) {
-  .msg-bubble {
-    max-width: 60%;
-  }
 }

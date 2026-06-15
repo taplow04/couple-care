@@ -1,21 +1,42 @@
 .msg-input {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px 12px;
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  gap: 10px;
+  padding: 10px 14px 14px;
+  background: #fff;
+  border-top: 1px solid #efefef;
   flex-shrink: 0;
 }
 
+/* Emoji button — left of input */
+.msg-input__emoji {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+
+.msg-input__emoji:hover { opacity: 1; }
+
+/* Pill input */
 .msg-input__field {
   flex: 1;
-  padding: 11px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: 99px;
+  padding: 10px 16px;
+  border: 1.5px solid #dbdbdb;
+  border-radius: 22px;
   font-size: 14px;
-  color: var(--text);
-  background: var(--background);
+  color: #262626;
+  background: #fff;
   outline: none;
   font-family: inherit;
   transition: border-color 0.2s;
@@ -23,39 +44,43 @@
 }
 
 .msg-input__field::placeholder {
-  color: var(--muted);
+  color: #8e8e8e;
 }
 
 .msg-input__field:focus {
-  border-color: var(--primary);
+  border-color: #a8a8a8;
 }
 
 .msg-input__field:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
+/* Send button */
 .msg-input__send {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff;
   border: none;
+  background: none;
+  padding: 0 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: var(--transition);
-  box-shadow: 0 4px 14px rgba(255, 92, 138, 0.35);
+  transition: opacity 0.15s, transform 0.15s;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
 }
 
 .msg-input__send:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  box-shadow: none;
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-.msg-input__send:not(:disabled):hover  { transform: scale(1.07); }
-.msg-input__send:not(:disabled):active { transform: scale(0.93); }
+.msg-input__send:not(:disabled):active {
+  transform: scale(0.9);
+  opacity: 0.7;
+}

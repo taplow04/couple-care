@@ -1,54 +1,42 @@
 .msg-options {
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   z-index: 100;
-  background: #1a1a2e;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  padding: 4px;
-  min-width: 120px;
-  animation: msg-options-in 0.12s ease;
+  background: #262626;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  animation: msg-options-in 0.13s ease;
 }
 
-.msg-options--mine {
-  right: 0;
-}
-
-.msg-options--theirs {
-  left: 0;
-}
+.msg-options--mine  { right: 0; }
+.msg-options--theirs { left: 0; }
 
 @keyframes msg-options-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: scale(0.9) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);   }
 }
 
 .msg-options__btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   background: none;
   border: none;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 13px 18px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
+  white-space: nowrap;
 }
 
 .msg-options__btn--delete {
-  color: #ff6b6b;
+  color: #ed4956;
 }
 
 .msg-options__btn--delete:hover,
 .msg-options__btn--delete:active {
-  background: rgba(255, 82, 82, 0.15);
+  background: rgba(237, 73, 86, 0.12);
 }

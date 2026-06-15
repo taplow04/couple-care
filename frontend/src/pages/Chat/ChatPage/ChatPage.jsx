@@ -282,9 +282,7 @@ const ChatPage = () => {
                 onDelete={handleDeleteRequest}
               />
             ))}
-            {isPartnerTyping && (
-              <TypingIndicator partnerName={partner?.name} />
-            )}
+            {isPartnerTyping && <TypingIndicator />}
             <div ref={bottomRef} />
           </div>
         )}
