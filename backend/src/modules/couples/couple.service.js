@@ -35,6 +35,14 @@ const createCouple = async (userId) => {
 };
 
 const joinCouple = async (userId, pairCode) => {
+  // Normalize so case / stray whitespace never causes a false "invalid code".
+  // Generated codes are always uppercase with a "CC-" prefix.
+  const code = String(pairCode || "").trim().toUpperCase();
+
+  if (!code) {
+    throw new Error("Pair code is required");
+  }
+
   const user = await User.findById(userId);
 
   if (!user) {
@@ -46,7 +54,7 @@ const joinCouple = async (userId, pairCode) => {
   }
 
   const couple = await Couple.findOne({
-    pairCode,
+    pairCode: code,
   });
 
   if (!couple) {

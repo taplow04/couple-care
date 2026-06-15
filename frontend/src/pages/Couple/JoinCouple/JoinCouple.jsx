@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { joinCouple } from "../../../services/couple.service";
@@ -7,10 +7,19 @@ import "./JoinCouple.css";
 
 const JoinCouple = () => {
   const navigate = useNavigate();
-  const { updateUser } = useAuth();
+  const { updateUser, user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Users who already have a couple can't join another one.
+  useEffect(() => {
+    if (user?.coupleConnected) {
+      navigate("/dashboard", { replace: true });
+    } else if (user?.currentCoupleId) {
+      navigate("/couple/create", { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (code) => {
     setLoading(true);

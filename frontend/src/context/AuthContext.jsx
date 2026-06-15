@@ -33,10 +33,19 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const login = (user, token) => {
+  const login = async (user, token) => {
     localStorage.setItem("token", token);
 
+    // Set immediately for snappy UX, then refetch the authoritative profile
+    // (includes coupleConnected) so route guards can decide correctly.
     setUser(user);
+
+    try {
+      const res = await getCurrentUser();
+      setUser(res.data);
+    } catch {
+      setUser(user);
+    }
   };
 
   const logout = () => {

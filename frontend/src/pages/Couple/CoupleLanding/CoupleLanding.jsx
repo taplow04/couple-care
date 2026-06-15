@@ -4,14 +4,22 @@ import { useAuth } from "../../../context/AuthContext";
 import "./CoupleLanding.css";
 
 const CoupleLanding = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // If already fully connected (has couple + partner joined), go to dashboard
+  // Connected users don't belong here; pending users go to their waiting screen.
   useEffect(() => {
-    // We only block if they somehow navigate here while connected
-    // CreateCouple handles the "pending couple" case
-  }, []);
+    if (user?.coupleConnected) {
+      navigate("/dashboard", { replace: true });
+    } else if (user?.currentCoupleId) {
+      navigate("/couple/create", { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="couple-landing">
@@ -58,6 +66,10 @@ const CoupleLanding = () => {
       <p className="couple-landing__footer">
         Hey {user?.name?.split(" ")[0] || "there"} 👋 — your partner needs the CoupleCare app too.
       </p>
+
+      <button className="couple-landing__logout" onClick={handleLogout}>
+        Log out
+      </button>
     </div>
   );
 };

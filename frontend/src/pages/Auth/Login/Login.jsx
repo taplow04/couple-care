@@ -49,8 +49,9 @@ const Login = () => {
 
       const response = await loginUser(form);
 
-      login(response.data.user, response.data.token);
+      await login(response.data.user, response.data.token);
 
+      // RequireCouple guard routes to /couple or /couple/create if not connected
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");

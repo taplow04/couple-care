@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import RequireCouple from "./routes/RequireCouple";
 
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Auth/Login/Login";
@@ -59,18 +60,25 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/moods" element={<Moods />} />
-          <Route path="/memories" element={<Memories />} />
+          {/* Account management — reachable even without a partner so a solo
+              user can manage/log out of their account. */}
           <Route path="/profile" element={<Profile />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/ai" element={<AI />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/journey" element={<JourneyPage />} />
-          <Route path="/mood-analytics" element={<MoodAnalyticsPage />} />
-          <Route path="/ai-center" element={<AICenterPage />} />
+
+          {/* Couple-gated features — require a fully connected partner. */}
+          <Route element={<RequireCouple />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/moods" element={<Moods />} />
+            <Route path="/memories" element={<Memories />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/ai" element={<AI />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/journey" element={<JourneyPage />} />
+            <Route path="/mood-analytics" element={<MoodAnalyticsPage />} />
+            <Route path="/ai-center" element={<AICenterPage />} />
+          </Route>
+
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Routes>

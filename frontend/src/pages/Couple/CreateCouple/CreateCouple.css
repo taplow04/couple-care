@@ -36,6 +36,23 @@
   background: #efefef;
 }
 
+.create-couple__logout {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 8px 4px;
+  width: 64px;
+  text-align: left;
+}
+
+.create-couple__logout:hover {
+  color: var(--text-secondary);
+}
+
 .create-couple__title {
   font-size: 17px;
   font-weight: 700;
