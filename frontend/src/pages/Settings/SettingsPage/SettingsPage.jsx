@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { getSettings, updateSettings } from "../../../services/security.service";
+import { getPrivacy, updatePrivacy } from "../../../services/privacy.service";
 import SettingsSection from "../../../components/settings/SettingsSection/SettingsSection";
 import SettingToggle from "../../../components/settings/SettingToggle/SettingToggle";
+import PrivacySelect from "../../../components/settings/PrivacySelect/PrivacySelect";
 import "./SettingsPage.css";
 
 const BackIcon = () => (
@@ -27,28 +29,57 @@ const DEFAULT_SETTINGS = {
   memoryRemindersEnabled: true,
 };
 
+const DEFAULT_PRIVACY = {
+  moodVisibility: "partner_only",
+  memoryVisibility: "partner_only",
+  journeyVisibility: "partner_only",
+  aiVisibility: "partner_only",
+  profileVisibility: "partner_only",
+  activityVisibility: "partner_only",
+};
+
+const PRIVACY_ROWS = [
+  { key: "profileVisibility", label: "Profile", icon: "👤", description: "Your bio, hobbies, likes & dislikes" },
+  { key: "moodVisibility", label: "Moods", icon: "😊", description: "Whether your partner sees your moods" },
+  { key: "activityVisibility", label: "Activity", icon: "⚡", description: "Your recent activity on your profile" },
+  { key: "memoryVisibility", label: "Memories", icon: "📸", description: "Shared memory visibility" },
+  { key: "journeyVisibility", label: "Journey", icon: "🗺️", description: "Your relationship journey view" },
+  { key: "aiVisibility", label: "AI Insights", icon: "✨", description: "AI-generated insight visibility" },
+];
+
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { updateUser } = useAuth();
 
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [privacy, setPrivacy] = useState(DEFAULT_PRIVACY);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // Fetch current settings
+  // Fetch current settings + privacy in parallel
   useEffect(() => {
-    getSettings()
-      .then((res) => {
-        if (res.data) setSettings({ ...DEFAULT_SETTINGS, ...res.data });
+    Promise.allSettled([getSettings(), getPrivacy()])
+      .then(([settingsRes, privacyRes]) => {
+        if (settingsRes.status === "fulfilled" && settingsRes.value.data) {
+          setSettings({ ...DEFAULT_SETTINGS, ...settingsRes.value.data });
+        }
+        if (privacyRes.status === "fulfilled" && privacyRes.value.data) {
+          setPrivacy({ ...DEFAULT_PRIVACY, ...privacyRes.value.data });
+        }
       })
-      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const toggle = (key) => (val) => {
     setSettings((prev) => ({ ...prev, [key]: val }));
+    setSaved(false);
+    setSaveError("");
+  };
+
+  const setPrivacyValue = (key) => (val) => {
+    setPrivacy((prev) => ({ ...prev, [key]: val }));
     setSaved(false);
     setSaveError("");
   };
@@ -59,9 +90,12 @@ const SettingsPage = () => {
     setSaved(false);
 
     try {
-      const res = await updateSettings(settings);
+      const [settingsRes] = await Promise.all([
+        updateSettings(settings),
+        updatePrivacy(privacy),
+      ]);
       // Sync settings into auth context so Profile page reflects changes
-      updateUser({ settings: res.data });
+      updateUser({ settings: settingsRes.data });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -144,6 +178,23 @@ const SettingsPage = () => {
                 checked={settings.aiInsightsEnabled}
                 onChange={toggle("aiInsightsEnabled")}
               />
+            </SettingsSection>
+
+            {/* ── Privacy & visibility ── */}
+            <SettingsSection
+              title="Privacy & Visibility"
+              description="Control what your partner can see. 'Private' hides it from your partner."
+            >
+              {PRIVACY_ROWS.map((row) => (
+                <PrivacySelect
+                  key={row.key}
+                  label={row.label}
+                  description={row.description}
+                  icon={row.icon}
+                  value={privacy[row.key]}
+                  onChange={setPrivacyValue(row.key)}
+                />
+              ))}
             </SettingsSection>
 
             {/* ── Privacy note ── */}

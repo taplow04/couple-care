@@ -109,6 +109,14 @@ const getPartnerMoods = async (userId) => {
     partnerId = couple.partnerOneId;
   }
 
+  if (!partnerId) return [];
+
+  // Respect the partner's global mood-visibility privacy setting.
+  const partner = await User.findById(partnerId).select("privacy");
+  if (partner?.privacy?.moodVisibility === "private") {
+    return [];
+  }
+
   return await Mood.find({
     userId: partnerId,
     visibility: "partner_only",

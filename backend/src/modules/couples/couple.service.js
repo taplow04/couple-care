@@ -199,6 +199,7 @@ const getPartnerProfile = async (userId) => {
 
   const profilePrivate = partner.privacy?.profileVisibility === "private";
   const moodPrivate = partner.privacy?.moodVisibility === "private";
+  const activityPrivate = partner.privacy?.activityVisibility === "private";
 
   // Aggregate stats (cheap counts + reused analytics).
   const [memoryCount, chatMessageCount] = await Promise.all([
@@ -221,12 +222,15 @@ const getPartnerProfile = async (userId) => {
       averageIntensity: analytics.averageIntensity,
       counts,
     };
-    recentMoods = await Mood.find({
-      userId: partnerId,
-      visibility: "partner_only",
-    })
-      .sort({ createdAt: -1 })
-      .limit(5);
+    // Recent activity is additionally gated by the activity-visibility setting.
+    if (!activityPrivate) {
+      recentMoods = await Mood.find({
+        userId: partnerId,
+        visibility: "partner_only",
+      })
+        .sort({ createdAt: -1 })
+        .limit(5);
+    }
   }
 
   // Public-safe profile (respects profileVisibility).
