@@ -3,9 +3,28 @@ const mongoose = require("mongoose");
 
 const User = require("../users/user.model");
 const Message = require("./message.model");
-const { isCoupleMember } = require("./chat.helpers");
+const { isCoupleMember, getPartnerId } = require("./chat.helpers");
+const callService = require("../calls/call.service");
 
 const onlineUsers = new Map();
+
+/*
+==========================
+CALL SIGNALING STATE
+==========================
+Media is NEVER touched by the server — these maps only track signaling state
+so we can route offer/answer/ICE to the right partner, detect "busy", and
+clean up on disconnect.
+*/
+
+// callId -> { callId, callerId, receiverId, coupleId, callType, accepted, timeout }
+const activeCalls = new Map();
+
+// userId (string) -> callId  (a user can only be in one call at a time)
+const userActiveCall = new Map();
+
+// How long an unanswered call rings before we mark it missed (ms).
+const RING_TIMEOUT_MS = 35000;
 
 const emitSocketError = (socket, message, details = null) => {
   socket.emit("socket:error", {
@@ -57,6 +76,45 @@ const removeOnlineSocket = (userId, socketId) => {
   if (sockets.size === 0) {
     onlineUsers.delete(key);
   }
+};
+
+const isUserOnline = (userId) => {
+  const sockets = onlineUsers.get(userId.toString());
+  return Boolean(sockets && sockets.size > 0);
+};
+
+// Emit an event to every active socket belonging to a user.
+const emitToUser = (io, userId, event, payload) => {
+  const sockets = onlineUsers.get(userId.toString());
+  if (!sockets) {
+    return;
+  }
+  sockets.forEach((socketId) => {
+    io.to(socketId).emit(event, payload);
+  });
+};
+
+const isUserBusy = (userId) => userActiveCall.has(userId.toString());
+
+// Returns the other participant's id for a given call session.
+const getCallPeerId = (session, userId) => {
+  return session.callerId.toString() === userId.toString()
+    ? session.receiverId
+    : session.callerId;
+};
+
+// Tear down all signaling state for a call. Idempotent.
+const cleanupCall = (callId) => {
+  const session = activeCalls.get(callId);
+  if (!session) {
+    return;
+  }
+  if (session.timeout) {
+    clearTimeout(session.timeout);
+  }
+  userActiveCall.delete(session.callerId.toString());
+  userActiveCall.delete(session.receiverId.toString());
+  activeCalls.delete(callId);
 };
 
 const normalizeCoupleId = (payload) => {
@@ -380,13 +438,303 @@ const initializeSocket = (io) => {
     });
 
     /*
+    ============================================================
+    WEBRTC CALL SIGNALING
+    ------------------------------------------------------------
+    Server relays signaling only. Audio/video flows peer-to-peer
+    (or via TURN) and never touches this server.
+    ============================================================
+    */
+
+    const userId = socket.user._id;
+
+    /*
+    ==========================
+    CALL: INITIATE
+    ==========================
+    */
+    socket.on("call:initiate", async (payload, ack) => {
+      try {
+        const callType = payload?.callType;
+
+        if (callType !== "voice" && callType !== "video") {
+          throw new Error("Invalid call type");
+        }
+
+        const coupleId = socket.user.currentCoupleId;
+        if (!coupleId) {
+          return sendAck(ack, { success: false, reason: "no-partner" });
+        }
+
+        // Only ever resolves to the bound partner — cannot call a random user.
+        const receiverId = await getPartnerId(userId);
+        if (!receiverId) {
+          return sendAck(ack, { success: false, reason: "no-partner" });
+        }
+
+        if (isUserBusy(userId)) {
+          return sendAck(ack, { success: false, reason: "already-in-call" });
+        }
+
+        if (isUserBusy(receiverId)) {
+          return sendAck(ack, { success: false, reason: "busy" });
+        }
+
+        if (!isUserOnline(receiverId)) {
+          // Log the missed attempt for history, then tell the caller.
+          try {
+            const missed = await callService.createCall({
+              coupleId,
+              callerId: userId,
+              receiverId,
+              callType,
+            });
+            await callService.finalizeCall(missed._id, "missed");
+          } catch (e) {
+            console.error("call history (offline) error:", e.message);
+          }
+          return sendAck(ack, { success: false, reason: "offline" });
+        }
+
+        const record = await callService.createCall({
+          coupleId,
+          callerId: userId,
+          receiverId,
+          callType,
+        });
+
+        const callId = record._id.toString();
+
+        const session = {
+          callId,
+          callerId: userId,
+          receiverId,
+          coupleId,
+          callType,
+          accepted: false,
+          timeout: null,
+        };
+
+        // Ring timeout -> missed call.
+        session.timeout = setTimeout(async () => {
+          const current = activeCalls.get(callId);
+          if (!current || current.accepted) {
+            return;
+          }
+          try {
+            await callService.finalizeCall(callId, "missed");
+          } catch (e) {
+            console.error("finalize missed error:", e.message);
+          }
+          emitToUser(io, receiverId, "call:missed", { callId });
+          emitToUser(io, userId, "call:timeout", { callId });
+          cleanupCall(callId);
+        }, RING_TIMEOUT_MS);
+
+        activeCalls.set(callId, session);
+        userActiveCall.set(userId.toString(), callId);
+        userActiveCall.set(receiverId.toString(), callId);
+
+        emitToUser(io, receiverId, "call:incoming", {
+          callId,
+          callType,
+          coupleId: coupleId.toString(),
+          from: {
+            _id: socket.user._id,
+            name: socket.user.name,
+            profilePhoto: socket.user.profilePhoto,
+          },
+        });
+
+        sendAck(ack, { success: true, callId });
+      } catch (error) {
+        console.error("call:initiate error:", error.message);
+        sendAck(ack, { success: false, message: error.message });
+      }
+    });
+
+    /*
+    ==========================
+    CALL: ACCEPT
+    ==========================
+    */
+    socket.on("call:accept", async (payload, ack) => {
+      try {
+        const callId = payload?.callId;
+        const session = activeCalls.get(callId);
+
+        if (!session) {
+          return sendAck(ack, { success: false, reason: "expired" });
+        }
+        if (session.receiverId.toString() !== userId.toString()) {
+          throw new Error("Not authorized for this call");
+        }
+
+        session.accepted = true;
+        if (session.timeout) {
+          clearTimeout(session.timeout);
+          session.timeout = null;
+        }
+
+        try {
+          await callService.markAnswered(callId);
+        } catch (e) {
+          console.error("markAnswered error:", e.message);
+        }
+
+        emitToUser(io, session.callerId, "call:accepted", { callId });
+        sendAck(ack, { success: true, callId });
+      } catch (error) {
+        sendAck(ack, { success: false, message: error.message });
+      }
+    });
+
+    /*
+    ==========================
+    CALL: REJECT
+    ==========================
+    */
+    socket.on("call:reject", async (payload, ack) => {
+      try {
+        const callId = payload?.callId;
+        const session = activeCalls.get(callId);
+        if (!session) {
+          return sendAck(ack, { success: true });
+        }
+
+        try {
+          await callService.finalizeCall(callId, "rejected");
+        } catch (e) {
+          console.error("finalize rejected error:", e.message);
+        }
+
+        emitToUser(io, session.callerId, "call:rejected", { callId });
+        cleanupCall(callId);
+        sendAck(ack, { success: true });
+      } catch (error) {
+        sendAck(ack, { success: false, message: error.message });
+      }
+    });
+
+    /*
+    ==========================
+    CALL: BUSY (auto-decline when callee already in a call elsewhere)
+    ==========================
+    */
+    socket.on("call:busy", async (payload) => {
+      const callId = payload?.callId;
+      const session = activeCalls.get(callId);
+      if (!session) {
+        return;
+      }
+      try {
+        await callService.finalizeCall(callId, "rejected");
+      } catch (e) {
+        console.error("finalize busy error:", e.message);
+      }
+      emitToUser(io, session.callerId, "call:rejected", {
+        callId,
+        reason: "busy",
+      });
+      cleanupCall(callId);
+    });
+
+    /*
+    ==========================
+    CALL: END (hang up / cancel)
+    ==========================
+    */
+    socket.on("call:end", async (payload, ack) => {
+      try {
+        const callId = payload?.callId;
+        const session = activeCalls.get(callId);
+        if (!session) {
+          return sendAck(ack, { success: true });
+        }
+
+        const status = session.accepted ? "completed" : "cancelled";
+        try {
+          await callService.finalizeCall(callId, status);
+        } catch (e) {
+          console.error("finalize end error:", e.message);
+        }
+
+        const peerId = getCallPeerId(session, userId);
+        emitToUser(io, peerId, "call:ended", { callId });
+
+        cleanupCall(callId);
+        sendAck(ack, { success: true });
+      } catch (error) {
+        sendAck(ack, { success: false, message: error.message });
+      }
+    });
+
+    /*
+    ==========================
+    WEBRTC: OFFER / ANSWER / ICE  (pure relay)
+    ==========================
+    */
+    socket.on("webrtc:offer", (payload) => {
+      const session = activeCalls.get(payload?.callId);
+      if (!session) return;
+      const peerId = getCallPeerId(session, userId);
+      emitToUser(io, peerId, "webrtc:offer", {
+        callId: session.callId,
+        sdp: payload.sdp,
+      });
+    });
+
+    socket.on("webrtc:answer", (payload) => {
+      const session = activeCalls.get(payload?.callId);
+      if (!session) return;
+      const peerId = getCallPeerId(session, userId);
+      emitToUser(io, peerId, "webrtc:answer", {
+        callId: session.callId,
+        sdp: payload.sdp,
+      });
+    });
+
+    socket.on("webrtc:ice-candidate", (payload) => {
+      const session = activeCalls.get(payload?.callId);
+      if (!session) return;
+      const peerId = getCallPeerId(session, userId);
+      emitToUser(io, peerId, "webrtc:ice-candidate", {
+        callId: session.callId,
+        candidate: payload.candidate,
+      });
+    });
+
+    /*
     ==========================
     DISCONNECT
     ==========================
     */
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       removeOnlineSocket(socket.user._id, socket.id);
+
+      // If this was the user's last connection and they were in a call,
+      // tear it down and notify the partner.
+      if (!isUserOnline(userId)) {
+        const callId = userActiveCall.get(userId.toString());
+        if (callId) {
+          const session = activeCalls.get(callId);
+          if (session) {
+            const status = session.accepted ? "completed" : "missed";
+            try {
+              await callService.finalizeCall(callId, status);
+            } catch (e) {
+              console.error("finalize disconnect error:", e.message);
+            }
+            const peerId = getCallPeerId(session, userId);
+            emitToUser(io, peerId, "call:ended", {
+              callId,
+              reason: "disconnected",
+            });
+            cleanupCall(callId);
+          }
+        }
+      }
 
       console.log(`Socket Disconnected: ${socket.id}`);
     });

@@ -1,0 +1,42 @@
+.conn-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+}
+
+.conn-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: conn-pulse 1.2s ease-in-out infinite;
+}
+
+.conn-status--pending {
+  color: #ffe08a;
+}
+.conn-status--warning {
+  color: var(--warning, #ffaa00);
+}
+.conn-status--danger {
+  color: var(--danger, #ff5252);
+}
+
+@keyframes conn-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}

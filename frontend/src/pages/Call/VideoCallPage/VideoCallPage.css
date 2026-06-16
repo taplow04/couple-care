@@ -1,0 +1,45 @@
+.video-call {
+  position: fixed;
+  inset: 0;
+  z-index: 3500;
+  background: #14101f;
+  overflow: hidden;
+}
+
+.video-call__top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 28px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent);
+}
+
+.video-call__top-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.video-call__name {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.video-call__timer {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.video-call__bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), transparent);
+}

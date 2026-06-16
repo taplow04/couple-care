@@ -89,3 +89,31 @@
 .chat-header__icon-btn:hover {
   background: #f5f5f5;
 }
+
+.chat-header__call-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary-light, rgba(255, 92, 138, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.15s, transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat-header__call-btn:hover {
+  background: rgba(255, 92, 138, 0.18);
+}
+
+.chat-header__call-btn:active {
+  transform: scale(0.92);
+}
+
+.chat-header__call-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

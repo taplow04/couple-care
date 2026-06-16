@@ -1,0 +1,67 @@
+.call-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 18px;
+  padding: 18px 16px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  width: 100%;
+}
+
+.call-controls__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.call-controls__icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.call-controls__btn:active .call-controls__icon {
+  transform: scale(0.9);
+}
+
+.call-controls__btn--active .call-controls__icon {
+  background: #fff;
+}
+
+.call-controls__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.call-controls__btn--end .call-controls__icon {
+  background: var(--danger, #ff5252);
+  transform: rotate(135deg);
+}
+
+.call-controls__btn--end:active .call-controls__icon {
+  transform: rotate(135deg) scale(0.9);
+}
+
+@media (min-width: 768px) {
+  .call-controls {
+    gap: 26px;
+  }
+  .call-controls__icon {
+    width: 68px;
+    height: 68px;
+    font-size: 1.7rem;
+  }
+}

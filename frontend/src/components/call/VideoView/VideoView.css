@@ -1,0 +1,33 @@
+.video-view {
+  position: absolute;
+  inset: 0;
+  background: #1a1a2e;
+}
+
+.video-view__remote {
+  position: absolute;
+  inset: 0;
+}
+
+.video-view__pip {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  right: 16px;
+  width: 108px;
+  height: 152px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  z-index: 5;
+  background: #1a1a2e;
+}
+
+@media (min-width: 768px) {
+  .video-view__pip {
+    width: 160px;
+    height: 224px;
+    top: 24px;
+    right: 24px;
+  }
+}

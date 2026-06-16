@@ -1,0 +1,27 @@
+.call-error-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--bottom-nav-height, 70px) + 24px);
+  z-index: 4500;
+  max-width: 90vw;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: toast-in 0.25s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

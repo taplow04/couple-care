@@ -25,6 +25,8 @@ import CoupleLanding from "./pages/Couple/CoupleLanding/CoupleLanding";
 import CreateCouple from "./pages/Couple/CreateCouple/CreateCouple";
 import JoinCouple from "./pages/Couple/JoinCouple/JoinCouple";
 import CoupleSuccess from "./pages/Couple/CoupleSuccess/CoupleSuccess";
+import VoiceCallPage from "./pages/Call/VoiceCallPage/VoiceCallPage";
+import VideoCallPage from "./pages/Call/VideoCallPage/VideoCallPage";
 
 function App() {
   return (
@@ -77,6 +79,8 @@ function App() {
             <Route path="/journey" element={<JourneyPage />} />
             <Route path="/mood-analytics" element={<MoodAnalyticsPage />} />
             <Route path="/ai-center" element={<AICenterPage />} />
+            <Route path="/call/voice" element={<VoiceCallPage />} />
+            <Route path="/call/video" element={<VideoCallPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
