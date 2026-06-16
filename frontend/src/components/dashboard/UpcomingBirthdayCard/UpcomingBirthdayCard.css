@@ -1,0 +1,38 @@
+.ubc {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius, 18px);
+  background: linear-gradient(135deg, #fff0f5, #f3eaff);
+  border: 1px solid rgba(255, 92, 138, 0.18);
+}
+
+.ubc__icon {
+  font-size: 1.9rem;
+  line-height: 1;
+  animation: ubc-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes ubc-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(4deg);
+  }
+}
+
+.ubc__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text, #1a1a2e);
+  font-size: 0.98rem;
+}
+
+.ubc__sub {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #444455);
+}

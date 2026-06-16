@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getHealthScore, getWeeklySummary, getMoodAnalysis } from "../../services/ai.service";
+import AIReport from "../../components/ai/AIReport/AIReport";
 import "./AI.css";
 
 const CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -110,7 +111,7 @@ const AI = () => {
           {loading ? (
             <ShimmerLines lines={3} />
           ) : summary ? (
-            <p className="ai-pg-body-text">{summary}</p>
+            <AIReport text={summary} />
           ) : (
             <p className="ai-pg-empty-text">
               Log more moods to unlock your weekly AI summary.
@@ -127,7 +128,7 @@ const AI = () => {
           {loading ? (
             <ShimmerLines lines={4} />
           ) : analysis ? (
-            <p className="ai-pg-body-text">{analysis}</p>
+            <AIReport text={analysis} />
           ) : (
             <p className="ai-pg-empty-text">
               Keep logging your moods to get a personalized analysis.

@@ -12,6 +12,7 @@ import {
   getHealthScore,
   getMemoryRecap,
 } from "../../../services/ai.service";
+import AIReport           from "../../../components/ai/AIReport/AIReport";
 import JourneyHeader      from "../../../components/journey/JourneyHeader/JourneyHeader";
 import RelationshipStats  from "../../../components/journey/RelationshipStats/RelationshipStats";
 import MilestoneProgress  from "../../../components/journey/MilestoneProgress/MilestoneProgress";
@@ -63,7 +64,7 @@ const AICard = ({ title, text, badge, loading }) => (
         ))}
       </div>
     ) : text ? (
-      <p className="jp-ai-card__body">{text}</p>
+      <div className="jp-ai-card__body"><AIReport text={text} /></div>
     ) : (
       <p className="jp-ai-card__empty">
         Add more memories to unlock AI insights about your journey.

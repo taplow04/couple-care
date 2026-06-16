@@ -1,3 +1,29 @@
+// Shared output contract: short, mobile-friendly, 3 bulleted sections.
+// Every text report uses this so the UI can render it consistently and users
+// get scannable insight instead of walls of text.
+const CONCISE_FORMAT = `
+Format your ENTIRE response EXACTLY like this, and output nothing else:
+
+Strengths
+• short point
+• short point
+
+Opportunities
+• short point
+• short point
+
+Suggestions
+• short point
+• short point
+
+Rules:
+- Maximum 5 bullets per section; aim for 3.
+- Each bullet is ONE short line (max ~12 words): warm, specific, practical.
+- Begin every bullet with "• ".
+- Use ONLY the three section titles above (no other headings).
+- No introduction, no conclusion, no markdown bold/italics, no emojis.
+`;
+
 const buildWeeklySummaryPrompt = ({
   moods,
   memories,
@@ -6,65 +32,48 @@ const buildWeeklySummaryPrompt = ({
   daysTogether,
 }) => {
   return `
-You are an expert relationship coach.
+You are an expert relationship coach reviewing a couple's week.
 
-Relationship Status:
-${relationshipStatus}
+Relationship status: ${relationshipStatus}
+Days together: ${daysTogether}
 
-Days Together:
-${daysTogether}
-
-Mood Entries:
+Mood entries (most recent first):
 ${JSON.stringify(moods, null, 2)}
 
-Relationship Histories:
+Relationship histories:
 ${JSON.stringify(histories, null, 2)}
 
-Shared Memories:
+Shared memories:
 ${JSON.stringify(memories, null, 2)}
 
-Generate:
-
-1. Weekly Summary
-2. Positive Observations
-3. Potential Concerns
-4. Suggestions For Improvement
-
-Keep the response supportive and practical.
-`;
+Write a supportive weekly snapshot for this couple.
+${CONCISE_FORMAT}`;
 };
 
 const buildMoodAnalysisPrompt = ({ moods }) => {
   return `
-You are an emotional wellness coach.
+You are an emotional wellness coach analyzing a person's recent moods.
 
-Analyze these mood entries:
-
+Mood entries (most recent first):
 ${JSON.stringify(moods, null, 2)}
 
-Provide:
-
-1. Mood Patterns
-2. Positive Signs
-3. Stress Indicators
-4. Recommendations
-`;
+Identify emotional strengths, stress/risk areas, and what could help.
+Map them to the sections: Strengths = positive emotional patterns,
+Opportunities = stressors or things to watch, Suggestions = practical next steps.
+${CONCISE_FORMAT}`;
 };
 
 const buildMemoryRecapPrompt = ({ memories }) => {
   return `
-You are a relationship storyteller.
+You are a warm relationship storyteller summarizing a couple's journey.
 
-Analyze these memories:
-
+Shared memories (most recent first):
 ${JSON.stringify(memories, null, 2)}
 
-Create:
-
-1. Relationship Journey Summary
-2. Key Milestones
-3. Memorable Moments
-`;
+Reflect on their journey so far. Map to the sections: Strengths = what their
+memories reveal they do well, Opportunities = experiences worth adding,
+Suggestions = ideas for new memories to make together.
+${CONCISE_FORMAT}`;
 };
 
 const buildRelationshipInsightsPrompt = ({
@@ -76,25 +85,19 @@ const buildRelationshipInsightsPrompt = ({
   return `
 Act as an expert relationship coach.
 
-Relationship Health Score:
-${healthScore}
+Relationship health score (0-100): ${healthScore}
 
-Mood Data:
+Mood data:
 ${JSON.stringify(moods, null, 2)}
 
-Memory Data:
+Memory data:
 ${JSON.stringify(memories, null, 2)}
 
-History Data:
+History data:
 ${JSON.stringify(histories, null, 2)}
 
-Provide:
-
-1. Strengths
-2. Weaknesses
-3. Communication Advice
-4. Growth Suggestions
-`;
+Give clear, actionable relationship insight.
+${CONCISE_FORMAT}`;
 };
 
 module.exports = {

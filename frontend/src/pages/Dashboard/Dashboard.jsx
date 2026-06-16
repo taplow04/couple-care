@@ -8,6 +8,7 @@ import { getHealthScore, getWeeklySummary } from "../../services/ai.service";
 
 import TopHeader from "../../components/navigation/TopHeader/TopHeader";
 import WelcomeCard from "../../components/dashboard/WelcomeCard/WelcomeCard";
+import UpcomingBirthdayCard from "../../components/dashboard/UpcomingBirthdayCard/UpcomingBirthdayCard";
 import HealthScoreCard from "../../components/dashboard/HealthScoreCard/HealthScoreCard";
 import RelationshipStatusCard from "../../components/dashboard/RelationshipStatusCard/RelationshipStatusCard";
 import RecentMoodCard from "../../components/dashboard/RecentMoodCard/RecentMoodCard";
@@ -130,6 +131,12 @@ const Dashboard = () => {
             onPartnerClick={() => navigate("/partner")}
           />
         </div>
+
+        {dashData?.partner?.birthday && (
+          <div className="db-fade-in" style={{ animationDelay: "30ms" }}>
+            <UpcomingBirthdayCard partner={dashData.partner} />
+          </div>
+        )}
 
         <div className="dashboard-grid-2">
           <div className="db-fade-in" style={{ animationDelay: "60ms" }}>

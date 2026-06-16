@@ -9,7 +9,7 @@ cloudinary.config({
 });
 
 const updateProfile = asyncHandler(async (req, res) => {
-  const { name, bio, hobbies, likes, dislikes, profilePhoto } = req.body;
+  const { name, bio, hobbies, likes, dislikes, profilePhoto, birthday } = req.body;
 
   const user = await User.findById(req.user._id);
   if (!user) throw new Error("User not found");
@@ -20,6 +20,25 @@ const updateProfile = asyncHandler(async (req, res) => {
   if (Array.isArray(likes)) user.likes = likes.slice(0, 15);
   if (Array.isArray(dislikes)) user.dislikes = dislikes.slice(0, 15);
   if (profilePhoto !== undefined) user.profilePhoto = profilePhoto;
+
+  if (birthday !== undefined) {
+    if (birthday === null || birthday === "") {
+      user.birthday = null;
+    } else {
+      const parsed = new Date(birthday);
+      if (isNaN(parsed.getTime())) {
+        const err = new Error("Invalid birthday");
+        err.statusCode = 400;
+        throw err;
+      }
+      if (parsed.getTime() > Date.now()) {
+        const err = new Error("Birthday cannot be in the future");
+        err.statusCode = 400;
+        throw err;
+      }
+      user.birthday = parsed;
+    }
+  }
 
   await user.save();
 

@@ -87,6 +87,18 @@ const ProfileForm = ({ values, onChange, errors }) => {
         />
       </Field>
 
+      {/* Birthday */}
+      <Field label="Birthday" hint="Used for birthday reminders & cards">
+        <input
+          className="pf__input"
+          type="date"
+          value={values.birthday || ""}
+          max={new Date().toISOString().split("T")[0]}
+          onChange={(e) => set("birthday")(e.target.value)}
+          aria-label="Birthday"
+        />
+      </Field>
+
       {/* Bio */}
       <Field label="Bio" hint={`${(values.bio || "").length}/500`}>
         <textarea

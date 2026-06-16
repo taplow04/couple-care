@@ -13,6 +13,7 @@ const {
 } = require("./ai.prompts");
 
 const { generateAIResponse } = require("./ai.engine");
+const { getDaysTogether } = require("../couples/couple.helpers");
 
 const getUserData = async (userId) => {
   const user = await User.findById(userId);
@@ -61,10 +62,7 @@ const generateWeeklySummary = async (userId) => {
     memories: data.memories,
     histories: data.histories,
     relationshipStatus: data.couple.relationshipStatus,
-    daysTogether: Math.floor(
-      (Date.now() - new Date(data.couple.relationshipStartedAt)) /
-        (1000 * 60 * 60 * 24),
-    ),
+    daysTogether: getDaysTogether(data.couple),
   });
 
   return await generateAIResponse(prompt);

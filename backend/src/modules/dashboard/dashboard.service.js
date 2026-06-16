@@ -17,8 +17,8 @@ const getDashboardData = async (userId) => {
   }
 
   const couple = await Couple.findById(user.currentCoupleId)
-    .populate("partnerOneId", "name email profilePhoto")
-    .populate("partnerTwoId", "name email profilePhoto");
+    .populate("partnerOneId", "name email profilePhoto birthday")
+    .populate("partnerTwoId", "name email profilePhoto birthday");
 
   let partner;
 

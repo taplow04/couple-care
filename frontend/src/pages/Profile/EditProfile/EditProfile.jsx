@@ -43,6 +43,8 @@ const EditProfile = () => {
     likes: user?.likes || [],
     dislikes: user?.dislikes || [],
     profilePhoto: user?.profilePhoto || "",
+    // <input type="date"> wants YYYY-MM-DD.
+    birthday: user?.birthday ? user.birthday.split("T")[0] : "",
   });
 
   const [errors, setErrors] = useState({});
