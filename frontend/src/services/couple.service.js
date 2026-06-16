@@ -14,3 +14,8 @@ export const getMyCouple = async () => {
   const res = await api.get("/couples/me");
   return res.data;
 };
+
+export const setRelationshipStartDate = async (relationshipStartDate) => {
+  const res = await api.patch("/couples/start-date", { relationshipStartDate });
+  return res.data;
+};

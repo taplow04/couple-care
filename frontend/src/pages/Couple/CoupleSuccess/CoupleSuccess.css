@@ -94,6 +94,67 @@
   margin: 0;
 }
 
+/* Dating-date capture */
+.couple-success__date {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  margin-top: 4px;
+}
+
+.couple-success__date-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.couple-success__date-input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1.5px solid #ececf2;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text);
+  background: #fafafd;
+  transition: var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.couple-success__date-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
+}
+
+.couple-success__date-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.couple-success__error {
+  font-size: 13px;
+  color: var(--danger);
+  margin: 0;
+}
+
+.couple-success__skip {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.couple-success__skip:hover {
+  color: var(--text-secondary);
+}
+
 .couple-success__btn {
   width: 100%;
   padding: 16px;
@@ -107,6 +168,11 @@
   transition: var(--transition);
   margin-top: 8px;
   box-shadow: 0 6px 20px rgba(255, 92, 138, 0.35);
+}
+
+.couple-success__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .couple-success__btn:hover {

@@ -41,10 +41,14 @@ const moodSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Default is partner-visible: this is a couples app, and getPartnerMoods
+    // filters on "partner_only". Defaulting to "private" previously meant
+    // partners could never see each other's moods. Users can still mark an
+    // individual mood private.
     visibility: {
       type: String,
       enum: ["private", "partner_only"],
-      default: "private",
+      default: "partner_only",
     },
   },
   {

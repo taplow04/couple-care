@@ -1,22 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { setRelationshipStartDate } from "../../../services/couple.service";
 import "./CoupleSuccess.css";
+
+const todayISO = () => new Date().toISOString().split("T")[0];
 
 const CoupleSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { loadUser } = useAuth();
 
-  const couple = location.state?.couple;
+  // location.state?.couple is available but the date is couple-wide, so we
+  // just let either partner set it here.
+  const [date, setDate] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     // Refresh full user state from server so dashboard has accurate data
     loadUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleStart = async () => {
-    navigate("/dashboard", { replace: true });
+  const goToDashboard = () => navigate("/dashboard", { replace: true });
+
+  const handleSaveDate = async () => {
+    if (!date) {
+      goToDashboard();
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await setRelationshipStartDate(date);
+      goToDashboard();
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Couldn't save the date. You can add it later.",
+      );
+      setSaving(false);
+    }
   };
 
   return (
@@ -38,12 +62,45 @@ const CoupleSuccess = () => {
 
         <h1 className="couple-success__title">You're Connected!</h1>
         <p className="couple-success__subtitle">
-          Your hearts are now linked. Start logging moods, making memories, and growing together.
+          One last thing — when did your story begin?
         </p>
 
-        <button className="couple-success__btn" onClick={handleStart}>
-          Start Your Journey 💕
+        <div className="couple-success__date">
+          <label className="couple-success__date-label" htmlFor="start-date">
+            When did you start dating?
+          </label>
+          <input
+            id="start-date"
+            type="date"
+            className="couple-success__date-input"
+            value={date}
+            max={todayISO()}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          <p className="couple-success__date-hint">
+            This sets your real “days together”. You can change it later.
+          </p>
+        </div>
+
+        {error && <p className="couple-success__error">{error}</p>}
+
+        <button
+          className="couple-success__btn"
+          onClick={handleSaveDate}
+          disabled={saving}
+        >
+          {saving ? "Saving…" : date ? "Save & Start 💕" : "Start Your Journey 💕"}
         </button>
+
+        {date && (
+          <button
+            className="couple-success__skip"
+            onClick={goToDashboard}
+            disabled={saving}
+          >
+            Skip for now
+          </button>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ const Couple = require("../couples/couple.model");
 const Mood = require("../moods/mood.model");
 const { getMoodAnalytics } = require("../moods/mood.service");
 const History = require("../histories/history.model");
+const { getDaysTogether, getRelationshipStart } = require("../couples/couple.helpers");
 
 const getDashboardData = async (userId) => {
   const user = await User.findById(userId);
@@ -45,10 +46,7 @@ const getDashboardData = async (userId) => {
 
   const moodAnalytics = await getMoodAnalytics(userId);
 
-  const daysTogether = Math.floor(
-    (Date.now() - new Date(couple.relationshipStartedAt)) /
-      (1000 * 60 * 60 * 24),
-  );
+  const daysTogether = getDaysTogether(couple);
 
   return {
     partner,
@@ -57,6 +55,8 @@ const getDashboardData = async (userId) => {
       status: couple.relationshipStatus,
 
       daysTogether,
+
+      startDate: getRelationshipStart(couple),
     },
 
     moodAnalytics,

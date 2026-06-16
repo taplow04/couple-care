@@ -47,6 +47,19 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
 
+    // Birthday — drives automatic birthday reminders/cards (no manual memory needed).
+    birthday: {
+      type: Date,
+      default: null,
+    },
+
+    // Real presence: updated on socket connect/disconnect (see chat/socket.js).
+    // There is intentionally NO privacy option to hide last seen.
+    lastSeen: {
+      type: Date,
+      default: null,
+    },
+
     currentCoupleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Couple",
@@ -95,6 +108,45 @@ const userSchema = new mongoose.Schema(
       memoryRemindersEnabled: {
         type: Boolean,
         default: true,
+      },
+    },
+
+    // Granular privacy controls. In a two-person app "partner_only" and
+    // "shared" are functionally equivalent (only the partner can ever see it),
+    // but both are kept so the UI can offer the full set. "private" hides the
+    // data from the partner. Default is partner-visible so the couple
+    // experience works out of the box. Note: lastSeen is deliberately NOT
+    // privacy-controlled.
+    privacy: {
+      moodVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      memoryVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      journeyVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      aiVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      profileVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      activityVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
       },
     },
   },

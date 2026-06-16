@@ -25,9 +25,17 @@ const coupleSchema = new mongoose.Schema(
       default: "active",
     },
 
+    // Auto-set when the couple record is created (legacy "days together" basis).
     relationshipStartedAt: {
       type: Date,
       default: Date.now,
+    },
+
+    // The REAL date the partners started dating, captured during onboarding.
+    // Falls back to relationshipStartedAt when not provided (see couple.helpers).
+    relationshipStartDate: {
+      type: Date,
+      default: null,
     },
   },
   {

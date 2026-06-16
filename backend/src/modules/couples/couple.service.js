@@ -1,6 +1,7 @@
 const Couple = require("./couple.model");
 const User = require("../users/user.model");
 const generatePairCode = require("../../utils/pairCode");
+const { getDaysTogether, getRelationshipStart } = require("./couple.helpers");
 
 const createCouple = async (userId) => {
   const user = await User.findById(userId);
@@ -98,10 +99,7 @@ const getDashboard = async (userId) => {
     partner = couple.partnerOneId;
   }
 
-  const daysTogether = Math.floor(
-    (Date.now() - new Date(couple.relationshipStartedAt)) /
-      (1000 * 60 * 60 * 24),
-  );
+  const daysTogether = getDaysTogether(couple);
 
   return {
     partner,
@@ -109,7 +107,44 @@ const getDashboard = async (userId) => {
     relationshipStatus: couple.relationshipStatus,
 
     daysTogether,
+
+    relationshipStartDate: getRelationshipStart(couple),
   };
+};
+
+/**
+ * Set/update the real dating start date for the caller's couple. Either
+ * partner may set it; used by the onboarding prompt and (later) the profile
+ * panel. Rejects future dates.
+ */
+const setRelationshipStartDate = async (userId, startDate) => {
+  const user = await User.findById(userId);
+
+  if (!user || !user.currentCoupleId) {
+    throw new Error("No active relationship");
+  }
+
+  const parsed = new Date(startDate);
+
+  if (isNaN(parsed.getTime())) {
+    const err = new Error("Invalid date");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (parsed.getTime() > Date.now()) {
+    const err = new Error("Start date cannot be in the future");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const couple = await Couple.findByIdAndUpdate(
+    user.currentCoupleId,
+    { relationshipStartDate: parsed },
+    { new: true },
+  );
+
+  return couple;
 };
 
 const getMyCouple = async (userId) => {
@@ -128,4 +163,5 @@ module.exports = {
   joinCouple,
   getDashboard,
   getMyCouple,
+  setRelationshipStartDate,
 };
