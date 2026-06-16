@@ -30,6 +30,8 @@ const notificationSchema = new mongoose.Schema(
         "anniversary_reminder",
         "weekly_summary_ready",
         "relationship_milestone",
+        "partner_mood_alert",
+        "birthday_reminder",
         "system",
       ],
       default: "system",

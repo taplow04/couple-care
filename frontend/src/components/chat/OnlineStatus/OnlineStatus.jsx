@@ -1,10 +1,62 @@
 import "./OnlineStatus.css";
 
-const OnlineStatus = ({ connected }) => (
-  <div className={`online-status ${connected ? "online-status--online" : ""}`}>
-    <span className="online-status__dot" />
-    <span className="online-status__text">{connected ? "Online" : "Connecting..."}</span>
-  </div>
-);
+// Compact relative "last seen" — e.g. "last seen just now / 5m ago / 3h ago /
+// yesterday / 12 Jun".
+const formatLastSeen = (lastSeen) => {
+  if (!lastSeen) return "Offline";
+  const then = new Date(lastSeen).getTime();
+  if (isNaN(then)) return "Offline";
+
+  const diffMs = Date.now() - then;
+  const min = Math.floor(diffMs / 60000);
+
+  if (min < 1) return "last seen just now";
+  if (min < 60) return `last seen ${min}m ago`;
+
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24) return `last seen ${hrs}h ago`;
+
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "last seen yesterday";
+  if (days < 7) return `last seen ${days}d ago`;
+
+  return `last seen ${new Date(lastSeen).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  })}`;
+};
+
+/**
+ * Partner presence line. Priority: typing > in-call > online > last seen.
+ * Backwards compatible: if only the legacy `connected` prop is passed it
+ * behaves like before.
+ */
+const OnlineStatus = ({ online, lastSeen, inCall, typing, connected }) => {
+  const isOnline = online ?? connected ?? false;
+
+  let modifier;
+  let text;
+
+  if (typing) {
+    modifier = "online-status--typing";
+    text = "typing…";
+  } else if (inCall) {
+    modifier = "online-status--incall";
+    text = "In call";
+  } else if (isOnline) {
+    modifier = "online-status--online";
+    text = "Online";
+  } else {
+    modifier = "online-status--offline";
+    text = formatLastSeen(lastSeen);
+  }
+
+  return (
+    <div className={`online-status ${modifier}`}>
+      <span className="online-status__dot" />
+      <span className="online-status__text">{text}</span>
+    </div>
+  );
+};
 
 export default OnlineStatus;

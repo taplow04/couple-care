@@ -1,6 +1,39 @@
 const Mood = require("./mood.model");
 const User = require("../users/user.model");
 const Couple = require("../couples/couple.model");
+const { getPartnerId } = require("../chat/chat.helpers");
+const { createNotification } = require("../notifications/notification.service");
+
+// Negative moods that should proactively alert the partner so they can offer
+// support. Maps mood type -> the phrase used in the notification copy.
+const SUPPORT_MOODS = {
+  sad: "feeling sad",
+  stressed: "feeling stressed",
+  angry: "feeling angry",
+  anxious: "feeling anxious",
+};
+
+// Fire-and-forget: never let a notification failure break mood logging.
+const maybeAlertPartner = async (userId, mood) => {
+  const phrase = SUPPORT_MOODS[mood.moodType];
+  // Respect privacy — a mood the user marked private must not alert anyone.
+  if (!phrase || mood.visibility === "private") return;
+
+  try {
+    const partnerId = await getPartnerId(userId);
+    if (!partnerId) return;
+
+    await createNotification({
+      userId: partnerId,
+      title: "Your partner needs you 💗",
+      message: `Your partner is ${phrase} today ❤️ They may need some support.`,
+      type: "partner_mood_alert",
+      metadata: { moodId: mood._id, moodType: mood.moodType },
+    });
+  } catch (e) {
+    console.error("partner mood alert error:", e.message);
+  }
+};
 
 const createMood = async (userId, data) => {
   const user = await User.findById(userId);
@@ -32,6 +65,9 @@ const createMood = async (userId, data) => {
     userId,
     coupleId: user.currentCoupleId,
   });
+
+  // Proactively alert the partner on negative moods (non-blocking).
+  await maybeAlertPartner(userId, mood);
 
   return mood;
 };

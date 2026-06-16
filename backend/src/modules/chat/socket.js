@@ -5,8 +5,13 @@ const User = require("../users/user.model");
 const Message = require("./message.model");
 const { isCoupleMember, getPartnerId } = require("./chat.helpers");
 const callService = require("../calls/call.service");
-
-const onlineUsers = new Map();
+const {
+  setIo,
+  addOnlineSocket,
+  removeOnlineSocket,
+  isUserOnline,
+  emitToUser,
+} = require("../../utils/realtime");
 
 /*
 ==========================
@@ -55,46 +60,48 @@ const getTokenFromSocket = (socket) => {
   return null;
 };
 
-const addOnlineSocket = (userId, socketId) => {
-  const key = userId.toString();
-  const sockets = onlineUsers.get(key) || new Set();
-
-  sockets.add(socketId);
-  onlineUsers.set(key, sockets);
-};
-
-const removeOnlineSocket = (userId, socketId) => {
-  const key = userId.toString();
-  const sockets = onlineUsers.get(key);
-
-  if (!sockets) {
-    return;
-  }
-
-  sockets.delete(socketId);
-
-  if (sockets.size === 0) {
-    onlineUsers.delete(key);
-  }
-};
-
-const isUserOnline = (userId) => {
-  const sockets = onlineUsers.get(userId.toString());
-  return Boolean(sockets && sockets.size > 0);
-};
-
-// Emit an event to every active socket belonging to a user.
-const emitToUser = (io, userId, event, payload) => {
-  const sockets = onlineUsers.get(userId.toString());
-  if (!sockets) {
-    return;
-  }
-  sockets.forEach((socketId) => {
-    io.to(socketId).emit(event, payload);
-  });
-};
-
 const isUserBusy = (userId) => userActiveCall.has(userId.toString());
+
+// True if the user is currently in an active (accepted or ringing) call.
+const isUserInCall = (userId) => userActiveCall.has(userId.toString());
+
+// Build the presence snapshot for a user.
+const buildPresence = async (userId) => {
+  const online = isUserOnline(userId);
+  let lastSeen = null;
+  if (!online) {
+    const u = await User.findById(userId).select("lastSeen");
+    lastSeen = u?.lastSeen || null;
+  }
+  return {
+    userId: userId.toString(),
+    online,
+    lastSeen,
+    inCall: isUserInCall(userId),
+  };
+};
+
+// Send the partner's CURRENT presence to one socket (initial sync).
+const sendPartnerPresenceTo = async (socket) => {
+  try {
+    const partnerId = await getPartnerId(socket.user._id);
+    if (!partnerId) return;
+    socket.emit("presence:update", await buildPresence(partnerId));
+  } catch {
+    /* no partner / no couple — nothing to send */
+  }
+};
+
+// Tell the partner that this user's presence changed.
+const broadcastPresenceToPartner = async (userId) => {
+  try {
+    const partnerId = await getPartnerId(userId);
+    if (!partnerId) return;
+    emitToUser(partnerId, "presence:update", await buildPresence(userId));
+  } catch {
+    /* no partner / no couple */
+  }
+};
 
 // Returns the other participant's id for a given call session.
 const getCallPeerId = (session, userId) => {
@@ -169,6 +176,10 @@ const validateMessagePayload = (payload, userId) => {
 };
 
 const initializeSocket = (io) => {
+  // Share the io instance with the realtime registry so other modules
+  // (e.g. notifications) can push events without importing this file.
+  setIo(io);
+
   io.use(async (socket, next) => {
     try {
       const token = getTokenFromSocket(socket);
@@ -193,9 +204,25 @@ const initializeSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
-    addOnlineSocket(socket.user._id, socket.id);
+    const wasOffline = addOnlineSocket(socket.user._id, socket.id);
 
     console.log(`Socket Connected: ${socket.id}`);
+
+    // Presence sync: push the partner's current presence to this socket, and
+    // — if this is a fresh online transition — tell the partner we're online.
+    sendPartnerPresenceTo(socket);
+    if (wasOffline) {
+      broadcastPresenceToPartner(socket.user._id);
+    }
+
+    /*
+    ==========================
+    PRESENCE: GET (on-demand partner presence, e.g. when a screen mounts)
+    ==========================
+    */
+    socket.on("presence:get", () => {
+      sendPartnerPresenceTo(socket);
+    });
 
     /*
     ==========================
@@ -526,8 +553,8 @@ const initializeSocket = (io) => {
           } catch (e) {
             console.error("finalize missed error:", e.message);
           }
-          emitToUser(io, receiverId, "call:missed", { callId });
-          emitToUser(io, userId, "call:timeout", { callId });
+          emitToUser(receiverId, "call:missed", { callId });
+          emitToUser(userId, "call:timeout", { callId });
           cleanupCall(callId);
         }, RING_TIMEOUT_MS);
 
@@ -535,7 +562,7 @@ const initializeSocket = (io) => {
         userActiveCall.set(userId.toString(), callId);
         userActiveCall.set(receiverId.toString(), callId);
 
-        emitToUser(io, receiverId, "call:incoming", {
+        emitToUser(receiverId, "call:incoming", {
           callId,
           callType,
           coupleId: coupleId.toString(),
@@ -582,7 +609,7 @@ const initializeSocket = (io) => {
           console.error("markAnswered error:", e.message);
         }
 
-        emitToUser(io, session.callerId, "call:accepted", { callId });
+        emitToUser(session.callerId, "call:accepted", { callId });
         sendAck(ack, { success: true, callId });
       } catch (error) {
         sendAck(ack, { success: false, message: error.message });
@@ -608,7 +635,7 @@ const initializeSocket = (io) => {
           console.error("finalize rejected error:", e.message);
         }
 
-        emitToUser(io, session.callerId, "call:rejected", { callId });
+        emitToUser(session.callerId, "call:rejected", { callId });
         cleanupCall(callId);
         sendAck(ack, { success: true });
       } catch (error) {
@@ -632,7 +659,7 @@ const initializeSocket = (io) => {
       } catch (e) {
         console.error("finalize busy error:", e.message);
       }
-      emitToUser(io, session.callerId, "call:rejected", {
+      emitToUser(session.callerId, "call:rejected", {
         callId,
         reason: "busy",
       });
@@ -660,7 +687,7 @@ const initializeSocket = (io) => {
         }
 
         const peerId = getCallPeerId(session, userId);
-        emitToUser(io, peerId, "call:ended", { callId });
+        emitToUser(peerId, "call:ended", { callId });
 
         cleanupCall(callId);
         sendAck(ack, { success: true });
@@ -678,7 +705,7 @@ const initializeSocket = (io) => {
       const session = activeCalls.get(payload?.callId);
       if (!session) return;
       const peerId = getCallPeerId(session, userId);
-      emitToUser(io, peerId, "webrtc:offer", {
+      emitToUser(peerId, "webrtc:offer", {
         callId: session.callId,
         sdp: payload.sdp,
       });
@@ -688,7 +715,7 @@ const initializeSocket = (io) => {
       const session = activeCalls.get(payload?.callId);
       if (!session) return;
       const peerId = getCallPeerId(session, userId);
-      emitToUser(io, peerId, "webrtc:answer", {
+      emitToUser(peerId, "webrtc:answer", {
         callId: session.callId,
         sdp: payload.sdp,
       });
@@ -698,7 +725,7 @@ const initializeSocket = (io) => {
       const session = activeCalls.get(payload?.callId);
       if (!session) return;
       const peerId = getCallPeerId(session, userId);
-      emitToUser(io, peerId, "webrtc:ice-candidate", {
+      emitToUser(peerId, "webrtc:ice-candidate", {
         callId: session.callId,
         candidate: payload.candidate,
       });
@@ -711,7 +738,17 @@ const initializeSocket = (io) => {
     */
 
     socket.on("disconnect", async () => {
-      removeOnlineSocket(socket.user._id, socket.id);
+      const nowOffline = removeOnlineSocket(socket.user._id, socket.id);
+
+      // Last connection closed: persist lastSeen and tell the partner.
+      if (nowOffline) {
+        try {
+          await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+        } catch (e) {
+          console.error("lastSeen update error:", e.message);
+        }
+        broadcastPresenceToPartner(userId);
+      }
 
       // If this was the user's last connection and they were in a call,
       // tear it down and notify the partner.
@@ -727,7 +764,7 @@ const initializeSocket = (io) => {
               console.error("finalize disconnect error:", e.message);
             }
             const peerId = getCallPeerId(session, userId);
-            emitToUser(io, peerId, "call:ended", {
+            emitToUser(peerId, "call:ended", {
               callId,
               reason: "disconnected",
             });

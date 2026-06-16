@@ -1,7 +1,18 @@
 const Notification = require("./notification.model");
+const { emitToUser } = require("../../utils/realtime");
 
 const createNotification = async (data) => {
-  return await Notification.create(data);
+  const notification = await Notification.create(data);
+
+  // Push it to the recipient in real time (no-op if they're offline). Never
+  // let a realtime failure break notification creation.
+  try {
+    emitToUser(notification.userId, "notification:new", notification);
+  } catch {
+    /* offline / io not ready */
+  }
+
+  return notification;
 };
 
 const getNotifications = async (userId, page = 1, limit = 20) => {

@@ -27,3 +27,21 @@
 .online-status--online .online-status__text {
   color: #3897f0;
 }
+
+/* In-call */
+.online-status--incall .online-status__dot {
+  background: var(--success, #32c36c);
+  box-shadow: 0 0 0 2px rgba(50, 195, 108, 0.2);
+}
+.online-status--incall .online-status__text {
+  color: var(--success, #32c36c);
+}
+
+/* Typing */
+.online-status--typing .online-status__dot {
+  background: #3897f0;
+}
+.online-status--typing .online-status__text {
+  color: #3897f0;
+  font-style: italic;
+}

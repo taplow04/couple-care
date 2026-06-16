@@ -5,8 +5,12 @@ import { CallProvider } from "../context/CallContext.jsx";
 import IncomingCallModal from "../components/call/IncomingCallModal/IncomingCallModal.jsx";
 import OutgoingCallModal from "../components/call/OutgoingCallModal/OutgoingCallModal.jsx";
 import CallErrorToast from "../components/call/CallErrorToast/CallErrorToast.jsx";
+import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications.js";
 
 const AppLayout = () => {
+  // App-wide: keep the unread badge live and seeded.
+  useRealtimeNotifications();
+
   return (
     // CallProvider lives here (inside the router, wrapping every authed page)
     // so incoming calls work app-wide and call state survives navigation to

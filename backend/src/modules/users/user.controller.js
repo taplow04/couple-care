@@ -49,4 +49,38 @@ const uploadPhoto = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: { url: result.secure_url } });
 });
 
-module.exports = { updateProfile, uploadPhoto };
+const PRIVACY_KEYS = [
+  "moodVisibility",
+  "memoryVisibility",
+  "journeyVisibility",
+  "aiVisibility",
+  "profileVisibility",
+  "activityVisibility",
+];
+const PRIVACY_VALUES = ["private", "partner_only", "shared"];
+
+const getPrivacy = asyncHandler(async (req, res) => {
+  res.status(200).json({ success: true, data: req.user.privacy });
+});
+
+const updatePrivacy = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) throw new Error("User not found");
+
+  for (const key of PRIVACY_KEYS) {
+    const value = req.body[key];
+    if (value === undefined) continue;
+    if (!PRIVACY_VALUES.includes(value)) {
+      const err = new Error(`Invalid value for ${key}`);
+      err.statusCode = 400;
+      throw err;
+    }
+    user.privacy[key] = value;
+  }
+
+  await user.save();
+
+  res.status(200).json({ success: true, data: user.privacy });
+});
+
+module.exports = { updateProfile, uploadPhoto, getPrivacy, updatePrivacy };

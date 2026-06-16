@@ -32,7 +32,6 @@ const ChatPage = () => {
   const [loading, setLoading] = useState(true);
   const [partner, setPartner] = useState(null);
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-  const [socketConnected, setSocketConnected] = useState(false);
   const [sendError, setSendError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -75,11 +74,10 @@ const ChatPage = () => {
     const socket = connectSocket(token);
 
     const onConnect = () => {
-      setSocketConnected(true);
       joinCoupleRoom(coupleId);
     };
 
-    const onDisconnect = () => setSocketConnected(false);
+    const onDisconnect = () => {};
 
     const onMessageReceive = (msg) => {
       // Normalize incoming socket message senderId
@@ -132,7 +130,6 @@ const ChatPage = () => {
     };
 
     if (socket.connected) {
-      setSocketConnected(true);
       joinCoupleRoom(coupleId);
     }
 
@@ -255,7 +252,7 @@ const ChatPage = () => {
 
   return (
     <div className="chat-page">
-      <ChatHeader partner={partner} socketConnected={socketConnected} />
+      <ChatHeader partner={partner} partnerTyping={isPartnerTyping} />
 
       <div className="chat-page__body">
         {loading ? (
