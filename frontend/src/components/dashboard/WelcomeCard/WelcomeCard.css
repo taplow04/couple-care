@@ -13,6 +13,14 @@
   pointer-events: none;
 }
 
+.wc-partner--link {
+  cursor: pointer;
+}
+
+.wc-avatar--clickable {
+  cursor: pointer;
+}
+
 .wc-blob--1 {
   width: 160px;
   height: 160px;

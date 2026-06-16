@@ -19,3 +19,13 @@ export const setRelationshipStartDate = async (relationshipStartDate) => {
   const res = await api.patch("/couples/start-date", { relationshipStartDate });
   return res.data;
 };
+
+export const getPartnerProfile = async () => {
+  const res = await api.get("/couples/partner-profile");
+  return res.data;
+};
+
+export const unmatchPartner = async () => {
+  const res = await api.post("/couples/unmatch");
+  return res.data;
+};

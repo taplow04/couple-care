@@ -6,6 +6,7 @@ import { getDashboard } from "../../services/dashboard.service";
 import { getMemories } from "../../services/memories.service";
 import { getHealthScore, getWeeklySummary } from "../../services/ai.service";
 
+import TopHeader from "../../components/navigation/TopHeader/TopHeader";
 import WelcomeCard from "../../components/dashboard/WelcomeCard/WelcomeCard";
 import HealthScoreCard from "../../components/dashboard/HealthScoreCard/HealthScoreCard";
 import RelationshipStatusCard from "../../components/dashboard/RelationshipStatusCard/RelationshipStatusCard";
@@ -60,6 +61,7 @@ const NoPartnerState = () => {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [dashData, setDashData] = useState(null);
   const [memories, setMemories] = useState(undefined);
@@ -119,8 +121,14 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-content">
+        <TopHeader />
+
         <div className="db-fade-in" style={{ animationDelay: "0ms" }}>
-          <WelcomeCard user={user} partner={dashData?.partner} />
+          <WelcomeCard
+            user={user}
+            partner={dashData?.partner}
+            onPartnerClick={() => navigate("/partner")}
+          />
         </div>
 
         <div className="dashboard-grid-2">

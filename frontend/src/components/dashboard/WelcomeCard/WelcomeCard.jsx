@@ -24,7 +24,7 @@ const MESSAGES = [
 
 const getRotatingMessage = () => MESSAGES[new Date().getDate() % MESSAGES.length];
 
-const Avatar = ({ photo, name, size, className = "" }) => {
+const Avatar = ({ photo, name, size, className = "", onClick }) => {
   if (photo) {
     return (
       <img
@@ -32,6 +32,7 @@ const Avatar = ({ photo, name, size, className = "" }) => {
         alt={name}
         className={`wc-avatar ${className}`}
         style={{ width: size, height: size }}
+        onClick={onClick}
       />
     );
   }
@@ -41,13 +42,14 @@ const Avatar = ({ photo, name, size, className = "" }) => {
       className={`wc-avatar wc-avatar--initials ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.38 }}
       aria-label={name}
+      onClick={onClick}
     >
       {initial}
     </div>
   );
 };
 
-const WelcomeCard = ({ user, partner }) => {
+const WelcomeCard = ({ user, partner, onPartnerClick }) => {
   return (
     <div className="wc-card">
       <div className="wc-blob wc-blob--1" aria-hidden="true" />
@@ -58,7 +60,11 @@ const WelcomeCard = ({ user, partner }) => {
           <p className="wc-date">{formatDate()}</p>
           <h2 className="wc-greeting">{getGreeting(user?.name)}</h2>
           {partner && (
-            <p className="wc-partner">
+            <p
+              className={`wc-partner ${onPartnerClick ? "wc-partner--link" : ""}`}
+              onClick={onPartnerClick}
+              role={onPartnerClick ? "button" : undefined}
+            >
               <span className="wc-heart" aria-hidden="true">💕</span>
               Connected with {partner.name?.split(" ")[0]}
             </p>
@@ -79,7 +85,8 @@ const WelcomeCard = ({ user, partner }) => {
                 photo={partner.profilePhoto}
                 name={partner.name}
                 size={52}
-                className="wc-avatar--partner"
+                className={`wc-avatar--partner ${onPartnerClick ? "wc-avatar--clickable" : ""}`}
+                onClick={onPartnerClick}
               />
             )}
             {!partner && (

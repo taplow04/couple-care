@@ -9,6 +9,25 @@
   min-height: 60px;
 }
 
+/* Clickable partner area (opens partner profile) */
+.chat-header__partner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat-header__partner:active {
+  opacity: 0.7;
+}
+
 /* Story-ring avatar */
 .chat-header__avatar-ring {
   flex-shrink: 0;

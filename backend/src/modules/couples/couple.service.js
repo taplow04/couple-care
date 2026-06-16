@@ -2,6 +2,17 @@ const Couple = require("./couple.model");
 const User = require("../users/user.model");
 const generatePairCode = require("../../utils/pairCode");
 const { getDaysTogether, getRelationshipStart } = require("./couple.helpers");
+const Mood = require("../moods/mood.model");
+const Memory = require("../memories/memory.model");
+const Message = require("../chat/message.model");
+const { getMoodAnalytics } = require("../moods/mood.service");
+const { emitToUser } = require("../../utils/realtime");
+
+// Resolve the partner id for a loaded couple + the requesting user.
+const resolvePartnerId = (couple, userId) =>
+  couple.partnerOneId.toString() === userId.toString()
+    ? couple.partnerTwoId
+    : couple.partnerOneId;
 
 const createCouple = async (userId) => {
   const user = await User.findById(userId);
@@ -158,10 +169,144 @@ const getMyCouple = async (userId) => {
   return couple;
 };
 
+/**
+ * Rich partner profile for the Partner Profile Panel: profile fields,
+ * relationship dates, and aggregate stats. Honors the partner's privacy
+ * settings (profileVisibility / moodVisibility).
+ */
+const getPartnerProfile = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user || !user.currentCoupleId) {
+    throw new Error("No active relationship");
+  }
+
+  const couple = await Couple.findById(user.currentCoupleId);
+  if (!couple) {
+    throw new Error("Couple not found");
+  }
+
+  const partnerId = resolvePartnerId(couple, userId);
+  if (!partnerId) {
+    throw new Error("Partner has not joined yet");
+  }
+
+  const partner = await User.findById(partnerId).select(
+    "name profilePhoto bio hobbies likes dislikes birthday privacy createdAt",
+  );
+  if (!partner) {
+    throw new Error("Partner not found");
+  }
+
+  const profilePrivate = partner.privacy?.profileVisibility === "private";
+  const moodPrivate = partner.privacy?.moodVisibility === "private";
+
+  // Aggregate stats (cheap counts + reused analytics).
+  const [memoryCount, chatMessageCount] = await Promise.all([
+    Memory.countDocuments({ coupleId: couple._id }),
+    Message.countDocuments({ coupleId: couple._id }),
+  ]);
+
+  let moodSummary = null;
+  let recentMoods = [];
+  if (!moodPrivate) {
+    const analytics = await getMoodAnalytics(partnerId);
+    const counts = { ...analytics };
+    delete counts.averageIntensity;
+    const dominant =
+      Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[1] > 0
+        ? Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+        : null;
+    moodSummary = {
+      dominant,
+      averageIntensity: analytics.averageIntensity,
+      counts,
+    };
+    recentMoods = await Mood.find({
+      userId: partnerId,
+      visibility: "partner_only",
+    })
+      .sort({ createdAt: -1 })
+      .limit(5);
+  }
+
+  // Public-safe profile (respects profileVisibility).
+  const profile = profilePrivate
+    ? {
+        _id: partner._id,
+        name: partner.name,
+        profilePhoto: partner.profilePhoto,
+        restricted: true,
+      }
+    : {
+        _id: partner._id,
+        name: partner.name,
+        profilePhoto: partner.profilePhoto,
+        bio: partner.bio,
+        hobbies: partner.hobbies,
+        likes: partner.likes,
+        dislikes: partner.dislikes,
+        birthday: partner.birthday,
+        restricted: false,
+      };
+
+  return {
+    partner: profile,
+    relationship: {
+      status: couple.relationshipStatus,
+      startDate: getRelationshipStart(couple),
+      daysTogether: getDaysTogether(couple),
+    },
+    stats: {
+      memoryCount,
+      chatMessageCount,
+      moodSummary,
+      recentMoods,
+    },
+  };
+};
+
+/**
+ * Soft unmatch: mark the relationship broken and detach both users (so the app
+ * gates them back to onboarding) WITHOUT deleting any shared data
+ * (moods/memories/chat/calls are retained). Notifies the partner in realtime.
+ */
+const unmatchPartner = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user || !user.currentCoupleId) {
+    throw new Error("No active relationship");
+  }
+
+  const couple = await Couple.findById(user.currentCoupleId);
+  if (!couple) {
+    throw new Error("Couple not found");
+  }
+
+  const partnerId = resolvePartnerId(couple, userId);
+
+  couple.relationshipStatus = "broken_up";
+  await couple.save();
+
+  const ids = [couple.partnerOneId, couple.partnerTwoId].filter(Boolean);
+  await User.updateMany({ _id: { $in: ids } }, { currentCoupleId: null });
+
+  // Let the partner's app react immediately (gate back to onboarding).
+  if (partnerId) {
+    try {
+      emitToUser(partnerId, "couple:unmatched", { coupleId: couple._id });
+    } catch {
+      /* offline */
+    }
+  }
+
+  return { success: true };
+};
+
 module.exports = {
   createCouple,
   joinCouple,
   getDashboard,
   getMyCouple,
   setRelationshipStartDate,
+  getPartnerProfile,
+  unmatchPartner,
 };

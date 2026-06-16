@@ -4,6 +4,8 @@ const {
   getDashboard,
   getMyCouple,
   setRelationshipStartDate,
+  getPartnerProfile,
+  unmatchPartner,
 } = require("./couple.service");
 
 const create = async (req, res, next) => {
@@ -66,10 +68,30 @@ const startDate = async (req, res, next) => {
   }
 };
 
+const partnerProfile = async (req, res, next) => {
+  try {
+    const data = await getPartnerProfile(req.user._id);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const unmatch = async (req, res, next) => {
+  try {
+    const data = await unmatchPartner(req.user._id);
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   create,
   join,
   dashboard,
   me,
   startDate,
+  partnerProfile,
+  unmatch,
 };
