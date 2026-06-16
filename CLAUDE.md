@@ -47,7 +47,7 @@ CLOUDINARY_API_SECRET=
 - `*.controller.js` — HTTP handler (calls service, sends JSON)
 - `*.routes.js` — Express router (auth middleware, validators, rate limiting)
 
-**Modules**: `auth`, `users`, `couples`, `chat`, `moods`, `memories`, `histories`, `dashboard`, `ai`, `notifications`, `security`
+**Modules**: `auth`, `users`, `couples`, `chat`, `moods`, `memories`, `histories`, `dashboard`, `ai`, `notifications`, `security`, `calls`
 
 ### Key backend behaviours
 
@@ -97,6 +97,17 @@ CLOUDINARY_API_SECRET=
 
 **Couples** (`/api/v1/couples`): pair via unique `pairCode`. `User.currentCoupleId` references active couple.
 
+**Calls** (`/api/v1/calls`) — WebRTC voice/video, one-to-one between paired partners only:
+- `GET /history` — recent `Call` records for the user's active couple (populated caller/receiver)
+- **All real-time call work happens over the existing Socket.io connection** (`modules/chat/socket.js`) — there is NO separate signaling server and NO second socket. It reuses the same JWT `io.use` auth, the `onlineUsers: Map<userId, Set<socketId>>` presence map, and `getPartnerId` (so a user can only ever ring their bound partner).
+- **Media is pure peer-to-peer** (STUN/TURN). The server relays signaling only — SDP/ICE blobs — and never sees audio/video. Critical for Render (no media bandwidth).
+- Signaling events (server side, in `socket.js`):
+  - Lifecycle: `call:initiate` (→ resolves partner, busy/offline checks, creates `Call`, emits `call:incoming` to partner), `call:accept` (→ `call:accepted`), `call:reject` (→ `call:rejected`), `call:busy`, `call:end` (→ `call:ended`). Server-emitted: `call:incoming`, `call:accepted`, `call:rejected`, `call:ended`, `call:missed`, `call:timeout`.
+  - WebRTC relay (server just forwards to the peer): `webrtc:offer`, `webrtc:answer`, `webrtc:ice-candidate`.
+  - **Caller is the offerer**: offer is created only AFTER `call:accepted` (no media negotiated for unanswered calls).
+- Signaling state lives in module-level maps in `socket.js`: `activeCalls` (callId → session) and `userActiveCall` (userId → callId, enforces one call at a time = busy detection). Unanswered calls auto-finalize as `missed` after `RING_TIMEOUT_MS` (35s). Disconnect mid-call notifies the peer (`call:ended`) and finalizes history.
+- `Call` model (`call.model.js`): `coupleId, callerId, receiverId, callType (voice|video), status (ringing|completed|missed|rejected|cancelled|failed), duration (s), startedAt, answeredAt, endedAt`. `call.service.js` helpers (`createCall`, `markAnswered`, `finalizeCall`, `getHistoryForCouple`) are tolerant — a history write failure must never break live signaling, so callers swallow their errors.
+
 ---
 
 ## Frontend Architecture (`frontend/src/`)
@@ -116,6 +127,8 @@ Protected (all nested under `<ProtectedRoute><AppLayout /></ProtectedRoute>`):
 | `/profile` | Profile |
 | `/chat` | Chat |
 | `/ai` | AI Insights |
+| `/call/voice` | VoiceCallPage |
+| `/call/video` | VideoCallPage |
 | `*` | → `/dashboard` (authenticated catch-all) |
 
 `AppLayout` renders `<Outlet />` + `<BottomNav />`. BottomNav is `position: fixed; bottom: 0; height: 70px`. Every page must include `padding-bottom: calc(var(--bottom-nav-height) + 28px)` so content is not hidden under it.
@@ -132,6 +145,8 @@ One file per domain — pages import from services only, never from axios direct
 | `ai.service.js` | `getHealthScore`, `getWeeklySummary`, `getMoodAnalysis` |
 | `chat.service.js` | `getMessages`, `sendMessage` |
 | `security.service.js` | security-related calls |
+| `call.service.js` | socket signaling emitters: `initiateCall`, `acceptCall`, `rejectCall`, `sendBusy`, `endCall`, `sendOffer`, `sendAnswer`, `sendIceCandidate` (NOT axios — emits over the shared socket) |
+| `webrtc.service.js` | `PeerSession` class (RTCPeerConnection wrapper), `acquireLocalStream`, `stopStream`, `getMediaConstraints` |
 
 All services return `response.data` (the full `{ success, data }` wrapper). Unwrap with `.data` in the caller.
 
@@ -190,6 +205,32 @@ Mobile-first CSS: base at 390px, breakpoint at `768px` for tablet/desktop.
 ### Navigation (`src/components/navigation/BottomNav/`)
 4 items: Home (`/dashboard`), Mood (`/moods`), Memory (`/memories`), Profile (`/profile`). Uses `NavLink` with `isActive` for active state styling.
 
+### Calling — WebRTC (voice & video)
+
+**`CallProvider` (`src/context/CallContext.jsx`) is the single orchestrator.** It is mounted **inside `AppLayout`** (not in `main.jsx`) so it lives under the router (`useNavigate`) and wraps every authed page — incoming calls work app-wide and call state survives navigation to the call pages. Consume it with `useCall()`.
+
+- **Reuses the shared chat socket** (`services/socket.service.js` singleton via `connectSocket`). `CallProvider` connects the socket app-wide on mount; `ChatPage` also calls `connectSocket` (idempotent — same instance). **Never add a second socket.**
+- State machine (`callState`): `idle → outgoing | incoming → connecting → active → idle`. Live media/peer values are held in **refs** (`peerRef`, `localStreamRef`, `callIdRef`, `roleRef`, `stateRef`) so socket handlers never read stale state; React state mirrors them for rendering.
+- Caller is the offerer: on `call:accepted` the caller builds the `PeerSession`, `createOffer`, `sendOffer`. Callee builds its `PeerSession` at accept time (before the offer arrives), then answers. ICE candidates that arrive before `setRemoteDescription` are queued in `PeerSession` and flushed.
+- `connectionState === "connected"` is what flips the UI to `active` and starts the timer (`callStartedAt`). `failed` ends the call; `disconnected` is left alone (ICE may auto-recover) and surfaced as "Reconnecting…".
+- Errors are mapped to friendly copy (`MEDIA_ERROR_MESSAGES`, `END_REASON_MESSAGES`) and shown via `CallErrorToast`.
+
+**ICE config (`src/config/iceServers.js`)** — Google STUN always; TURN is **env-driven and optional**: set `VITE_TURN_URL` (comma-separated urls ok), `VITE_TURN_USERNAME`, `VITE_TURN_CREDENTIAL` on Vercel to enable it (no code change). **Without TURN, calls fail on symmetric/CGNAT mobile networks** — STUN-only only works on compatible/Wi-Fi NATs.
+
+**Components (`src/components/call/`)** — each own folder, JSX + CSS:
+| Component | Notes |
+|---|---|
+| `IncomingCallModal` / `OutgoingCallModal` | Global overlays (`z-index: 4000`), render only in `incoming`/`outgoing` state; read `useCall()` directly. Rendered in `AppLayout`. |
+| `CallControls` | Adapts to voice vs video (mute / camera / flip / speaker / end); large touch targets, safe-area padding |
+| `CallTimer` | Elapsed time from `callStartedAt` (ms timestamp) |
+| `ConnectionStatus` | Maps `RTCPeerConnection.connectionState` to themed label; renders nothing when healthy |
+| `VideoView` | Full-bleed `PartnerVideo` + floating `LocalVideo` PiP |
+| `PartnerVideo` / `LocalVideo` | `<video>` wrappers; LocalVideo is `muted` + mirrored; PartnerVideo plays remote audio. Voice page uses a hidden `<audio>` for remote audio. |
+
+**Call pages** (`pages/Call/VoiceCallPage`, `VideoCallPage`, routes `/call/voice` `/call/video`) read everything from `useCall()` and `<Navigate to="/chat">` if `callState` isn't `connecting`/`active`. Like the chat page they are `position: fixed` full-screen (cover the BottomNav).
+
+**Chat integration**: `ChatHeader` shows ❤️ (voice) / 🎥 (video) buttons gated on `useCall().canCall` (i.e. `currentCoupleId` exists); calls `startCall(type, partner)`.
+
 ---
 
 ## Known patterns and gotchas
@@ -200,3 +241,7 @@ Mobile-first CSS: base at 390px, breakpoint at `768px` for tablet/desktop.
 - **AI summary shape**: `getWeeklySummary()` returns `{ success, data: { summary } }`. Extract `res.data.summary`, not `res.data` directly, before passing as a string to `AIInsightCard`.
 - **Chat page uses `position: fixed`** (fills viewport above BottomNav). Do not wrap it in the standard page scroll container.
 - **Service return shape**: All services return the full axios `response.data` which is `{ success, data }`. Access `.data` in the calling page to reach the actual payload.
+- **Calls: one socket only**. `call.service.js` emits over the existing `socket.service.js` singleton; `CallProvider` and `ChatPage` both call `connectSocket` (idempotent). Do NOT introduce a second socket/provider for calls.
+- **Calls need TURN on mobile**. Without the `VITE_TURN_*` env vars, calls ring and "accept" but stall at "Connecting…" on cellular/symmetric-NAT networks. This is a missing-TURN symptom, not a code bug.
+- **Call signaling is socket-only**, not REST — the only HTTP call route is `GET /calls/history`. Call history is written best-effort in `socket.js`; a DB failure there must not break the live call.
+- **`getUserMedia` requires a secure context** (HTTPS or localhost) and explicit mic/camera permission. iOS only supports it in Safari, not iOS Chrome.
