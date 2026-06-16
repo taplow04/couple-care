@@ -68,7 +68,9 @@ CLOUDINARY_API_SECRET=
 - `GET /health-score` → `{ score: 0–100, level: "Excellent"|"Healthy"|"Moderate"|"Needs Attention" }`
 - `GET /weekly-summary` → `{ summary: "<text>" }`
 - `GET /mood-analysis` → `{ analysis: "<text>" }`
+- `GET /relationship-insights` → `{ insights }`, `GET /memory-recap` → `{ recap }`
 - Uses Groq SDK (`llama-3.3-70b-versatile`); prompts in `ai.prompts.js`
+- **Reports are concise + bulleted**: prompts force a strict `Strengths` / `Opportunities` / `Suggestions` format (≤5 bullets each, no paragraphs); `ai.engine` caps `max_tokens`. The frontend `AIReport` component (`components/ai/AIReport`) parses that text into styled sections, with a raw-text fallback if the model deviates. Weekly summary's `daysTogether` uses the effective start date (`couple.helpers`).
 
 **Moods** (`/api/v1/moods`):
 - `GET /` — user's own moods, newest first
@@ -76,6 +78,9 @@ CLOUDINARY_API_SECRET=
 - `GET /partner` — partner's moods
 - `GET /analytics` — counts per mood type
 - `DELETE /:id`
+- **Mood `visibility` defaults to `partner_only`** (was `private`, which hid moods from the partner). A mood can still be set `private`.
+- **Negative moods (`sad|stressed|angry|anxious`) alert the partner**: `createMood` fires a `partner_mood_alert` notification (skipped if the mood is `private`).
+- `GET /partner` returns `[]` if the partner's `privacy.moodVisibility === "private"`.
 
 **Memories** (`/api/v1/memories`):
 - `GET /` — couple's memories
@@ -92,10 +97,33 @@ CLOUDINARY_API_SECRET=
 **Notifications** (`/api/v1/notifications`):
 - `GET /` — user's notifications
 - `PATCH /read-all`, `PATCH /:id/read`, `DELETE /:id`
-- Cron job runs daily at 8pm; creates `mood_reminder` if user hasn't logged a mood today
-- Types: `mood_reminder | memory_reminder | anniversary_reminder | weekly_summary_ready | relationship_milestone | system`
+- Crons: `mood_reminder` daily 8pm (if no mood logged); **birthday reminder daily 9am** (notifies the partner at 7d / 1d / day-of using `User.birthday`).
+- Types: `mood_reminder | memory_reminder | anniversary_reminder | weekly_summary_ready | relationship_milestone | partner_mood_alert | birthday_reminder | system`
+- **`createNotification` pushes in real time**: it emits `notification:new` to the recipient via the realtime registry (`utils/realtime`). Frontend `useRealtimeNotifications` (mounted in `AppLayout`) seeds the unread badge on load and increments it live.
 
 **Couples** (`/api/v1/couples`): pair via unique `pairCode`. `User.currentCoupleId` references active couple.
+- `POST /create`, `POST /join`, `GET /me`, `GET /dashboard`
+- `PATCH /start-date` — `{ relationshipStartDate }` set the real dating date (either partner; captured on `CoupleSuccess` during onboarding)
+- `GET /partner-profile` — partner fields + relationship + stats (`memoryCount`, `chatMessageCount`, `moodSummary`, `recentMoods`), **privacy-aware** (see Privacy below)
+- `POST /unmatch` — **soft unmatch**: sets `relationshipStatus: "broken_up"`, clears both users' `currentCoupleId`, **keeps all data** (moods/memories/chat/calls); emits `couple:unmatched` to the partner so their app gates back to onboarding (`AppLayout` listens + reloads the user)
+- **Two dates**: `relationshipStartedAt` (couple creation) vs `relationshipStartDate` (real dating date). `couple.helpers.getRelationshipStart`/`getDaysTogether` return the effective value (`relationshipStartDate || relationshipStartedAt`) — used by dashboard, journey, milestones, AI.
+
+**Users** (`/api/v1/users`):
+- `PATCH /profile` — name/bio/hobbies/likes/dislikes/profilePhoto/**birthday**
+- `POST /upload-photo` — Cloudinary avatar upload
+- `GET /privacy`, `PATCH /privacy` — the 6 visibility controls (see Privacy below)
+
+**Presence** (Socket.io, no REST): true online/offline/last-seen, reusing the shared socket + `onlineUsers` map in `utils/realtime`.
+- On connect: pushes the partner's current presence to the new socket and (if a fresh online transition) broadcasts this user online to the partner.
+- On disconnect (last socket): persists `User.lastSeen` and broadcasts offline.
+- `presence:get` (client → server) re-syncs the partner's presence on demand (e.g. when a screen mounts). Server emits `presence:update { userId, online, lastSeen, inCall }`.
+- `inCall` is derived from the call `userActiveCall` map. **`lastSeen` is intentionally NOT privacy-controlled.**
+- Frontend: `usePartnerPresence(partnerId)` hook + upgraded `OnlineStatus` (online / last seen / typing / in-call). The chat header was previously fed the user's OWN socket state (the "always online" bug) — now it uses real partner presence.
+
+**Privacy** (Feature 6): `User.privacy` sub-doc with `moodVisibility`, `memoryVisibility`, `journeyVisibility`, `aiVisibility`, `profileVisibility`, `activityVisibility` — each `private | partner_only | shared`, default `partner_only`.
+- Settings UI: "Privacy & Visibility" section on the Settings page using the `PrivacySelect` 3-way control.
+- Enforced on partner-facing reads: `getPartnerMoods` (moodVisibility), partner profile (profileVisibility for fields, moodVisibility for the mood summary, activityVisibility for recent activity).
+- In a strict 1:1 app, mood/profile/activity are the data with real cross-partner reads. Memories/journey are inherently shared (co-owned) and AI insights are self-generated, so those settings are stored prefs applied wherever a partner-facing surface exists — by design we do NOT hide co-owned data from the partner who shares it.
 
 **Calls** (`/api/v1/calls`) — WebRTC voice/video, one-to-one between paired partners only:
 - `GET /history` — recent `Call` records for the user's active couple (populated caller/receiver)
@@ -129,6 +157,7 @@ Protected (all nested under `<ProtectedRoute><AppLayout /></ProtectedRoute>`):
 | `/ai` | AI Insights |
 | `/call/voice` | VoiceCallPage |
 | `/call/video` | VideoCallPage |
+| `/partner` | PartnerProfile (partner profile panel) |
 | `*` | → `/dashboard` (authenticated catch-all) |
 
 `AppLayout` renders `<Outlet />` + `<BottomNav />`. BottomNav is `position: fixed; bottom: 0; height: 70px`. Every page must include `padding-bottom: calc(var(--bottom-nav-height) + 28px)` so content is not hidden under it.
@@ -147,8 +176,22 @@ One file per domain — pages import from services only, never from axios direct
 | `security.service.js` | security-related calls |
 | `call.service.js` | socket signaling emitters: `initiateCall`, `acceptCall`, `rejectCall`, `sendBusy`, `endCall`, `sendOffer`, `sendAnswer`, `sendIceCandidate` (NOT axios — emits over the shared socket) |
 | `webrtc.service.js` | `PeerSession` class (RTCPeerConnection wrapper), `acquireLocalStream`, `stopStream`, `getMediaConstraints` |
+| `couple.service.js` | `createCouple`, `joinCouple`, `getMyCouple`, `setRelationshipStartDate`, `getPartnerProfile`, `unmatchPartner` |
+| `privacy.service.js` | `getPrivacy`, `updatePrivacy` |
+| `users.service.js` | `updateProfile` (incl. `birthday`), `uploadPhoto` |
 
 All services return `response.data` (the full `{ success, data }` wrapper). Unwrap with `.data` in the caller.
+
+### Hooks (`src/hooks/`)
+- `usePartnerPresence(partnerId)` — live partner presence over the shared socket.
+- `useRealtimeNotifications()` — seeds + live-increments the unread badge (mount once in `AppLayout`).
+
+### Notable UI added
+- `components/navigation/TopHeader` — app-like top bar (brand + chat/notifications/avatar) on the Dashboard; chat icon opens the partner chat directly (1:1, no chat list).
+- `pages/Partner/PartnerProfile` (`/partner`) — partner panel; opened by tapping the partner avatar in the chat header or on the dashboard WelcomeCard.
+- `components/ai/AIReport` — renders the bulleted AI report sections.
+- `components/dashboard/UpcomingBirthdayCard` — shows when the partner's birthday is ≤30 days away.
+- `components/settings/PrivacySelect` — 3-way visibility control used in the Settings "Privacy & Visibility" section.
 
 ### API shape reminder
 `axios.js` points to `http://localhost:5000/api/v1` and attaches `Authorization: Bearer <token>` on every request via interceptor.
@@ -245,3 +288,8 @@ Mobile-first CSS: base at 390px, breakpoint at `768px` for tablet/desktop.
 - **Calls need TURN on mobile**. Without the `VITE_TURN_*` env vars, calls ring and "accept" but stall at "Connecting…" on cellular/symmetric-NAT networks. This is a missing-TURN symptom, not a code bug.
 - **Call signaling is socket-only**, not REST — the only HTTP call route is `GET /calls/history`. Call history is written best-effort in `socket.js`; a DB failure there must not break the live call.
 - **`getUserMedia` requires a secure context** (HTTPS or localhost) and explicit mic/camera permission. iOS only supports it in Safari, not iOS Chrome.
+- **Realtime registry** (`utils/realtime.js`) is the single owner of the `io` instance + `onlineUsers` map. Non-socket modules (e.g. `notification.service`) import `emitToUser` from it to push events — do NOT import `socket.js` for that (circular dep). `socket.js` calls `setIo(io)` on init.
+- **Effective relationship date**: never compute "days together" from `relationshipStartedAt` directly — use `couple.helpers.getDaysTogether` / `getRelationshipStart` so the real dating date wins.
+- **Presence is partner-based, not self**: feed `OnlineStatus`/headers from `usePartnerPresence`, not the local socket's `connected` flag (that was the original "always online" bug).
+- **Batch migration**: after deploying the data-foundation changes, run once: `cd backend && node src/scripts/migrate-batch1.js` (idempotent — backfills `relationshipStartDate`, flips legacy `private` moods → `partner_only`, seeds `privacy` defaults).
+- **Privacy is enforced on partner-facing reads only**; co-owned data (memories/journey) and self-only AI are not hidden from the partner by design.
