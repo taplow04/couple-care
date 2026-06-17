@@ -5,6 +5,7 @@ const User = require("../users/user.model");
 const Message = require("./message.model");
 const { isCoupleMember, getPartnerId } = require("./chat.helpers");
 const callService = require("../calls/call.service");
+const { sendPushToUser } = require("../push/push.service");
 const {
   setIo,
   addOnlineSocket,
@@ -307,6 +308,20 @@ const initializeSocket = (io) => {
           createdAt: savedMessage.createdAt,
         });
 
+        // OS push to the partner (delivers when their app is closed). Best-
+        // effort — never block the message send.
+        getPartnerId(socket.user._id)
+          .then((partnerId) => {
+            if (!partnerId) return;
+            return sendPushToUser(partnerId, {
+              title: socket.user.name?.split(" ")[0] || "New message",
+              body: message.text.slice(0, 120),
+              data: { url: "/chat" },
+              tag: "chat",
+            });
+          })
+          .catch(() => {});
+
         sendAck(ack, {
           success: true,
           data: savedMessage,
@@ -572,6 +587,18 @@ const initializeSocket = (io) => {
             profilePhoto: socket.user.profilePhoto,
           },
         });
+
+        // WhatsApp-style: also fire an OS push so a backgrounded/closed app
+        // still rings. The SW suppresses it if the app is open & focused (the
+        // in-app modal handles that case). Best-effort.
+        sendPushToUser(receiverId, {
+          type: "call",
+          title: `Incoming ${callType} call`,
+          body: `${socket.user.name?.split(" ")[0] || "Your partner"} is calling…`,
+          data: { url: "/chat", callId },
+          tag: "incoming-call",
+          requireInteraction: true,
+        }).catch(() => {});
 
         sendAck(ack, { success: true, callId });
       } catch (error) {

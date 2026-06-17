@@ -2,7 +2,8 @@ const asyncHandler = require("../../utils/asyncHandler");
 const cloudinary = require("../../config/cloudinary");
 const { getIo } = require("../../utils/realtime");
 const Message = require("./message.model");
-const { getCoupleByUser } = require("./chat.helpers");
+const { getCoupleByUser, getPartnerId } = require("./chat.helpers");
+const { sendPushToUser } = require("../push/push.service");
 
 // Size caps (bytes). Images are compressed by Cloudinary anyway; raw files are
 // stored as-is, so they get a higher ceiling.
@@ -133,6 +134,19 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
   if (io) {
     io.to(String(couple._id)).emit("message:receive", payload);
   }
+
+  // OS push to the partner (best-effort).
+  getPartnerId(req.user._id)
+    .then((partnerId) => {
+      if (!partnerId) return;
+      return sendPushToUser(partnerId, {
+        title: req.user.name?.split(" ")[0] || "New message",
+        body: type === "image" ? "📷 Photo" : "📎 File",
+        data: { url: "/chat" },
+        tag: "chat",
+      });
+    })
+    .catch(() => {});
 
   res.status(201).json({ success: true, data: payload });
 });

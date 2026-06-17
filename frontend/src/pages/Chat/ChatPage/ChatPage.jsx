@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../../context/AuthContext";
+import { useVisualViewport } from "../../../hooks/useVisualViewport";
 import {
   getMessages,
   markMessageSeen,
@@ -31,6 +32,9 @@ const flatSenderId = (senderId) =>
 const ChatPage = () => {
   const { user } = useAuth();
   const coupleId = user?.currentCoupleId;
+
+  // Keyboard-aware full-screen sizing (WhatsApp-style) on mobile.
+  useVisualViewport();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);

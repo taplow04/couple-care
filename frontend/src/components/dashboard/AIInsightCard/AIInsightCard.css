@@ -5,6 +5,8 @@
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
+  /* Reserve height so the shimmer→content swap doesn't shift the page (CLS). */
+  min-height: 150px;
 }
 
 .aic-card::before {

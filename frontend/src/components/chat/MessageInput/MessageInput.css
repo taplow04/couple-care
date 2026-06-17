@@ -9,6 +9,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px 14px;
+  /* Sit above the home indicator / gesture bar on notched phones. */
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   background: #fff;
 }
 
@@ -118,7 +120,8 @@
   padding: 10px 16px;
   border: 1.5px solid #dbdbdb;
   border-radius: 22px;
-  font-size: 14px;
+  /* 16px prevents iOS Safari from auto-zooming the page on focus. */
+  font-size: 16px;
   color: #262626;
   background: #fff;
   outline: none;

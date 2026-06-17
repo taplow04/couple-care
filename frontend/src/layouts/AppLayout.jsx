@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 import BottomNav from "../components/navigation/BottomNav/BottomNav.jsx";
+import NotificationBell from "../components/navigation/NotificationBell/NotificationBell.jsx";
 import { CallProvider } from "../context/CallContext.jsx";
 import IncomingCallModal from "../components/call/IncomingCallModal/IncomingCallModal.jsx";
 import OutgoingCallModal from "../components/call/OutgoingCallModal/OutgoingCallModal.jsx";
@@ -9,10 +10,22 @@ import CallErrorToast from "../components/call/CallErrorToast/CallErrorToast.jsx
 import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { connectSocket } from "../services/socket.service.js";
+import { isPushSupported, getPermission, subscribeToPush } from "../services/push.service.js";
+
+// Immersive screens cover the chrome (no bottom nav / floating bell).
+const isImmersive = (pathname) =>
+  pathname.startsWith("/chat") || pathname.startsWith("/call");
+
+// The Dashboard has its own TopHeader (with the bell), so the floating bell is
+// shown everywhere EXCEPT the dashboard and immersive screens.
+const showFloatingBell = (pathname) =>
+  !isImmersive(pathname) && pathname !== "/dashboard";
 
 const AppLayout = () => {
   // App-wide: keep the unread badge live and seeded.
   useRealtimeNotifications();
+
+  const { pathname } = useLocation();
 
   // If the partner unmatches, refresh the user so route guards send us back to
   // onboarding (currentCoupleId becomes null).
@@ -24,6 +37,17 @@ const AppLayout = () => {
     return () => socket.off("couple:unmatched", onUnmatched);
   }, [loadUser]);
 
+  // If the user already granted notification permission, (re)register this
+  // browser's push subscription under their account. New opt-ins happen via the
+  // Settings toggle (which needs a user gesture for the permission prompt).
+  useEffect(() => {
+    if (isPushSupported() && getPermission() === "granted") {
+      subscribeToPush();
+    }
+  }, []);
+
+  const immersive = isImmersive(pathname);
+
   return (
     // CallProvider lives here (inside the router, wrapping every authed page)
     // so incoming calls work app-wide and call state survives navigation to
@@ -31,7 +55,9 @@ const AppLayout = () => {
     // connection is created.
     <CallProvider>
       <Outlet />
-      <BottomNav />
+
+      {showFloatingBell(pathname) && <NotificationBell />}
+      {!immersive && <BottomNav />}
 
       {/* Global call overlays */}
       <IncomingCallModal />

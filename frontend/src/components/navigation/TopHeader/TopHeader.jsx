@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
 import { useNotificationsCtx } from "../../../context/NotificationsContext";
 import "./TopHeader.css";
 
@@ -41,11 +40,8 @@ const BellIcon = () => (
  */
 const TopHeader = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { unreadCount } = useNotificationsCtx();
   const badgeCount = Math.min(unreadCount, 99);
-
-  const initial = user?.name ? user.name[0].toUpperCase() : "♥";
 
   return (
     <header className="top-header">
@@ -77,18 +73,6 @@ const TopHeader = () => {
             <span className="top-header__badge" aria-hidden="true">
               {badgeCount > 9 ? "9+" : badgeCount}
             </span>
-          )}
-        </button>
-
-        <button
-          className="top-header__avatar-btn"
-          onClick={() => navigate("/profile")}
-          aria-label="Your profile"
-        >
-          {user?.profilePhoto ? (
-            <img src={user.profilePhoto} alt={user.name} />
-          ) : (
-            <span className="top-header__avatar-initial">{initial}</span>
           )}
         </button>
       </div>

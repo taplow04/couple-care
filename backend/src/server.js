@@ -14,6 +14,8 @@ const recommendedEnv = [
   "CLOUDINARY_API_KEY",
   "CLOUDINARY_API_SECRET",
   "GROQ_API_KEY",
+  "VAPID_PUBLIC_KEY",
+  "VAPID_PRIVATE_KEY",
 ];
 
 const missingRequired = requiredEnv.filter((key) => !process.env[key]);

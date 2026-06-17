@@ -22,6 +22,7 @@ const notificationRoutes = require("../modules/notifications/notification.routes
 const securityRoutes = require("../modules/security/security.routes");
 const userRoutes = require("../modules/users/user.routes");
 const callRoutes = require("../modules/calls/call.routes");
+const pushRoutes = require("../modules/push/push.routes");
 
 router.use("/auth", authRoutes);
 
@@ -44,6 +45,7 @@ router.use("/notifications", notificationRoutes);
 router.use("/security", securityRoutes);
 router.use("/users", userRoutes);
 router.use("/calls", callRoutes);
+router.use("/push", pushRoutes);
 
 router.get("/", (req, res) => {
   res.json({

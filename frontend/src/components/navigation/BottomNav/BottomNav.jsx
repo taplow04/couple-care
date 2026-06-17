@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { useNotificationsCtx } from "../../../context/NotificationsContext";
+import { useAuth } from "../../../context/AuthContext";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./BottomNav.css";
 
 const HomeIcon = () => (
@@ -34,26 +35,19 @@ const JourneyIcon = () => (
   </svg>
 );
 
-const BellIcon = () => (
+const AICenterIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
-      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M13.73 21a2 2 0 0 1-3.46 0"
-      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const ProfileIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.9" />
-    <path d="M4 21C4 17.5 7.6 14.5 12 14.5C16.4 14.5 20 17.5 20 21"
-      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    <path d="M12 3L13.6 8.4L19 10L13.6 11.6L12 17L10.4 11.6L5 10L10.4 8.4L12 3Z"
+      stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" fill="currentColor" fillOpacity="0.12" />
+    <circle cx="18.5" cy="17.5" r="2" stroke="currentColor" strokeWidth="1.6" />
+    <circle cx="5.5" cy="16.5" r="1.4" stroke="currentColor" strokeWidth="1.5" />
   </svg>
 );
 
 const BottomNav = () => {
-  const { unreadCount } = useNotificationsCtx();
-  const badgeCount = Math.min(unreadCount, 99);
+  const { user } = useAuth();
+  const photo = user?.profilePhoto;
+  const initial = user?.name ? user.name[0].toUpperCase() : "♥";
 
   return (
     <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
@@ -76,6 +70,15 @@ const BottomNav = () => {
       </NavLink>
 
       <NavLink
+        to="/ai-center"
+        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
+        aria-label="AI Center"
+      >
+        <span className="bottom-nav-icon"><AICenterIcon /></span>
+        <span className="bottom-nav-label">AI Center</span>
+      </NavLink>
+
+      <NavLink
         to="/journey"
         className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
         aria-label="Journey"
@@ -85,27 +88,17 @@ const BottomNav = () => {
       </NavLink>
 
       <NavLink
-        to="/notifications"
-        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
-        aria-label={`Notifications${badgeCount > 0 ? `, ${badgeCount} unread` : ""}`}
-      >
-        <span className="bottom-nav-icon bottom-nav-icon--relative">
-          <BellIcon />
-          {badgeCount > 0 && (
-            <span className="bottom-nav-badge" aria-hidden="true">
-              {badgeCount > 9 ? "9+" : badgeCount}
-            </span>
-          )}
-        </span>
-        <span className="bottom-nav-label">Alerts</span>
-      </NavLink>
-
-      <NavLink
         to="/profile"
         className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
         aria-label="Profile"
       >
-        <span className="bottom-nav-icon"><ProfileIcon /></span>
+        <span className="bottom-nav-icon bottom-nav-avatar">
+          {photo ? (
+            <img src={photo} alt={getFirstName(user?.name, "You")} />
+          ) : (
+            <span className="bottom-nav-avatar__initial">{initial}</span>
+          )}
+        </span>
         <span className="bottom-nav-label">Profile</span>
       </NavLink>
     </nav>

@@ -44,6 +44,35 @@
   position: relative;
 }
 
+/* Profile avatar in the nav (Instagram-style) */
+.bottom-nav-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--primary-light);
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.bottom-nav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bottom-nav-avatar__initial {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.bottom-nav-item--active .bottom-nav-avatar {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
 .bottom-nav-label {
   font-size: 10px;
   font-weight: 600;

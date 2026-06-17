@@ -48,6 +48,7 @@ const HealthScoreCard = ({ aiScore, health }) => {
           width={RING_SIZE}
           height={RING_SIZE}
           viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+          preserveAspectRatio="xMidYMid meet"
           aria-label={hasData ? `Health score: ${score}%` : "No data yet"}
           role="img"
         >

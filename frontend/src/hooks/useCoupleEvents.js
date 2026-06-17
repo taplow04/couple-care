@@ -16,9 +16,13 @@ import { getSocket, connectSocket } from "../services/socket.service";
  *   });
  */
 export const useCoupleEvents = (handlers) => {
-  // Keep the latest handlers without re-subscribing on every render.
+  // Keep the latest handlers without re-subscribing on every render. The ref is
+  // updated in an effect (not during render) so socket listeners always call
+  // the current handlers.
   const handlersRef = useRef(handlers);
-  handlersRef.current = handlers;
+  useEffect(() => {
+    handlersRef.current = handlers;
+  });
 
   useEffect(() => {
     // Ensure a socket exists (idempotent — CallProvider already connects it).

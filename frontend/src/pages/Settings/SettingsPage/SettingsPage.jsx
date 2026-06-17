@@ -6,6 +6,12 @@ import { getPrivacy, updatePrivacy } from "../../../services/privacy.service";
 import SettingsSection from "../../../components/settings/SettingsSection/SettingsSection";
 import SettingToggle from "../../../components/settings/SettingToggle/SettingToggle";
 import PrivacySelect from "../../../components/settings/PrivacySelect/PrivacySelect";
+import {
+  isPushSupported,
+  getPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from "../../../services/push.service";
 import "./SettingsPage.css";
 
 const BackIcon = () => (
@@ -57,6 +63,28 @@ const SettingsPage = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  // Device-level browser push (separate from the server notification prefs —
+  // this manages the actual OS subscription on THIS device).
+  const pushSupported = isPushSupported();
+  const [pushOn, setPushOn] = useState(getPermission() === "granted");
+  const [pushBusy, setPushBusy] = useState(false);
+
+  const togglePush = async (val) => {
+    if (pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (val) {
+        const ok = await subscribeToPush();
+        setPushOn(ok);
+      } else {
+        await unsubscribeFromPush();
+        setPushOn(false);
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   // Fetch current settings + privacy in parallel
   useEffect(() => {
@@ -143,9 +171,22 @@ const SettingsPage = () => {
               title="Notifications"
               description="Choose what you want to be notified about."
             >
+              {pushSupported && (
+                <SettingToggle
+                  label="Push on this device"
+                  description={
+                    pushBusy
+                      ? "Updating…"
+                      : "Get notifications even when the app is closed"
+                  }
+                  icon="📲"
+                  checked={pushOn}
+                  onChange={togglePush}
+                />
+              )}
               <SettingToggle
-                label="Push Notifications"
-                description="Receive in-app alerts and reminders"
+                label="In-app Alerts"
+                description="Receive alerts and reminders inside the app"
                 icon="🔔"
                 checked={settings.notificationsEnabled}
                 onChange={toggle("notificationsEnabled")}
