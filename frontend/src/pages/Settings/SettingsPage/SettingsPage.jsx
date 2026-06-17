@@ -11,6 +11,8 @@ import {
   getPermission,
   subscribeToPush,
   unsubscribeFromPush,
+  isSubscribed,
+  sendTestPush,
 } from "../../../services/push.service";
 import "./SettingsPage.css";
 
@@ -67,22 +69,56 @@ const SettingsPage = () => {
   // Device-level browser push (separate from the server notification prefs —
   // this manages the actual OS subscription on THIS device).
   const pushSupported = isPushSupported();
-  const [pushOn, setPushOn] = useState(getPermission() === "granted");
+  const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [pushMsg, setPushMsg] = useState("");
+
+  // Reflect the REAL subscription state for this browser (not just permission).
+  useEffect(() => {
+    isSubscribed().then(setPushOn);
+  }, []);
 
   const togglePush = async (val) => {
     if (pushBusy) return;
     setPushBusy(true);
+    setPushMsg("");
     try {
       if (val) {
         const ok = await subscribeToPush();
         setPushOn(ok);
+        if (!ok) {
+          setPushMsg(
+            getPermission() === "denied"
+              ? "Notifications are blocked in your browser/site settings. Enable them there, then try again."
+              : "Couldn't enable notifications on this device.",
+          );
+        }
       } else {
         await unsubscribeFromPush();
         setPushOn(false);
       }
     } finally {
       setPushBusy(false);
+    }
+  };
+
+  const handleTestPush = async () => {
+    setPushMsg("Sending…");
+    try {
+      const { pushEnabled, devices } = await sendTestPush();
+      if (!pushEnabled) {
+        setPushMsg("Push isn't configured on the server yet.");
+      } else if (devices === 0) {
+        setPushMsg(
+          "No subscribed device found — turn on “Push on this device” above first.",
+        );
+      } else {
+        setPushMsg(
+          `Test sent to ${devices} device${devices > 1 ? "s" : ""}. If it doesn't appear, check your OS/browser notification settings.`,
+        );
+      }
+    } catch {
+      setPushMsg("Could not send a test notification.");
     }
   };
 
@@ -171,18 +207,35 @@ const SettingsPage = () => {
               title="Notifications"
               description="Choose what you want to be notified about."
             >
-              {pushSupported && (
-                <SettingToggle
-                  label="Push on this device"
-                  description={
-                    pushBusy
-                      ? "Updating…"
-                      : "Get notifications even when the app is closed"
-                  }
-                  icon="📲"
-                  checked={pushOn}
-                  onChange={togglePush}
-                />
+              {pushSupported ? (
+                <>
+                  <SettingToggle
+                    label="Push on this device"
+                    description={
+                      pushBusy
+                        ? "Updating…"
+                        : "Get notifications even when the app is closed"
+                    }
+                    icon="📲"
+                    checked={pushOn}
+                    onChange={togglePush}
+                  />
+                  {pushOn && (
+                    <button
+                      type="button"
+                      className="settings-pg__test-push"
+                      onClick={handleTestPush}
+                    >
+                      Send a test notification
+                    </button>
+                  )}
+                  {pushMsg && <p className="settings-pg__push-msg">{pushMsg}</p>}
+                </>
+              ) : (
+                <p className="settings-pg__push-msg">
+                  This browser doesn’t support push notifications. On iPhone, add
+                  CoupleCare to your Home Screen first.
+                </p>
               )}
               <SettingToggle
                 label="In-app Alerts"

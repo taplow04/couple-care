@@ -4,16 +4,22 @@ const PushSubscription = require("./pushSubscription.model");
 // Configure VAPID once. If keys are missing, push is disabled (logged) but the
 // app keeps running — push is additive to the in-app realtime notifications.
 let pushEnabled = false;
-if (
-  process.env.VAPID_PUBLIC_KEY &&
-  process.env.VAPID_PRIVATE_KEY
-) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:support@couplecare.app",
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY,
-  );
-  pushEnabled = true;
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  // setVapidDetails THROWS on a malformed key. Guard it so a bad/typo'd env var
+  // only disables push instead of crash-looping the entire backend at boot.
+  try {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || "mailto:support@couplecare.app",
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY,
+    );
+    pushEnabled = true;
+  } catch (e) {
+    console.error(
+      "[push] Invalid VAPID keys — push disabled. Fix VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY:",
+      e.message,
+    );
+  }
 } else {
   console.warn(
     "[push] VAPID keys not set — browser push notifications are disabled.",
@@ -52,6 +58,15 @@ const removeSubscription = async (endpoint) => {
   return { success: true };
 };
 
+// How many devices a user currently has subscribed (for diagnostics).
+const getSubscriptionCount = async (userId) => {
+  try {
+    return await PushSubscription.countDocuments({ userId });
+  } catch {
+    return 0;
+  }
+};
+
 /**
  * Send a push to every device a user has registered. Best-effort: a failure for
  * one device never throws to the caller, and expired endpoints (404/410) are
@@ -70,13 +85,22 @@ const sendPushToUser = async (userId, payload) => {
   if (!subs.length) return;
 
   const body = JSON.stringify(payload);
+  // TTL keeps the message queued by the push service (FCM/Mozilla/Apple) for a
+  // while if the device is briefly offline; high urgency for time-sensitive
+  // events (messages/calls) so they wake the device.
+  const options = { TTL: 3600, urgency: "high" };
 
   await Promise.all(
     subs.map(async (sub) => {
       try {
         await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: sub.keys },
+          {
+            endpoint: sub.endpoint,
+            // Convert the Mongoose subdoc to a plain object for web-push.
+            keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth },
+          },
           body,
+          options,
         );
       } catch (err) {
         // 404 Gone / 410 = subscription expired or revoked → prune it.
@@ -95,5 +119,6 @@ module.exports = {
   getPublicKey,
   saveSubscription,
   removeSubscription,
+  getSubscriptionCount,
   sendPushToUser,
 };

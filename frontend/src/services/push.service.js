@@ -73,6 +73,25 @@ export const subscribeToPush = async () => {
   }
 };
 
+// True if THIS browser currently holds an active push subscription.
+export const isSubscribed = async () => {
+  if (!isPushSupported()) return false;
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    const sub = await registration?.pushManager.getSubscription();
+    return !!sub;
+  } catch {
+    return false;
+  }
+};
+
+// Fires a real OS push to the current user's own devices (end-to-end test).
+// Returns { pushEnabled, devices } so the UI can explain failures precisely.
+export const sendTestPush = async () => {
+  const res = await api.post("/push/test");
+  return res.data?.data || { pushEnabled: false, devices: 0 };
+};
+
 export const unsubscribeFromPush = async () => {
   if (!isPushSupported()) return;
   const registration = await navigator.serviceWorker.getRegistration();
