@@ -24,4 +24,8 @@ if (missing.length) {
   );
 }
 
+// True only when all three credentials are present. Controllers use this to
+// return a clear "not configured" error instead of an opaque Cloudinary throw.
+cloudinary.isConfigured = () => missing.length === 0;
+
 module.exports = cloudinary;

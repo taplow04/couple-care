@@ -28,8 +28,10 @@ export const uploadChatMedia = async (file, caption = "", onProgress) => {
   formData.append("file", file);
   if (caption) formData.append("text", caption);
 
+  // Do NOT set Content-Type manually — the browser must add the multipart
+  // boundary itself. Setting "multipart/form-data" by hand drops the boundary
+  // and the server fails to parse the file.
   const response = await api.post("/chat/upload", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
     onUploadProgress: (e) => {
       if (e.total) {
         onProgress?.(Math.round((e.loaded * 100) / e.total));

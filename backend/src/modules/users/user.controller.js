@@ -60,6 +60,14 @@ const uploadPhoto = asyncHandler(async (req, res) => {
       .json({ success: false, message: "Invalid image format" });
   }
 
+  if (!cloudinary.isConfigured()) {
+    return res.status(500).json({
+      success: false,
+      message:
+        "Image uploads are not configured on the server (missing Cloudinary credentials).",
+    });
+  }
+
   let result;
   try {
     result = await cloudinary.uploader.upload(imageData, {

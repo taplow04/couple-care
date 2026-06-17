@@ -57,8 +57,12 @@ const ImageUploader = ({ currentUrl, name, onUploadComplete, onError }) => {
         // Clean up object URL
         URL.revokeObjectURL(objectUrl);
         setPreview(res.data.url);
-      } catch {
-        const msg = "Upload failed. Please try again.";
+      } catch (err) {
+        const msg =
+          err?.response?.data?.message ||
+          (err?.response?.status === 413
+            ? "Image is too large for the server."
+            : "Upload failed. Please try again.");
         setUploadError(msg);
         onError?.(msg);
         // Roll back preview

@@ -44,6 +44,14 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: "No file provided" });
   }
 
+  if (!cloudinary.isConfigured()) {
+    return res.status(500).json({
+      success: false,
+      message:
+        "File uploads are not configured on the server (missing Cloudinary credentials).",
+    });
+  }
+
   const couple = await getCoupleByUser(req.user._id);
 
   const isImage = file.mimetype.startsWith("image/");
