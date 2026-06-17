@@ -1,0 +1,201 @@
+<div align="center">
+
+# 💕 CoupleCare
+
+**Your relationship companion — chat, calls, moods, memories, milestones, and AI insights, all in one place.**
+
+A full-stack app for couples to stay close: real-time 1:1 messaging with media sharing, voice/video calls, mood tracking, shared memories, a relationship journey timeline, and AI-powered relationship insights.
+
+</div>
+
+---
+
+## ✨ Features
+
+- **Secure onboarding** — email + password registration gated by a **6-digit OTP** (verified before the account is created), plus forgot/reset password.
+- **Pair with one partner** — connect via a unique pair code; soft unmatch keeps your data.
+- **Real-time chat** — 1:1 messaging over Socket.io with typing indicators, seen receipts, delete, and **media sharing** (images & files via Cloudinary) with a shared-media gallery.
+- **Voice & video calls** — WebRTC peer-to-peer calling between partners (STUN/TURN), with full call lifecycle and history.
+- **Live presence** — true online / last-seen / in-call / typing status.
+- **Mood tracking** — log moods with intensity & notes; partner mood alerts; analytics, trends, heatmaps & compatibility.
+- **Shared memories** — a co-owned timeline of dates, trips, anniversaries & milestones (with photos).
+- **Relationship journey** — days-together, milestones, and stats based on your real start date.
+- **AI insights** — concise, bulleted relationship health score, weekly summaries, and mood analysis (Groq / Llama 3.3).
+- **Smart reminders** — automated mood, birthday, and anniversary notifications (real-time + scheduled).
+- **Privacy controls** — granular per-data-type visibility settings.
+- **Installable PWA** — branded icons, manifest, and mobile-first UI.
+
+---
+
+## 🏗️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 19 + Vite, React Router, Axios, Socket.io-client, WebRTC |
+| **Backend** | Node.js, Express 5, Socket.io |
+| **Database** | MongoDB (Mongoose 9) — MongoDB Atlas |
+| **Media storage** | Cloudinary (avatars + chat media) |
+| **Email** | Brevo (transactional — OTP, password reset) |
+| **AI** | Groq SDK (`llama-3.3-70b-versatile`) |
+| **Auth** | JWT (bcrypt password hashing) |
+| **Hosting** | Frontend → Vercel · Backend → Render |
+
+---
+
+## 📁 Repository Structure
+
+This is a two-project repo — `frontend/` and `backend/` run independently.
+
+```
+couple-care/
+├── backend/                 # Express + Socket.io API
+│   └── src/
+│       ├── server.js        # HTTP server, DB connect, Socket.io, cron jobs
+│       ├── app.js           # Express middleware + routes
+│       ├── config/          # db + cloudinary config
+│       ├── middleware/       # auth, error handling
+│       ├── modules/          # feature modules (model/service/controller/routes)
+│       │   ├── auth/         # OTP registration, login
+│       │   ├── users/        # profile, avatar upload, privacy
+│       │   ├── couples/      # pairing, partner profile, unmatch
+│       │   ├── chat/         # messages, media upload, socket signaling, calls
+│       │   ├── moods/  memories/  histories/  dashboard/
+│       │   ├── ai/           # Groq-powered insights
+│       │   ├── notifications/ # real-time + scheduled
+│       │   ├── security/     # email (Brevo), tokens, password reset
+│       │   └── calls/        # WebRTC call history
+│       └── utils/            # realtime registry, jwt, helpers
+│
+└── frontend/                # React + Vite SPA
+    └── src/
+        ├── api/              # axios instance
+        ├── services/         # one module per API domain
+        ├── context/          # Auth, Call, Notifications providers
+        ├── hooks/            # presence, realtime notifications
+        ├── components/       # UI (chat, call, dashboard, ai, journey…)
+        ├── pages/            # route pages
+        └── utils/            # getFirstName, etc.
+```
+
+The backend follows a consistent module pattern: `*.model.js` (schema), `*.service.js` (logic), `*.controller.js` (HTTP), `*.routes.js` (router). All API responses use `{ success, data }`.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- A MongoDB database (Atlas or local)
+- Cloudinary, Brevo, and Groq accounts (for media, email, and AI)
+
+### 1. Backend
+
+```bash
+cd backend
+npm install
+cp .env.example .env      # then fill in the values below
+npm run dev               # nodemon on http://localhost:5000
+```
+
+**`backend/.env`:**
+
+```env
+PORT=5000
+MONGO_URI=mongodb+srv://...            # MongoDB Atlas connection string
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRE=30d
+
+FRONTEND_URL=http://localhost:5173     # CORS origin
+APP_URL=http://localhost:5173          # FRONTEND origin used in email links
+
+GROQ_API_KEY=...
+BREVO_API_KEY=...
+EMAIL_FROM=noreply@yourdomain.com      # must be a Brevo-VERIFIED sender
+
+CLOUDINARY_CLOUD_NAME=...              # exact cloud name from Cloudinary dashboard
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+```
+
+> ⚠️ **All three `CLOUDINARY_*` values must come from the same Cloudinary account**, and `CLOUDINARY_CLOUD_NAME` must be your **actual** cloud name (not the project name) — otherwise uploads fail with `Invalid cloud_name`.
+>
+> ⚠️ **`APP_URL` must be the frontend origin** (it builds password-reset links), and **`EMAIL_FROM` must be a Brevo-verified sender** or OTP/reset emails won't send.
+
+The server validates required env vars on boot (`MONGO_URI` / `JWT_SECRET` are fatal; the rest warn).
+
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev               # Vite on http://localhost:5173
+```
+
+**`frontend/.env`:**
+
+```env
+VITE_API_URL=http://localhost:5000/api/v1
+# Optional — TURN servers for reliable calls on mobile/symmetric NAT:
+# VITE_TURN_URL=
+# VITE_TURN_USERNAME=
+# VITE_TURN_CREDENTIAL=
+```
+
+> The socket connection is derived from `VITE_API_URL` (it strips `/api/v1`). Without TURN, calls work on Wi-Fi but may stall on cellular/symmetric-NAT networks.
+
+---
+
+## 📜 Scripts
+
+**Backend** (`backend/`)
+| Command | Description |
+|---|---|
+| `npm run dev` | Start with nodemon (hot reload) |
+| `npm start` | Start the server |
+
+**Frontend** (`frontend/`)
+| Command | Description |
+|---|---|
+| `npm run dev` | Vite dev server |
+| `npm run build` | Production build |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Run ESLint |
+
+To regenerate the PWA icons from the heart SVG: `node frontend/scripts/generate-icons.cjs`.
+
+---
+
+## 🔐 Authentication Flow
+
+1. **Register** → `POST /auth/request-otp` (name, email, password) emails a 6-digit code; no account exists yet (stored in a TTL'd `PendingRegistration`).
+2. **Verify** → `POST /auth/verify-otp` creates the account and returns `{ user, token }` (auto-login).
+3. **Login** → `POST /auth/login` returns `{ user, token }`.
+4. **Forgot password** → `POST /security/forgot-password` → email link → `POST /security/reset-password`.
+
+JWT is stored in `localStorage` and attached as `Authorization: Bearer <token>`. OTP codes are hashed at rest, expire in 10 minutes, and are rate-limited.
+
+---
+
+## ☁️ Deployment
+
+| Service | Hosts | Notes |
+|---|---|---|
+| **Vercel** | Frontend | Auto-deploys on push to `master`. Set `VITE_API_URL` (+ optional `VITE_TURN_*`). |
+| **Render** | Backend | Auto-deploys on push to `master`. Set all backend env vars above. WebSocket-enabled. |
+| **MongoDB Atlas** | Database | Connection string → `MONGO_URI`. |
+| **Cloudinary** | Media | Avatars + chat media. |
+| **Brevo** | Email | OTP + password reset; sender must be verified. |
+
+Both apps deploy from the same repo by pushing to `master`.
+
+---
+
+## 🤝 Contributing
+
+The codebase follows the established module pattern and `{ success, data }` response shape. See `CLAUDE.md` for detailed architecture notes, conventions, and gotchas.
+
+---
+
+<div align="center">
+Made with 💕 for couples.
+</div>
