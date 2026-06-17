@@ -5,16 +5,29 @@ const SOCKET_URL = import.meta.env.VITE_API_URL
   : "http://localhost:5000";
 
 let socket = null;
+let socketToken = null;
 
 export const getSocket = () => socket;
 
+/**
+ * Returns the single shared socket, creating it only once. This is called from
+ * many places on mount (AppLayout, presence, unread, chat, calls). It MUST be
+ * idempotent: returning the existing instance whether it's connected OR still
+ * connecting. (The old code disconnected an in-flight socket and made a new one
+ * on every concurrent call, which orphaned already-attached listeners and made
+ * the server see connect/disconnect churn — the real cause of flaky presence
+ * and missed events.) Only rebuild if the auth token actually changed.
+ */
 export const connectSocket = (token) => {
-  if (socket?.connected) return socket;
+  if (socket && socketToken === token) return socket;
+
+  // Token changed (re-login) — tear down the old connection first.
   if (socket) {
     socket.disconnect();
     socket = null;
   }
 
+  socketToken = token;
   socket = io(SOCKET_URL, {
     auth: { token },
     reconnection: true,
@@ -31,6 +44,7 @@ export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
     socket = null;
+    socketToken = null;
   }
 };
 

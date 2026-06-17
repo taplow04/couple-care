@@ -52,6 +52,31 @@ const deleteMessage = async (userId, messageId) => {
   return { messageId: String(messageId), coupleId: String(couple._id) };
 };
 
+// Unread = messages in this couple sent by the PARTNER that the user hasn't
+// seen yet. Derived from the existing Message.seen flag.
+const getUnreadCount = async (userId) => {
+  const couple = await getCoupleByUser(userId);
+
+  return await Message.countDocuments({
+    coupleId: couple._id,
+    senderId: { $ne: userId },
+    seen: false,
+  });
+};
+
+// Mark every unseen partner message as seen (called when the user opens chat),
+// so the server-side unread count resets — not just the client badge.
+const markAllSeen = async (userId) => {
+  const couple = await getCoupleByUser(userId);
+
+  await Message.updateMany(
+    { coupleId: couple._id, senderId: { $ne: userId }, seen: false },
+    { seen: true },
+  );
+
+  return { coupleId: String(couple._id) };
+};
+
 const markSeen = async (userId, messageId) => {
   const couple = await getCoupleByUser(userId);
 
@@ -76,4 +101,6 @@ module.exports = {
   getMessages,
   markSeen,
   deleteMessage,
+  getUnreadCount,
+  markAllSeen,
 };

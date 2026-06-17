@@ -145,7 +145,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <div className="dashboard-content">
-        <TopHeader />
+        <TopHeader partner={dashData?.partner} />
 
         <div className="db-fade-in" style={{ animationDelay: "0ms" }}>
           <WelcomeCard

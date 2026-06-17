@@ -76,6 +76,22 @@
   border: 2px solid var(--background, #f7f8fc);
 }
 
+/* Green "partner online" dot on the chat icon. */
+.top-header__online-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--success, #32c36c);
+  border: 2px solid var(--background, #f7f8fc);
+}
+
+.top-header__badge--chat {
+  background: var(--primary, #ff5c8a);
+}
+
 .top-header__avatar-btn {
   width: 42px;
   height: 42px;

@@ -535,6 +535,15 @@ const initializeSocket = (io) => {
           } catch (e) {
             console.error("call history (offline) error:", e.message);
           }
+          // Receiver is offline — a push is the only way they'll know. Frame it
+          // as an incoming call so a quick tap can still call back.
+          sendPushToUser(receiverId, {
+            type: "call",
+            title: `Missed ${callType} call`,
+            body: `${socket.user.name?.split(" ")[0] || "Your partner"} tried to reach you`,
+            data: { url: "/chat" },
+            tag: "missed-call",
+          }).catch(() => {});
           return sendAck(ack, { success: false, reason: "offline" });
         }
 
@@ -570,6 +579,14 @@ const initializeSocket = (io) => {
           }
           emitToUser(receiverId, "call:missed", { callId });
           emitToUser(userId, "call:timeout", { callId });
+          // Leave a missed-call push so an unanswered ring isn't lost.
+          sendPushToUser(receiverId, {
+            type: "call",
+            title: `Missed ${callType} call`,
+            body: `${socket.user.name?.split(" ")[0] || "Your partner"} tried to reach you`,
+            data: { url: "/chat" },
+            tag: "missed-call",
+          }).catch(() => {});
           cleanupCall(callId);
         }, RING_TIMEOUT_MS);
 

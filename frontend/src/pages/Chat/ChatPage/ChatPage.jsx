@@ -4,6 +4,7 @@ import { useVisualViewport } from "../../../hooks/useVisualViewport";
 import {
   getMessages,
   markMessageSeen,
+  markAllSeen,
   uploadChatMedia,
 } from "../../../services/chat.service";
 import { getDashboard } from "../../../services/dashboard.service";
@@ -56,6 +57,10 @@ const ChatPage = () => {
       setLoading(false);
       return;
     }
+
+    // Opening chat reads the thread — clear the server-side unread count so the
+    // dashboard badge resets and stays reset across refreshes.
+    markAllSeen().catch(() => {});
 
     Promise.allSettled([getMessages(), getDashboard()]).then(([msgRes, dashRes]) => {
       if (msgRes.status === "fulfilled") {

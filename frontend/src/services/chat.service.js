@@ -15,6 +15,16 @@ export const markMessageSeen = async (messageId) => {
   return response.data;
 };
 
+export const getUnreadCount = async () => {
+  const response = await api.get("/chat/unread-count");
+  return response.data;
+};
+
+export const markAllSeen = async () => {
+  const response = await api.patch("/chat/seen-all");
+  return response.data;
+};
+
 export const deleteMessage = async (messageId) => {
   const response = await api.delete(`/chat/messages/${messageId}`);
   return response.data;

@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useNotificationsCtx } from "../../../context/NotificationsContext";
+import { useChatUnreadCtx } from "../../../context/ChatUnreadContext";
+import { usePartnerPresence } from "../../../hooks/usePartnerPresence";
 import "./TopHeader.css";
 
 const ChatIcon = () => (
@@ -38,10 +40,14 @@ const BellIcon = () => (
  * badge) and the user's own avatar on the right. Since CoupleCare is 1:1, the
  * chat icon opens the partner chat directly (no chat list).
  */
-const TopHeader = () => {
+const TopHeader = ({ partner }) => {
   const navigate = useNavigate();
   const { unreadCount } = useNotificationsCtx();
+  const { unreadChats } = useChatUnreadCtx();
+  const presence = usePartnerPresence(partner?._id);
+
   const badgeCount = Math.min(unreadCount, 99);
+  const chatBadge = unreadChats > 99 ? "99+" : unreadChats;
 
   return (
     <header className="top-header">
@@ -58,9 +64,17 @@ const TopHeader = () => {
         <button
           className="top-header__icon-btn"
           onClick={() => navigate("/chat")}
-          aria-label="Chat with partner"
+          aria-label={`Chat with partner${unreadChats > 0 ? `, ${unreadChats} unread` : ""}`}
         >
           <ChatIcon />
+          {presence.online && (
+            <span className="top-header__online-dot" aria-hidden="true" />
+          )}
+          {unreadChats > 0 && (
+            <span className="top-header__badge top-header__badge--chat" aria-hidden="true">
+              {chatBadge}
+            </span>
+          )}
         </button>
 
         <button

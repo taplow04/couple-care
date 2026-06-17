@@ -5,6 +5,7 @@ import App from "./App";
 
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
+import { ChatUnreadProvider } from "./context/ChatUnreadContext";
 
 import { registerServiceWorker } from "./services/push.service";
 
@@ -14,7 +15,9 @@ import "./styles/variables.css";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <AuthProvider>
     <NotificationsProvider>
-      <App />
+      <ChatUnreadProvider>
+        <App />
+      </ChatUnreadProvider>
     </NotificationsProvider>
   </AuthProvider>,
 );

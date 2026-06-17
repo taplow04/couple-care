@@ -19,6 +19,10 @@ router.post("/messages", authenticateUser, controller.send);
 
 router.get("/messages", authenticateUser, controller.getAll);
 
+router.get("/unread-count", authenticateUser, controller.unreadCount);
+
+router.patch("/seen-all", authenticateUser, controller.seenAll);
+
 router.post(
   "/upload",
   authenticateUser,

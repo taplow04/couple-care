@@ -7,7 +7,9 @@ import { CallProvider } from "../context/CallContext.jsx";
 import IncomingCallModal from "../components/call/IncomingCallModal/IncomingCallModal.jsx";
 import OutgoingCallModal from "../components/call/OutgoingCallModal/OutgoingCallModal.jsx";
 import CallErrorToast from "../components/call/CallErrorToast/CallErrorToast.jsx";
+import PushPrompt from "../components/push/PushPrompt/PushPrompt.jsx";
 import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications.js";
+import { useChatUnread } from "../hooks/useChatUnread.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { connectSocket } from "../services/socket.service.js";
 import { isPushSupported, getPermission, subscribeToPush } from "../services/push.service.js";
@@ -22,8 +24,9 @@ const showFloatingBell = (pathname) =>
   !isImmersive(pathname) && pathname !== "/dashboard";
 
 const AppLayout = () => {
-  // App-wide: keep the unread badge live and seeded.
+  // App-wide: keep the unread badges live and seeded.
   useRealtimeNotifications();
+  useChatUnread();
 
   const { pathname } = useLocation();
 
@@ -58,6 +61,7 @@ const AppLayout = () => {
 
       {showFloatingBell(pathname) && <NotificationBell />}
       {!immersive && <BottomNav />}
+      {!immersive && <PushPrompt />}
 
       {/* Global call overlays */}
       <IncomingCallModal />
