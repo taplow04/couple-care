@@ -37,6 +37,27 @@ const coupleSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // ─── Relationship Health (a COUPLE metric — identical for both partners) ──
+    // Cached result of couples/health.service.computeCoupleHealth. Recomputed on
+    // read and on relevant writes (mood/memory). Stored here so the score is
+    // owned by the couple, can back real-time emits, and supports history.
+    healthScore: {
+      type: Number,
+      default: null,
+    },
+    healthLevel: {
+      type: String,
+      default: null,
+    },
+    healthBreakdown: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    healthUpdatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

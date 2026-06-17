@@ -14,6 +14,7 @@ const {
 
 const { generateAIResponse } = require("./ai.engine");
 const { getDaysTogether } = require("../couples/couple.helpers");
+const { getCoupleHealthForUser } = require("../couples/health.service");
 
 const getUserData = async (userId) => {
   const user = await User.findById(userId);
@@ -68,37 +69,11 @@ const generateWeeklySummary = async (userId) => {
   return await generateAIResponse(prompt);
 };
 
+// Relationship Health is a COUPLE metric — identical for both partners. The
+// real computation lives in couples/health.service (deterministic, couple-wide).
+// This delegates so the AI endpoint returns the same score as the dashboard.
 const generateHealthScore = async (userId) => {
-  const data = await getUserData(userId);
-
-  let score = 50;
-
-  data.moods.forEach((mood) => {
-    if (["happy", "loved", "excited"].includes(mood.moodType)) {
-      score += 2;
-    }
-
-    if (["sad", "angry", "stressed", "anxious"].includes(mood.moodType)) {
-      score -= 2;
-    }
-  });
-
-  score += Math.min(data.memories.length, 20);
-
-  score += Math.min(Math.floor(data.messages / 20), 20);
-
-  score = Math.max(0, Math.min(score, 100));
-
-  let level = "Needs Attention";
-
-  if (score >= 90) level = "Excellent";
-  else if (score >= 75) level = "Healthy";
-  else if (score >= 50) level = "Moderate";
-
-  return {
-    score,
-    level,
-  };
+  return await getCoupleHealthForUser(userId);
 };
 
 const generateMoodAnalysis = async (userId) => {

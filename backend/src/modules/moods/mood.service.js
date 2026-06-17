@@ -3,6 +3,7 @@ const User = require("../users/user.model");
 const Couple = require("../couples/couple.model");
 const { getPartnerId } = require("../chat/chat.helpers");
 const { createNotification } = require("../notifications/notification.service");
+const { recomputeAndBroadcast } = require("../couples/health.service");
 
 // Negative moods that should proactively alert the partner so they can offer
 // support. Maps mood type -> the phrase used in the notification copy.
@@ -69,6 +70,10 @@ const createMood = async (userId, data) => {
   // Proactively alert the partner on negative moods (non-blocking).
   await maybeAlertPartner(userId, mood);
 
+  // Recompute the couple's health and push it live to BOTH partners so every
+  // surface (dashboard, analytics, journey, health card) updates in real time.
+  await recomputeAndBroadcast(user.currentCoupleId, "mood");
+
   return mood;
 };
 
@@ -87,7 +92,12 @@ const deleteMood = async (userId, moodId) => {
     throw new Error("Unauthorized");
   }
 
+  const coupleId = mood.coupleId;
+
   await mood.deleteOne();
+
+  // Deleting a mood changes the couple's score too — keep both partners in sync.
+  if (coupleId) await recomputeAndBroadcast(coupleId, "mood");
 
   return true;
 };

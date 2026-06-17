@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useCoupleEvents } from "../../../hooks/useCoupleEvents";
 import {
   getMyMoods,
   getPartnerMoods,
@@ -125,6 +126,22 @@ const MoodAnalyticsPage = () => {
 
     load();
   }, []);
+
+  /* Live refresh when either partner logs/deletes a mood (no skeleton flicker). */
+  const refresh = useCallback(async () => {
+    const [myMoodsRes, partnerMoodsRes, analyticsRes] = await Promise.allSettled([
+      getMyMoods(),
+      getPartnerMoods(),
+      getMoodAnalytics(),
+    ]);
+    if (myMoodsRes.status === "fulfilled") setMyMoods(myMoodsRes.value.data ?? []);
+    if (partnerMoodsRes.status === "fulfilled")
+      setPartnerMoods(partnerMoodsRes.value.data ?? []);
+    if (analyticsRes.status === "fulfilled")
+      setMyAnalytics(analyticsRes.value.data ?? null);
+  }, []);
+
+  useCoupleEvents({ "couple:activity": refresh });
 
   /* Derived data (cheap — no useMemo needed at this scale) */
   const partnerAnalytics = useMemo(() => computeLocalAnalytics(partnerMoods), [partnerMoods]);

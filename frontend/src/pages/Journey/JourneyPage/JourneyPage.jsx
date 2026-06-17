@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useCoupleEvents } from "../../../hooks/useCoupleEvents";
 import { getDashboard } from "../../../services/dashboard.service";
 import {
   getMemoriesTimeline,
@@ -132,6 +133,29 @@ const JourneyPage = () => {
 
     load();
   }, []);
+
+  /* Live updates: shared health score + memory stats when either partner acts. */
+  const refresh = useCallback(async () => {
+    const [dashRes, statsRes, timelineRes] = await Promise.allSettled([
+      getDashboard(),
+      getMemoryStats(),
+      getMemoriesTimeline(),
+    ]);
+    if (dashRes.status === "fulfilled") {
+      setDashboard(dashRes.value.data);
+      if (dashRes.value.data?.health) setHealthScore(dashRes.value.data.health);
+    }
+    if (statsRes.status === "fulfilled") setMemStats(statsRes.value.data ?? null);
+    if (timelineRes.status === "fulfilled")
+      setTimeline(timelineRes.value.data ?? {});
+  }, []);
+
+  useCoupleEvents({
+    "health:update": (payload) => {
+      if (payload?.score != null) setHealthScore(payload);
+    },
+    "couple:activity": refresh,
+  });
 
   if (loading) return <div className="jp"><JourneySkeleton /></div>;
   if (noPartner) return <div className="jp"><NoPartnerState /></div>;

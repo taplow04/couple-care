@@ -14,21 +14,17 @@ const getScoreConfig = (score) => {
   return { level: "Needs Care", color: "#ff5252", trackColor: "rgba(255,82,82,0.12)" };
 };
 
-const computeLocalScore = (moodAnalytics) => {
-  if (!moodAnalytics) return null;
-  const { happy = 0, loved = 0, excited = 0, sad = 0, angry = 0, stressed = 0, anxious = 0 } = moodAnalytics;
-  const positive = happy + loved + excited;
-  const negative = sad + angry + stressed + anxious;
-  const total = positive + negative;
-  if (total === 0) return null;
-  return Math.min(100, Math.round((positive / total) * 100));
-};
-
-const HealthScoreCard = ({ aiScore, moodAnalytics }) => {
+const HealthScoreCard = ({ aiScore, health }) => {
   const [animated, setAnimated] = useState(false);
 
-  const score = aiScore?.score ?? computeLocalScore(moodAnalytics);
-  const level = aiScore?.level ?? (score !== null ? getScoreConfig(score).level : null);
+  // Relationship Health is a COUPLE metric — identical for both partners. Use
+  // the couple-level value from either the dashboard payload (`health`, shown
+  // immediately) or the AI endpoint (`aiScore`); both return the same number.
+  // No per-user fallback — that was the source of divergent scores.
+  const source = aiScore ?? health ?? null;
+  const score = source?.score ?? null;
+  const level =
+    source?.level ?? (score !== null ? getScoreConfig(score).level : null);
   const hasData = score !== null;
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 const Memory = require("./memory.model");
 
 const User = require("../users/user.model");
+const { recomputeAndBroadcast } = require("../couples/health.service");
 
 const createError = (message, statusCode = 400) => {
   const error = new Error(message);
@@ -33,6 +34,9 @@ const createMemory = async (userId, data) => {
 
     coupleId,
   });
+
+  // Memories feed the couple health score — recompute + push live to both.
+  await recomputeAndBroadcast(coupleId, "memory");
 
   return memory;
 };
@@ -77,6 +81,8 @@ const deleteMemory = async (userId, memoryId) => {
   }
 
   await memory.deleteOne();
+
+  await recomputeAndBroadcast(coupleId, "memory");
 
   return true;
 };

@@ -4,6 +4,7 @@ const Mood = require("../moods/mood.model");
 const { getMoodAnalytics } = require("../moods/mood.service");
 const History = require("../histories/history.model");
 const { getDaysTogether, getRelationshipStart } = require("../couples/couple.helpers");
+const { computeCoupleHealth } = require("../couples/health.service");
 
 const getDashboardData = async (userId) => {
   const user = await User.findById(userId);
@@ -48,6 +49,17 @@ const getDashboardData = async (userId) => {
 
   const daysTogether = getDaysTogether(couple);
 
+  // Couple-level health (identical for both partners). Computed here so the
+  // dashboard card shows the shared score immediately, without waiting on the
+  // separate AI endpoint. Never let a health failure break the dashboard.
+  let health = null;
+  try {
+    const { score, level } = await computeCoupleHealth(couple._id);
+    health = { score, level };
+  } catch (e) {
+    console.error("[dashboard] health compute failed:", e.message);
+  }
+
   return {
     partner,
 
@@ -58,6 +70,8 @@ const getDashboardData = async (userId) => {
 
       startDate: getRelationshipStart(couple),
     },
+
+    health,
 
     moodAnalytics,
 

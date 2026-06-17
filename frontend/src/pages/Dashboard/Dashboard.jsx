@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getDashboard } from "../../services/dashboard.service";
 import { getMemories } from "../../services/memories.service";
 import { getHealthScore, getWeeklySummary } from "../../services/ai.service";
+import { useCoupleEvents } from "../../hooks/useCoupleEvents";
 
 import TopHeader from "../../components/navigation/TopHeader/TopHeader";
 import WelcomeCard from "../../components/dashboard/WelcomeCard/WelcomeCard";
@@ -77,6 +78,28 @@ const Dashboard = () => {
     loadPrimary();
   }, []);
 
+  // Live couple updates: when either partner logs a mood / adds a memory, the
+  // server recomputes the shared health score and broadcasts to both. Update
+  // the score instantly and refresh recent activity — no manual reload.
+  const refreshDashboard = async () => {
+    try {
+      const res = await getDashboard();
+      setDashData(res.data);
+      if (res.data?.health) setAiScore(res.data.health);
+    } catch {
+      /* keep current data on a failed refresh */
+    }
+  };
+
+  useCoupleEvents({
+    "health:update": (payload) => {
+      if (payload?.score != null) setAiScore(payload);
+    },
+    "couple:activity": () => {
+      refreshDashboard();
+    },
+  });
+
   const loadPrimary = async () => {
     try {
       const res = await getDashboard();
@@ -142,7 +165,7 @@ const Dashboard = () => {
           <div className="db-fade-in" style={{ animationDelay: "60ms" }}>
             <HealthScoreCard
               aiScore={aiScore}
-              moodAnalytics={dashData?.moodAnalytics}
+              health={dashData?.health}
             />
           </div>
           <div className="db-fade-in" style={{ animationDelay: "100ms" }}>
