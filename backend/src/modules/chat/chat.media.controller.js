@@ -91,7 +91,9 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error("[cloudinary] chat upload failed:", err.message);
-    const error = new Error("Upload failed. Please try again.");
+    const error = new Error(
+      `Upload failed: ${err.message || "Cloudinary error"}`,
+    );
     error.statusCode = 502;
     throw error;
   }

@@ -79,7 +79,9 @@ const uploadPhoto = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error("[cloudinary] avatar upload failed:", err.message);
-    const error = new Error("Image upload failed. Please try again.");
+    const error = new Error(
+      `Image upload failed: ${err.message || "Cloudinary error"}`,
+    );
     error.statusCode = 502;
     throw error;
   }
