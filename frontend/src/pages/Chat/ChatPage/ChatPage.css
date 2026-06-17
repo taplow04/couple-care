@@ -7,10 +7,18 @@
      viewport. `--app-height` (set by useVisualViewport) tracks the keyboard;
      100dvh is the fallback for browsers without the override. */
   height: var(--app-height, 100dvh);
+  /* Follow the visual viewport's offset so the chat stays pinned to the visible
+     area when iOS scrolls the page up for the keyboard (prevents the white gap). */
+  transform: translateY(var(--app-top, 0px));
   display: flex;
   flex-direction: column;
   background: #fff;
   z-index: 1;
+  overflow: hidden;
+}
+
+/* Body scroll lock while the chat is open (set by useVisualViewport). */
+body.vv-lock {
   overflow: hidden;
 }
 
@@ -117,6 +125,6 @@
     left: 50%;
     right: auto;
     width: 640px;
-    transform: translateX(-50%);
+    transform: translate(-50%, var(--app-top, 0px));
   }
 }

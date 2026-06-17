@@ -15,10 +15,18 @@ import { useEffect } from "react";
 export const useVisualViewport = () => {
   useEffect(() => {
     const vv = window.visualViewport;
+    const root = document.documentElement;
 
     const apply = () => {
+      // height = the actually-visible area (shrinks when the keyboard opens).
       const h = vv ? vv.height : window.innerHeight;
-      document.documentElement.style.setProperty("--app-height", `${h}px`);
+      // offsetTop = how far the visual viewport is pushed down from the layout
+      // viewport (iOS scrolls the page up to reveal a focused input). A
+      // position:fixed element is anchored to the LAYOUT viewport, so without
+      // compensating for this it ends up above the visible area → white gap.
+      const top = vv ? vv.offsetTop : 0;
+      root.style.setProperty("--app-height", `${h}px`);
+      root.style.setProperty("--app-top", `${top}px`);
     };
 
     apply();
@@ -30,6 +38,10 @@ export const useVisualViewport = () => {
     window.addEventListener("resize", apply);
     window.addEventListener("orientationchange", apply);
 
+    // Lock the body so the page itself can't scroll behind the chat (prevents
+    // the rubber-band white-screen on iOS).
+    document.body.classList.add("vv-lock");
+
     return () => {
       if (vv) {
         vv.removeEventListener("resize", apply);
@@ -37,8 +49,10 @@ export const useVisualViewport = () => {
       }
       window.removeEventListener("resize", apply);
       window.removeEventListener("orientationchange", apply);
-      // Release the override so other screens use their normal sizing.
-      document.documentElement.style.removeProperty("--app-height");
+      document.body.classList.remove("vv-lock");
+      // Release the overrides so other screens use their normal sizing.
+      root.style.removeProperty("--app-height");
+      root.style.removeProperty("--app-top");
     };
   }, []);
 };
