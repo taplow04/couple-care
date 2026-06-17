@@ -18,18 +18,21 @@ const formatBytes = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const MessageBody = ({ message }) => {
+const MessageBody = ({ message, onMediaClick }) => {
   if (message.type === "image" && message.mediaUrl) {
     return (
       <div className="msg-bubble__media">
-        <a href={message.mediaUrl} target="_blank" rel="noopener noreferrer">
-          <img
-            className="msg-bubble__image"
-            src={message.mediaUrl}
-            alt={message.fileName || "Shared image"}
-            loading="lazy"
-          />
-        </a>
+        {/* Not an <a>: a long-press on a link/image fires the native callout and
+            a tap navigates away, which blocked the delete menu. We open the
+            image via onClick (guarded against long-press) instead. */}
+        <img
+          className="msg-bubble__image"
+          src={message.mediaUrl}
+          alt={message.fileName || "Shared image"}
+          loading="lazy"
+          draggable={false}
+          onClick={(e) => onMediaClick(e, message.mediaUrl, false)}
+        />
         {message.text ? (
           <p className="msg-bubble__text">{message.text}</p>
         ) : null}
@@ -45,6 +48,8 @@ const MessageBody = ({ message }) => {
         target="_blank"
         rel="noopener noreferrer"
         download={message.fileName || true}
+        draggable={false}
+        onClick={(e) => onMediaClick(e, message.mediaUrl, true)}
       >
         <span className="msg-bubble__file-icon" aria-hidden="true">📄</span>
         <span className="msg-bubble__file-info">
@@ -87,14 +92,35 @@ const TickIcon = ({ seen, failed, pending }) => {
 const MessageBubble = ({ message, isMine, onDelete }) => {
   const [showOptions, setShowOptions] = useState(false);
   const pressTimer = useRef(null);
+  // True for the click that immediately follows a long-press, so opening media
+  // doesn't fire when the user was actually opening the delete menu.
+  const suppressClickRef = useRef(false);
 
   const startPress = useCallback(() => {
     if (!isMine) return;
-    pressTimer.current = setTimeout(() => setShowOptions(true), LONG_PRESS_MS);
+    suppressClickRef.current = false;
+    pressTimer.current = setTimeout(() => {
+      suppressClickRef.current = true;
+      setShowOptions(true);
+    }, LONG_PRESS_MS);
   }, [isMine]);
 
   const cancelPress = useCallback(() => {
     clearTimeout(pressTimer.current);
+  }, []);
+
+  const handleMediaClick = useCallback((e, url, isFile) => {
+    // The click right after a long-press just opens the menu — don't navigate.
+    if (suppressClickRef.current) {
+      e.preventDefault();
+      suppressClickRef.current = false;
+      return;
+    }
+    if (!isFile) {
+      // Image: open full view in a new tab. (Files let the anchor default run.)
+      e.preventDefault();
+      window.open(url, "_blank", "noopener");
+    }
   }, []);
 
   const handleDeleteClick = useCallback(() => {
@@ -120,17 +146,25 @@ const MessageBubble = ({ message, isMine, onDelete }) => {
       onMouseDown={startPress}
       onMouseUp={cancelPress}
       onMouseLeave={cancelPress}
+      onContextMenu={(e) => {
+        // Suppress the native long-press/right-click menu so our own delete
+        // menu shows (and so images can be long-pressed to delete).
+        if (isMine) e.preventDefault();
+      }}
     >
       <div className="msg-bubble-wrap">
         {showOptions && (
           <MessageOptions
             isMine={isMine}
             onDelete={handleDeleteClick}
-            onClose={() => setShowOptions(false)}
+            onClose={() => {
+              setShowOptions(false);
+              suppressClickRef.current = false;
+            }}
           />
         )}
         <div className={cls}>
-          <MessageBody message={message} />
+          <MessageBody message={message} onMediaClick={handleMediaClick} />
           <div className="msg-bubble__meta">
             <span className="msg-bubble__time">{formatTime(message.createdAt)}</span>
             {isMine && (

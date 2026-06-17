@@ -1,8 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import "./MessageOptions.css";
 
 const MessageOptions = ({ onDelete, onClose, isMine }) => {
   const ref = useRef(null);
+  // Default to opening above the bubble; flip below for messages near the top
+  // (e.g. the first message) so the menu isn't hidden behind the chat header.
+  const [placement, setPlacement] = useState("above");
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // If the menu's top is within the header zone (or off-screen), open below.
+    if (el.getBoundingClientRect().top < 72) {
+      setPlacement("below");
+    }
+  }, []);
 
   useEffect(() => {
     const handler = (e) => {
@@ -21,7 +33,7 @@ const MessageOptions = ({ onDelete, onClose, isMine }) => {
   return (
     <div
       ref={ref}
-      className={`msg-options ${isMine ? "msg-options--mine" : "msg-options--theirs"}`}
+      className={`msg-options msg-options--${placement} ${isMine ? "msg-options--mine" : "msg-options--theirs"}`}
       onClick={(e) => e.stopPropagation()}
     >
       <button className="msg-options__btn msg-options__btn--delete" onClick={onDelete}>

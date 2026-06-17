@@ -1,9 +1,15 @@
 import "./DeleteConfirmModal.css";
 
 const DeleteConfirmModal = ({ message, onConfirm, onCancel }) => {
-  const preview = message.text.length > 80
-    ? message.text.slice(0, 80) + "…"
-    : message.text;
+  // Media messages may have no text — guard against it (this was crashing the
+  // modal, which is why photos couldn't be deleted).
+  const raw =
+    message.type === "image"
+      ? message.text || "📷 Photo"
+      : message.type === "file"
+        ? `📎 ${message.fileName || "File"}`
+        : message.text || "";
+  const preview = raw.length > 80 ? raw.slice(0, 80) + "…" : raw;
 
   return (
     <div className="del-modal-overlay" onClick={onCancel}>

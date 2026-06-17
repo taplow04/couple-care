@@ -77,6 +77,18 @@
   border-radius: 14px;
   object-fit: cover;
   background: rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  /* Stop iOS's long-press image "save/copy" callout from hijacking the press,
+     so long-press reaches our delete menu. */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.msg-bubble__file {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Media — file */

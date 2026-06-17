@@ -1,6 +1,5 @@
 .msg-options {
   position: absolute;
-  bottom: calc(100% + 8px);
   z-index: 100;
   background: #262626;
   border-radius: 12px;
@@ -8,6 +7,10 @@
   overflow: hidden;
   animation: msg-options-in 0.13s ease;
 }
+
+/* Open above the bubble by default; below it when near the top of the screen. */
+.msg-options--above { bottom: calc(100% + 8px); }
+.msg-options--below { top: calc(100% + 8px); }
 
 .msg-options--mine  { right: 0; }
 .msg-options--theirs { left: 0; }
