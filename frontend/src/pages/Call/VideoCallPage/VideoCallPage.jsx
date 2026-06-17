@@ -5,6 +5,7 @@ import VideoView from "../../../components/call/VideoView/VideoView";
 import CallControls from "../../../components/call/CallControls/CallControls";
 import CallTimer from "../../../components/call/CallTimer/CallTimer";
 import ConnectionStatus from "../../../components/call/ConnectionStatus/ConnectionStatus";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./VideoCallPage.css";
 
 const VideoCallPage = () => {
@@ -42,7 +43,7 @@ const VideoCallPage = () => {
 
       <div className="video-call__top">
         <div className="video-call__top-inner">
-          <span className="video-call__name">{peer?.name || "Your Partner"}</span>
+          <span className="video-call__name">{getFirstName(peer?.name, "Your Partner")}</span>
           {callState === "active" ? (
             <CallTimer startedAt={callStartedAt} className="video-call__timer" />
           ) : (

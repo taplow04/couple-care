@@ -1,18 +1,40 @@
-const { registerUser, loginUser } = require("./auth.service");
+const {
+  requestRegistration,
+  verifyRegistration,
+  resendOtp,
+  loginUser,
+} = require("./auth.service");
 const Couple = require("../couples/couple.model");
 
-const register = async (req, res, next) => {
+// Step 1: collect credentials + email an OTP (no account created yet).
+const requestOtp = async (req, res, next) => {
   try {
-    const result = await registerUser(req.body);
-
-    res.status(201).json({
-      success: true,
-      data: result,
-    });
+    const result = await requestRegistration(req.body);
+    res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
 };
+
+// Step 2: verify OTP → create account → auto-login.
+const verifyOtp = async (req, res, next) => {
+  try {
+    const result = await verifyRegistration(req.body);
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resend = async (req, res, next) => {
+  try {
+    const result = await resendOtp(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const login = async (req, res, next) => {
   try {
     const result = await loginUser(req.body);
@@ -25,6 +47,7 @@ const login = async (req, res, next) => {
     next(error);
   }
 };
+
 const getCurrentUser = async (req, res, next) => {
   try {
     const userObj = req.user.toObject ? req.user.toObject() : req.user;
@@ -49,7 +72,9 @@ const getCurrentUser = async (req, res, next) => {
 };
 
 module.exports = {
-  register,
+  requestOtp,
+  verifyOtp,
+  resend,
   login,
   getCurrentUser,
 };

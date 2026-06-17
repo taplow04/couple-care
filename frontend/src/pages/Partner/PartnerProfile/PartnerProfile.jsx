@@ -5,6 +5,8 @@ import {
   getPartnerProfile,
   unmatchPartner,
 } from "../../../services/couple.service";
+import SharedMedia from "../../../components/chat/SharedMedia/SharedMedia";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./PartnerProfile.css";
 
 const MOOD_META = {
@@ -94,6 +96,7 @@ const PartnerProfile = () => {
 
   const { partner, relationship, stats } = data;
   const initial = partner?.name ? partner.name[0].toUpperCase() : "♥";
+  const firstName = getFirstName(partner?.name, "Partner");
   const dominant = stats?.moodSummary?.dominant;
 
   return (
@@ -115,7 +118,7 @@ const PartnerProfile = () => {
             <span>{initial}</span>
           )}
         </div>
-        <h1 className="pp__name">{partner.name}</h1>
+        <h1 className="pp__name">{firstName}</h1>
         {relationship?.startDate && (
           <p className="pp__since">
             Together since {formatDate(relationship.startDate)}
@@ -207,6 +210,9 @@ const PartnerProfile = () => {
         </div>
       )}
 
+      {/* Shared photos & files exchanged in chat */}
+      <SharedMedia />
+
       <Chips title="Hobbies" items={partner.hobbies} tone="primary" />
       <Chips title="Likes" items={partner.likes} tone="success" />
       <Chips title="Dislikes" items={partner.dislikes} tone="muted" />
@@ -240,7 +246,7 @@ const PartnerProfile = () => {
       {confirmUnmatch && (
         <div className="pp__modal-overlay" onClick={() => !unmatching && setConfirmUnmatch(false)}>
           <div className="pp__modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="pp__modal-title">Unmatch {partner.name}?</h3>
+            <h3 className="pp__modal-title">Unmatch {firstName}?</h3>
             <p className="pp__modal-text">
               You'll both be disconnected and returned to setup. Your moods,
               memories and chats are kept — you can reconnect later.

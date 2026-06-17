@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./CoupleLanding.css";
 
 const CoupleLanding = () => {
@@ -64,7 +65,7 @@ const CoupleLanding = () => {
       </div>
 
       <p className="couple-landing__footer">
-        Hey {user?.name?.split(" ")[0] || "there"} 👋 — your partner needs the CoupleCare app too.
+        Hey {getFirstName(user?.name, "there")} 👋 — your partner needs the CoupleCare app too.
       </p>
 
       <button className="couple-landing__logout" onClick={handleLogout}>

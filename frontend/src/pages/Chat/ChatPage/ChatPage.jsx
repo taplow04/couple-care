@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { getMessages, markMessageSeen } from "../../../services/chat.service";
+import {
+  getMessages,
+  markMessageSeen,
+  uploadChatMedia,
+} from "../../../services/chat.service";
 import { getDashboard } from "../../../services/dashboard.service";
 import {
   connectSocket,
@@ -213,6 +217,13 @@ const ChatPage = () => {
     [coupleId, user?._id]
   );
 
+  // Media upload: REST → Cloudinary → server broadcasts via "message:receive",
+  // so we don't add anything optimistically here.
+  const handleUploadMedia = useCallback(
+    (file, caption, onProgress) => uploadChatMedia(file, caption, onProgress),
+    [],
+  );
+
   const handleDeleteRequest = useCallback((message) => {
     setDeleteTarget(message);
   }, []);
@@ -294,6 +305,7 @@ const ChatPage = () => {
       <MessageInput
         onSend={handleSend}
         onTyping={handleTyping}
+        onUploadMedia={handleUploadMedia}
         disabled={false}
       />
 

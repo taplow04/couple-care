@@ -8,6 +8,7 @@ import {
 } from "../../../services/moods.service";
 import { getMoodAnalysis } from "../../../services/ai.service";
 import { getDashboard } from "../../../services/dashboard.service";
+import { getFirstName } from "../../../utils/getFirstName";
 
 import MoodOverview     from "../../../components/moodAnalytics/MoodOverview/MoodOverview";
 import MoodCompatibility from "../../../components/moodAnalytics/MoodCompatibility/MoodCompatibility";
@@ -179,8 +180,8 @@ const MoodAnalyticsPage = () => {
           <MoodOverview
             myAnalytics={myAnalytics}
             partnerAnalytics={partnerAnalytics}
-            myName={user?.name}
-            partnerName={partner?.name}
+            myName={getFirstName(user?.name, "You")}
+            partnerName={getFirstName(partner?.name, "Partner")}
             myPhoto={user?.profilePhoto}
             partnerPhoto={partner?.profilePhoto}
           />
@@ -188,16 +189,16 @@ const MoodAnalyticsPage = () => {
           {/* 2. Compatibility ring */}
           <MoodCompatibility
             compatibility={compatibility}
-            myName={user?.name}
-            partnerName={partner?.name}
+            myName={getFirstName(user?.name, "You")}
+            partnerName={getFirstName(partner?.name, "Partner")}
           />
 
           {/* 3. Trend chart */}
           <MoodTrendChart
             myTrend={myTrend}
             partnerTrend={partnerTrend}
-            myName={user?.name}
-            partnerName={partner?.name}
+            myName={getFirstName(user?.name, "You")}
+            partnerName={getFirstName(partner?.name, "Partner")}
           />
 
           {/* 4. Weekly heatmap */}
@@ -206,7 +207,7 @@ const MoodAnalyticsPage = () => {
           {/* 5. Partner moods list */}
           <PartnerMoodCard
             moods={partnerMoods}
-            partnerName={partner?.name}
+            partnerName={getFirstName(partner?.name, "Partner")}
             partnerPhoto={partner?.profilePhoto}
           />
 

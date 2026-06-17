@@ -1,4 +1,5 @@
 import { useCall } from "../../../context/CallContext";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./OutgoingCallModal.css";
 
 /**
@@ -34,7 +35,7 @@ const OutgoingCallModal = () => {
           </div>
         </div>
 
-        <h2 className="outgoing-call__name">{peer?.name || "Your Partner"}</h2>
+        <h2 className="outgoing-call__name">{getFirstName(peer?.name, "Your Partner")}</h2>
         <p className="outgoing-call__sub">
           Calling<span className="outgoing-call__dots" />
         </p>

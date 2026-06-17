@@ -1,3 +1,4 @@
+import { getFirstName } from "../../../utils/getFirstName";
 import "./UpcomingBirthdayCard.css";
 
 const daysUntilBirthday = (birthday) => {
@@ -20,7 +21,7 @@ const UpcomingBirthdayCard = ({ partner }) => {
   const days = daysUntilBirthday(partner.birthday);
   if (days === null || days > 30) return null;
 
-  const first = partner.name?.split(" ")[0] || "Your partner";
+  const first = getFirstName(partner.name, "Your partner");
 
   let label;
   if (days === 0) label = `🎉 It's ${first}'s birthday today!`;

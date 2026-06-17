@@ -5,6 +5,7 @@ import { useCall } from "../../../context/CallContext";
 import CallControls from "../../../components/call/CallControls/CallControls";
 import CallTimer from "../../../components/call/CallTimer/CallTimer";
 import ConnectionStatus from "../../../components/call/ConnectionStatus/ConnectionStatus";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./VoiceCallPage.css";
 
 const VoiceCallPage = () => {
@@ -78,7 +79,7 @@ const VoiceCallPage = () => {
           </div>
         </div>
 
-        <h2 className="voice-call__name">{peer?.name || "Your Partner"}</h2>
+        <h2 className="voice-call__name">{getFirstName(peer?.name, "Your Partner")}</h2>
 
         <div className="voice-call__status">
           {callState === "active" ? (

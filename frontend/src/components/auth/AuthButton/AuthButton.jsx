@@ -1,8 +1,12 @@
 import "./AuthButton.css";
 
-const AuthButton = ({ children, loading, type = "submit" }) => {
+const AuthButton = ({ children, loading, disabled, type = "submit" }) => {
   return (
-    <button type={type} className="auth-button" disabled={loading}>
+    <button
+      type={type}
+      className="auth-button"
+      disabled={loading || disabled}
+    >
       {loading ? "Please wait..." : children}
     </button>
   );

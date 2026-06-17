@@ -62,6 +62,72 @@
   color: #fff;
 }
 
+/* Media — image */
+.msg-bubble__media {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.msg-bubble__image {
+  display: block;
+  max-width: 240px;
+  max-height: 300px;
+  width: 100%;
+  border-radius: 14px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Media — file */
+.msg-bubble__file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  min-width: 180px;
+  max-width: 260px;
+}
+
+.msg-bubble__file-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.msg-bubble__file-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.msg-bubble__file-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.msg-bubble--theirs .msg-bubble__file-name {
+  color: #262626;
+}
+
+.msg-bubble--mine .msg-bubble__file-name {
+  color: #fff;
+}
+
+.msg-bubble__file-size {
+  font-size: 11px;
+}
+
+.msg-bubble--theirs .msg-bubble__file-size {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.msg-bubble--mine .msg-bubble__file-size {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* Meta row */
 .msg-bubble__meta {
   display: flex;

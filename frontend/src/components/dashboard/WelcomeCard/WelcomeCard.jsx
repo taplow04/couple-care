@@ -1,8 +1,9 @@
+import { getFirstName } from "../../../utils/getFirstName";
 import "./WelcomeCard.css";
 
 const getGreeting = (name) => {
   const hour = new Date().getHours();
-  const first = name ? name.split(" ")[0] : "";
+  const first = getFirstName(name);
   if (hour >= 5 && hour < 12) return `Good morning, ${first}`;
   if (hour >= 12 && hour < 17) return `Good afternoon, ${first}`;
   if (hour >= 17 && hour < 21) return `Good evening, ${first}`;
@@ -66,7 +67,7 @@ const WelcomeCard = ({ user, partner, onPartnerClick }) => {
               role={onPartnerClick ? "button" : undefined}
             >
               <span className="wc-heart" aria-hidden="true">💕</span>
-              Connected with {partner.name?.split(" ")[0]}
+              Connected with {getFirstName(partner.name)}
             </p>
           )}
           <p className="wc-message">{getRotatingMessage()}</p>

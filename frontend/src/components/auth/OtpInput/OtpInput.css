@@ -1,0 +1,40 @@
+.otp-input {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 8px 0 4px;
+}
+
+.otp-input__box {
+  width: 46px;
+  height: 56px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  border: 1.5px solid #e2e4ee;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  outline: none;
+  transition: var(--transition);
+}
+
+.otp-input__box:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.otp-input__box:disabled {
+  opacity: 0.6;
+}
+
+@media (max-width: 380px) {
+  .otp-input {
+    gap: 7px;
+  }
+  .otp-input__box {
+    width: 40px;
+    height: 50px;
+    font-size: 20px;
+  }
+}

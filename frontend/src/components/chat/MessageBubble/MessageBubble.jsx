@@ -11,6 +11,57 @@ const formatTime = (d) =>
     hour12: true,
   }).format(new Date(d));
 
+const formatBytes = (bytes) => {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const MessageBody = ({ message }) => {
+  if (message.type === "image" && message.mediaUrl) {
+    return (
+      <div className="msg-bubble__media">
+        <a href={message.mediaUrl} target="_blank" rel="noopener noreferrer">
+          <img
+            className="msg-bubble__image"
+            src={message.mediaUrl}
+            alt={message.fileName || "Shared image"}
+            loading="lazy"
+          />
+        </a>
+        {message.text ? (
+          <p className="msg-bubble__text">{message.text}</p>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (message.type === "file" && message.mediaUrl) {
+    return (
+      <a
+        className="msg-bubble__file"
+        href={message.mediaUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        download={message.fileName || true}
+      >
+        <span className="msg-bubble__file-icon" aria-hidden="true">📄</span>
+        <span className="msg-bubble__file-info">
+          <span className="msg-bubble__file-name">
+            {message.fileName || "Download file"}
+          </span>
+          <span className="msg-bubble__file-size">
+            {formatBytes(message.fileSize)}
+          </span>
+        </span>
+      </a>
+    );
+  }
+
+  return <p className="msg-bubble__text">{message.text}</p>;
+};
+
 const TickIcon = ({ seen, failed, pending }) => {
   if (pending) {
     return <span className="msg-bubble__tick msg-bubble__tick--pending">◷</span>;
@@ -79,7 +130,7 @@ const MessageBubble = ({ message, isMine, onDelete }) => {
           />
         )}
         <div className={cls}>
-          <p className="msg-bubble__text">{message.text}</p>
+          <MessageBody message={message} />
           <div className="msg-bubble__meta">
             <span className="msg-bubble__time">{formatTime(message.createdAt)}</span>
             {isMine && (

@@ -1,20 +1,24 @@
+.msg-input-wrap {
+  background: #fff;
+  border-top: 1px solid #efefef;
+  flex-shrink: 0;
+}
+
 .msg-input {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 14px 14px;
   background: #fff;
-  border-top: 1px solid #efefef;
-  flex-shrink: 0;
 }
 
-/* Emoji button — left of input */
-.msg-input__emoji {
+/* Attach button — left of input */
+.msg-input__attach {
   width: 36px;
   height: 36px;
   border: none;
   background: none;
-  font-size: 24px;
+  font-size: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -26,7 +30,87 @@
   transition: opacity 0.15s;
 }
 
-.msg-input__emoji:hover { opacity: 1; }
+.msg-input__attach:hover { opacity: 1; }
+.msg-input__attach:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.msg-input__file {
+  display: none;
+}
+
+/* Attachment preview row */
+.msg-input__attachment {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 0;
+  position: relative;
+}
+
+.msg-input__att-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.msg-input__att-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.msg-input__att-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-input__att-progress {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.msg-input__att-remove {
+  border: none;
+  background: #efefef;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: #555;
+}
+
+.msg-input__progress-bar {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -2px;
+  height: 3px;
+  border-radius: 3px;
+  background: #efefef;
+  overflow: hidden;
+}
+
+.msg-input__progress-fill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.15s ease;
+}
+
+.msg-input__error {
+  margin: 0;
+  padding: 8px 14px 0;
+  font-size: 12.5px;
+  color: var(--danger);
+}
 
 /* Pill input */
 .msg-input__field {

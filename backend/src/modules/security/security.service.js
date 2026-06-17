@@ -57,7 +57,14 @@ const forgotPassword = async (email) => {
   user.passwordResetExpires = Date.now() + 60 * 60 * 1000;
   await user.save();
 
-  await sendPasswordResetEmailMessage(user.email, rawToken);
+  // Never let a Brevo/SMTP failure surface to the client: doing so both leaks
+  // whether the email exists (enumeration) and exposes server misconfig. Log it
+  // for ops and always return a generic success.
+  try {
+    await sendPasswordResetEmailMessage(user.email, rawToken);
+  } catch (err) {
+    console.error("[email] password reset send failed:", err.message);
+  }
 
   return { success: true };
 };

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useCall } from "../../../context/CallContext";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./IncomingCallModal.css";
 
 /**
@@ -48,7 +49,7 @@ const IncomingCallModal = () => {
           </div>
         </div>
 
-        <h2 className="incoming-call__name">{peer?.name || "Your Partner"}</h2>
+        <h2 className="incoming-call__name">{getFirstName(peer?.name, "Your Partner")}</h2>
         <p className="incoming-call__sub">is calling you…</p>
 
         <div className="incoming-call__actions">

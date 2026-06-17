@@ -27,9 +27,11 @@ npm start          # node src/server.js
 PORT=5000
 MONGO_URI=
 JWT_SECRET=
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173   # CORS origin
+APP_URL=http://localhost:5173        # FRONTEND origin used to build email links
 GROQ_API_KEY=
 BREVO_API_KEY=
+EMAIL_FROM=                          # must be a Brevo-verified sender
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
@@ -55,10 +57,14 @@ CLOUDINARY_API_SECRET=
 
 **All API responses** follow `{ success: true, data: ... }` shape. Controllers use `asyncHandler` utility. Global error handler in `errorMiddleware.js` reads `err.statusCode`, defaults to 400.
 
-**Auth** (`/api/v1/auth`):
-- `POST /register` — creates user, sends verification email via Brevo SDK v5
-- `POST /login` — returns `{ user, token }`; `data` is the full object
+**Auth** (`/api/v1/auth`) — **OTP-gated registration**:
+- `POST /request-otp` — `{ name, email, password }` → hashes the password, generates a 6-digit OTP (hashed at rest via `security/token.service.hashToken`), upserts a **`PendingRegistration`** doc (TTL-indexed, auto-expires) and emails the code (`security/email.service.sendOtpEmail`). **No User row is created yet.**
+- `POST /verify-otp` — `{ email, otp }` → validates (10-min expiry, max 5 attempts), creates the real `User` with `emailVerified: true`, deletes the pending doc, returns `{ user, token }` (**auto-login**). The pre-hashed password is written via `User.updateOne` after create so the model's pre-save hook does not double-hash it.
+- `POST /resend-otp` — `{ email }` → throttled (60s cooldown + per-window cap).
+- `POST /login` — returns `{ user, token }`. **Existing pre-OTP users are grandfathered** (login is NOT gated on `emailVerified`).
 - `GET /me` — returns `req.user` (password excluded by schema `select: false`)
+- OTP routes sit behind a dedicated `otpLimiter`. The old immediate `POST /register` is **removed**; frontend `Register.jsx` is a 2-step flow (details → OTP) using `components/auth/OtpInput`.
+- Token-link `verify-email`/`forgot-password`/`reset-password` still live under `/api/v1/security` (link-based, unchanged).
 
 **Dashboard** (`/api/v1/dashboard`):
 - `GET /` — returns `{ partner, relationship: { status, daysTogether }, moodAnalytics, recentMoods, recentHistories }`
@@ -91,8 +97,12 @@ CLOUDINARY_API_SECRET=
 **Chat** (`/api/v1/chat`):
 - `GET /messages?page=1&limit=50` — returns newest first (reverse in UI)
 - `POST /messages` — `{ text }` — sends to couple room
+- `POST /upload` — **media sharing** (multipart `file` + optional `text` caption). `multer` memory storage → streams to Cloudinary (`resource_type:"auto"`, folder `couple-care/chat/<coupleId>`), creates a `Message`, and **broadcasts `message:receive`** to the room via `realtime.getIo()` (so it renders live like socket text). Images ≤10 MB, files ≤25 MB, mime allowlist. Binary is **never** stored in Mongo.
+- `GET /media` — all image/file messages for the couple (shared-media gallery).
 - `PATCH /messages/:id/seen`
-- Real-time via Socket.io: events `message:send` → `message:receive`, `typing:start`, `typing:stop`, `message:seen`; couples join room keyed by `coupleId`
+- `Message` schema has `type: text|image|file` + `mediaUrl/fileName/fileSize/mimeType/width/height`; `text` is required only when `type==="text"`.
+- Real-time via Socket.io: events `message:send` → `message:receive`, `typing:start`, `typing:stop`, `message:seen`; couples join room keyed by `coupleId`. **Media goes via REST then server-emits `message:receive`** — `message:send` stays text-only (no second socket).
+- Frontend: `MessageInput` has a 📎 attach button (preview + progress); `MessageBubble` renders image/file; `components/chat/SharedMedia` is the gallery (shown on PartnerProfile).
 
 **Notifications** (`/api/v1/notifications`):
 - `GET /` — user's notifications
@@ -167,12 +177,12 @@ One file per domain — pages import from services only, never from axios direct
 
 | File | Exports |
 |---|---|
-| `auth.service.js` | `registerUser`, `loginUser`, `getCurrentUser` |
+| `auth.service.js` | `requestOtp`, `verifyOtp`, `resendOtp`, `loginUser`, `getCurrentUser` |
 | `dashboard.service.js` | `getDashboard` |
 | `moods.service.js` | `getMyMoods`, `logMood`, `deleteMood` |
 | `memories.service.js` | `getMemories`, `addMemory` |
 | `ai.service.js` | `getHealthScore`, `getWeeklySummary`, `getMoodAnalysis` |
-| `chat.service.js` | `getMessages`, `sendMessage` |
+| `chat.service.js` | `getMessages`, `sendMessage`, `markMessageSeen`, `deleteMessage`, `uploadChatMedia`, `getSharedMedia` |
 | `security.service.js` | security-related calls |
 | `call.service.js` | socket signaling emitters: `initiateCall`, `acceptCall`, `rejectCall`, `sendBusy`, `endCall`, `sendOffer`, `sendAnswer`, `sendIceCandidate` (NOT axios — emits over the shared socket) |
 | `webrtc.service.js` | `PeerSession` class (RTCPeerConnection wrapper), `acquireLocalStream`, `stopStream`, `getMediaConstraints` |
@@ -293,3 +303,9 @@ Mobile-first CSS: base at 390px, breakpoint at `768px` for tablet/desktop.
 - **Presence is partner-based, not self**: feed `OnlineStatus`/headers from `usePartnerPresence`, not the local socket's `connected` flag (that was the original "always online" bug).
 - **Batch migration**: after deploying the data-foundation changes, run once: `cd backend && node src/scripts/migrate-batch1.js` (idempotent — backfills `relationshipStartDate`, flips legacy `private` moods → `partner_only`, seeds `privacy` defaults).
 - **Privacy is enforced on partner-facing reads only**; co-owned data (memories/journey) and self-only AI are not hidden from the partner by design.
+- **Body limit is 15mb** (`app.js`): `express.json({ limit: "15mb" })` + `urlencoded`. The previous default 100kb silently 413'd base64 avatar/chat uploads — never revert it.
+- **Cloudinary config is centralized** in `config/cloudinary.js` (single `cloudinary.config()`). Avatar upload (`users.controller`) and chat media (`chat.media.controller`) both import it. Don't re-`config()` per-module.
+- **`APP_URL` must be the FRONTEND origin** (Vercel) — it builds email links (`/reset-password?token=`, `/verify-email?token=`). `EMAIL_FROM` must be a Brevo-verified sender or OTP/reset emails silently fail. `forgotPassword` swallows Brevo errors and always returns generic success (no email enumeration); check server logs for `[email]` failures.
+- **First-name display**: use `frontend/src/utils/getFirstName.js` for all partner/user name *display* (chat header, dashboard, call screens, journey, mood insights, partner profile). Full name is still stored and edited (`EditProfile`/`ProfileForm`). Notification/AI prompt text already uses first names server-side.
+- **Branding**: `index.html` (title/meta/OG), `public/manifest.webmanifest`, heart `public/favicon.svg`, and PNG icons (`icon-192/512`, `icon-maskable-512`, `apple-touch-icon`) generated by `frontend/scripts/generate-icons.cjs` (pure-Node, no deps — rerun to regenerate).
+- **Env validation at boot** (`server.js`): missing `MONGO_URI`/`JWT_SECRET` exits; missing email/Cloudinary/Groq vars warn.

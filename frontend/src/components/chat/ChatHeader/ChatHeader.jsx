@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import OnlineStatus from "../OnlineStatus/OnlineStatus";
 import { useCall } from "../../../context/CallContext";
 import { usePartnerPresence } from "../../../hooks/usePartnerPresence";
+import { getFirstName } from "../../../utils/getFirstName";
 import "./ChatHeader.css";
 
 const ChatHeader = ({ partner, partnerTyping }) => {
@@ -33,7 +34,7 @@ const ChatHeader = ({ partner, partnerTyping }) => {
         </div>
 
         <div className="chat-header__info">
-          <h2 className="chat-header__name">{partner?.name || "Your Partner"}</h2>
+          <h2 className="chat-header__name">{getFirstName(partner?.name, "Your Partner")}</h2>
           <OnlineStatus
             online={presence.online}
             lastSeen={presence.lastSeen}

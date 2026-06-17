@@ -1,12 +1,6 @@
-const cloudinary = require("cloudinary").v2;
+const cloudinary = require("../../config/cloudinary");
 const asyncHandler = require("../../utils/asyncHandler");
 const User = require("./user.model");
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 const updateProfile = asyncHandler(async (req, res) => {
   const { name, bio, hobbies, likes, dislikes, profilePhoto, birthday } = req.body;
@@ -53,17 +47,34 @@ const updateProfile = asyncHandler(async (req, res) => {
 const uploadPhoto = asyncHandler(async (req, res) => {
   const { imageData } = req.body;
 
-  if (!imageData) {
-    return res.status(400).json({ success: false, message: "No image data provided" });
+  if (!imageData || typeof imageData !== "string") {
+    return res
+      .status(400)
+      .json({ success: false, message: "No image data provided" });
   }
 
-  const result = await cloudinary.uploader.upload(imageData, {
-    folder: "couple-care/avatars",
-    transformation: [
-      { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" },
-    ],
-    resource_type: "image",
-  });
+  // Only accept image data URLs (the frontend sends FileReader base64).
+  if (!/^data:image\/(png|jpe?g|webp|gif);base64,/.test(imageData)) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid image format" });
+  }
+
+  let result;
+  try {
+    result = await cloudinary.uploader.upload(imageData, {
+      folder: "couple-care/avatars",
+      transformation: [
+        { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" },
+      ],
+      resource_type: "image",
+    });
+  } catch (err) {
+    console.error("[cloudinary] avatar upload failed:", err.message);
+    const error = new Error("Image upload failed. Please try again.");
+    error.statusCode = 502;
+    throw error;
+  }
 
   res.status(200).json({ success: true, data: { url: result.secure_url } });
 });

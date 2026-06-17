@@ -1,3 +1,4 @@
+import { getFirstName } from "../../../utils/getFirstName";
 import "./JourneyHeader.css";
 
 const getInitials = (name = "") =>
@@ -68,9 +69,9 @@ const JourneyHeader = ({ user, partner, relationship }) => {
       </div>
 
       <div className="jh__names">
-        <span className="jh__name">{user?.name?.split(" ")[0] ?? "You"}</span>
+        <span className="jh__name">{getFirstName(user?.name, "You")}</span>
         <span className="jh__amp">&</span>
-        <span className="jh__name">{partner?.name?.split(" ")[0] ?? "Partner"}</span>
+        <span className="jh__name">{getFirstName(partner?.name, "Partner")}</span>
       </div>
 
       <div className="jh__duration">

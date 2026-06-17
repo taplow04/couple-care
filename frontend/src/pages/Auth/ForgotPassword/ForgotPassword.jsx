@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import AuthLayout from "../../../components/auth/AuthLayout/AuthLayout";
 
@@ -12,6 +12,8 @@ import { forgotPassword } from "../../../services/security.service";
 
 import "./ForgotPassword.css";
 
+const RESEND_SECONDS = 60;
+
 const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
 
@@ -20,6 +22,15 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
 
   const [email, setEmail] = useState("");
+
+  const [cooldown, setCooldown] = useState(0);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    timerRef.current = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timerRef.current);
+  }, [cooldown]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,12 +44,18 @@ const ForgotPassword = () => {
       return;
     }
 
+    if (cooldown > 0) return;
+
     try {
       setLoading(true);
 
-      const response = await forgotPassword(email);
+      await forgotPassword(email.trim());
 
-      setSuccess(response.message || "Password reset email sent");
+      // Generic copy on purpose — never reveal whether the email is registered.
+      setSuccess(
+        "If an account exists for that email, a password reset link is on its way. Check your inbox and spam folder.",
+      );
+      setCooldown(RESEND_SECONDS);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send reset email");
     } finally {
@@ -65,7 +82,9 @@ const ForgotPassword = () => {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <AuthButton loading={loading}>Send Reset Link</AuthButton>
+        <AuthButton loading={loading} disabled={cooldown > 0}>
+          {cooldown > 0 ? `Resend in ${cooldown}s` : "Send Reset Link"}
+        </AuthButton>
       </form>
 
       <AuthFooter

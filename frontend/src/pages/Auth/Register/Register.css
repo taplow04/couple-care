@@ -35,3 +35,26 @@
 
   font-size: 14px;
 }
+
+.register-otp-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  gap: 12px;
+}
+
+.register-link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.register-link-btn:disabled {
+  color: var(--muted);
+  cursor: default;
+}

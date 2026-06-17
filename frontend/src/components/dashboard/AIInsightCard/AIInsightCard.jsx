@@ -1,3 +1,4 @@
+import { getFirstName } from "../../../utils/getFirstName";
 import "./AIInsightCard.css";
 
 const FALLBACK_INSIGHTS = {
@@ -42,7 +43,7 @@ const InsightSkeleton = () => (
 
 const AIInsightCard = ({ aiSummary, moodAnalytics, partner, loading = false }) => {
   const isLoading = loading || (aiSummary === null && !moodAnalytics);
-  const partnerName = partner?.name?.split(" ")[0];
+  const partnerName = getFirstName(partner?.name);
 
   let displayText = "";
   let displayAction = "";
