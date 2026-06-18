@@ -2,7 +2,6 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import "./VoiceRecorder.css";
 
 const BARS = 32;
-const CANCEL_THRESHOLD = 90; // px dragged left to cancel
 const MAX_DURATION_MS = 5 * 60 * 1000; // 5 min hard cap
 
 const isSupported = () =>
@@ -37,8 +36,9 @@ const fmt = (ms) => {
 };
 
 /**
- * Hold-to-record voice note button. Press and hold the mic; a live waveform +
- * timer appears. Slide left past the threshold to cancel; release to send.
+ * Tap-to-record voice note. Tap the mic to start; a live waveform + timer
+ * appears with an explicit Cancel (discard) and Send (stop) button — reliable
+ * on both desktop and mobile (replaces the old hold + slide-to-cancel gesture).
  *
  * Props:
  *  - onRecorded(file, durationSeconds)
@@ -47,7 +47,6 @@ const fmt = (ms) => {
  */
 const VoiceRecorder = ({ onRecorded, onError, disabled }) => {
   const [recording, setRecording] = useState(false);
-  const [cancelArmed, setCancelArmed] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [amps, setAmps] = useState(() => new Array(BARS).fill(0.08));
 
@@ -56,7 +55,6 @@ const VoiceRecorder = ({ onRecorded, onError, disabled }) => {
   const chunksRef = useRef([]);
   const mimeRef = useRef("");
   const startRef = useRef(0);
-  const startXRef = useRef(0);
   const cancelRef = useRef(false);
   const rafRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -105,149 +103,126 @@ const VoiceRecorder = ({ onRecorded, onError, disabled }) => {
     rafRef.current = requestAnimationFrame(drawLoop);
   }, []);
 
-  const stop = useCallback(
-    (cancel) => {
-      cancelRef.current = cancel;
-      const rec = recRef.current;
-      if (rec && rec.state !== "inactive") {
-        rec.stop();
-      }
-    },
-    [],
-  );
+  const stop = useCallback((cancel) => {
+    cancelRef.current = cancel;
+    const rec = recRef.current;
+    if (rec && rec.state !== "inactive") {
+      rec.stop();
+    }
+  }, []);
 
-  const start = useCallback(
-    async (clientX) => {
-      if (disabled || recording) return;
-      if (!isSupported()) {
-        onError?.(
-          "Voice recording isn't supported on this browser. On iPhone, use Safari.",
+  const start = useCallback(async () => {
+    if (disabled || recording) return;
+    if (!isSupported()) {
+      onError?.(
+        "Voice recording isn't supported on this browser. On iPhone, use Safari.",
+      );
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const mime = pickMime();
+      mimeRef.current = mime;
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      recRef.current = rec;
+      chunksRef.current = [];
+      cancelRef.current = false;
+
+      rec.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      rec.onstop = () => {
+        const durationSec = Math.max(
+          1,
+          Math.round((Date.now() - startRef.current) / 1000),
         );
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        streamRef.current = stream;
-
-        const mime = pickMime();
-        mimeRef.current = mime;
-        const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
-        recRef.current = rec;
-        chunksRef.current = [];
-        cancelRef.current = false;
-        startXRef.current = clientX ?? 0;
-
-        rec.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
-        };
-        rec.onstop = () => {
-          const durationSec = Math.max(1, Math.round((Date.now() - startRef.current) / 1000));
-          cleanup();
-          setRecording(false);
-          setCancelArmed(false);
-          setElapsed(0);
-          setAmps(new Array(BARS).fill(0.08));
-
-          if (cancelRef.current) {
-            chunksRef.current = [];
-            return;
-          }
-          const type = mimeRef.current || "audio/webm";
-          const blob = new Blob(chunksRef.current, { type });
-          chunksRef.current = [];
-          if (blob.size < 1200) return; // too short / empty
-          const file = new File([blob], `voice-note.${extFor(type)}`, { type });
-          onRecorded?.(file, durationSec);
-        };
-
-        // Waveform analyser.
-        try {
-          const Ctx = window.AudioContext || window.webkitAudioContext;
-          const ctx = new Ctx();
-          audioCtxRef.current = ctx;
-          const source = ctx.createMediaStreamSource(stream);
-          const analyser = ctx.createAnalyser();
-          analyser.fftSize = 256;
-          source.connect(analyser);
-          analyserRef.current = analyser;
-          rafRef.current = requestAnimationFrame(drawLoop);
-        } catch {
-          /* waveform is optional */
-        }
-
-        startRef.current = Date.now();
-        rec.start();
-        setRecording(true);
-        setCancelArmed(false);
-
-        tickRef.current = setInterval(() => {
-          const ms = Date.now() - startRef.current;
-          setElapsed(ms);
-          if (ms >= MAX_DURATION_MS) stop(false);
-        }, 250);
-      } catch (err) {
         cleanup();
-        onError?.(
-          err?.name === "NotAllowedError"
-            ? "Microphone permission denied. Enable it in your browser settings."
-            : "Couldn't start recording.",
-        );
-      }
-    },
-    [disabled, recording, onError, onRecorded, cleanup, drawLoop, stop],
-  );
+        setRecording(false);
+        setElapsed(0);
+        setAmps(new Array(BARS).fill(0.08));
 
-  // ── Pointer handlers (unified touch + mouse) ──
-  const onPointerDown = useCallback(
-    (e) => {
-      e.preventDefault();
-      // Capture so move/up keep firing on this button even if the finger
-      // slides off it (needed for slide-to-cancel + reliable release).
+        if (cancelRef.current) {
+          chunksRef.current = [];
+          return;
+        }
+        const type = mimeRef.current || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
+        chunksRef.current = [];
+        if (blob.size < 1200) return; // too short / empty
+        const file = new File([blob], `voice-note.${extFor(type)}`, { type });
+        onRecorded?.(file, durationSec);
+      };
+
+      // Waveform analyser.
       try {
-        e.currentTarget.setPointerCapture(e.pointerId);
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new Ctx();
+        audioCtxRef.current = ctx;
+        const source = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+        rafRef.current = requestAnimationFrame(drawLoop);
       } catch {
-        /* not supported — degrade gracefully */
+        /* waveform is optional */
       }
-      start(e.clientX);
-    },
-    [start],
-  );
 
-  const onPointerMove = useCallback(
-    (e) => {
-      if (!recording) return;
-      const dx = startXRef.current - e.clientX;
-      setCancelArmed(dx > CANCEL_THRESHOLD);
-    },
-    [recording],
-  );
+      startRef.current = Date.now();
+      rec.start();
+      setRecording(true);
 
-  const onPointerUp = useCallback(() => {
-    if (!recording) return;
-    stop(cancelArmed);
-  }, [recording, cancelArmed, stop]);
+      tickRef.current = setInterval(() => {
+        const ms = Date.now() - startRef.current;
+        setElapsed(ms);
+        if (ms >= MAX_DURATION_MS) stop(false);
+      }, 250);
+    } catch (err) {
+      cleanup();
+      onError?.(
+        err?.name === "NotAllowedError"
+          ? "Microphone permission denied. Enable it in your browser settings."
+          : "Couldn't start recording.",
+      );
+    }
+  }, [disabled, recording, onError, onRecorded, cleanup, drawLoop, stop]);
 
   return (
     <>
-      <button
-        type="button"
-        className={`voice-rec__mic ${recording ? "voice-rec__mic--active" : ""}`}
-        aria-label="Hold to record voice message"
-        disabled={disabled}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={() => recording && stop(true)}
-        onPointerLeave={onPointerMove}
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="9" y="2" width="6" height="12" rx="3" />
-          <path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
-        </svg>
-      </button>
+      {!recording && (
+        <button
+          type="button"
+          className="voice-rec__mic"
+          aria-label="Record voice message"
+          disabled={disabled}
+          onClick={start}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="2" width="6" height="12" rx="3" />
+            <path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
+          </svg>
+        </button>
+      )}
 
       {recording && (
-        <div className={`voice-rec__overlay ${cancelArmed ? "voice-rec__overlay--cancel" : ""}`}>
+        <div className="voice-rec__overlay">
+          {/* Cancel / discard */}
+          <button
+            type="button"
+            className="voice-rec__cancel"
+            aria-label="Cancel recording"
+            onClick={() => stop(true)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14H6L5 6" />
+              <path d="M10 11v6M14 11v6" />
+              <path d="M9 6V4h6v2" />
+            </svg>
+          </button>
+
           <span className="voice-rec__dot" />
           <span className="voice-rec__time">{fmt(elapsed)}</span>
 
@@ -261,9 +236,17 @@ const VoiceRecorder = ({ onRecorded, onError, disabled }) => {
             ))}
           </div>
 
-          <span className="voice-rec__hint">
-            {cancelArmed ? "Release to cancel" : "‹ Slide to cancel"}
-          </span>
+          {/* Stop & send */}
+          <button
+            type="button"
+            className="voice-rec__send"
+            aria-label="Send voice message"
+            onClick={() => stop(false)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.2L4 11l9 1-9 1-1.99 6.2a1 1 0 0 0 1.39 1.2z" />
+            </svg>
+          </button>
         </div>
       )}
     </>
