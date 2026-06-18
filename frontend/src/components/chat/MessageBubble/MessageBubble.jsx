@@ -1,8 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import MessageOptions from "../MessageOptions/MessageOptions";
+import ReactionBadge from "../MessageReaction/MessageReaction";
+import VoiceMessage from "../VoiceMessage/VoiceMessage";
 import "./MessageBubble.css";
 
 const LONG_PRESS_MS = 500;
+const DOUBLE_TAP_MS = 300;
 
 const formatTime = (d) =>
   new Intl.DateTimeFormat("en-US", {
@@ -18,13 +21,22 @@ const formatBytes = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const MessageBody = ({ message, onMediaClick }) => {
+const flatId = (v) => (v?._id ? String(v._id) : v ? String(v) : "");
+
+// Short label for a quoted (replied-to) message.
+const replyLabel = (r) => {
+  if (!r) return "";
+  if (r.type === "image") return "📷 Photo";
+  if (r.type === "video") return "🎥 Video";
+  if (r.type === "audio") return "🎤 Voice message";
+  if (r.type === "file") return `📎 ${r.fileName || "File"}`;
+  return r.text || "Message";
+};
+
+const MessageBody = ({ message, isMine, onMediaClick }) => {
   if (message.type === "image" && message.mediaUrl) {
     return (
       <div className="msg-bubble__media">
-        {/* Not an <a>: a long-press on a link/image fires the native callout and
-            a tap navigates away, which blocked the delete menu. We open the
-            image via onClick (guarded against long-press) instead. */}
         <img
           className="msg-bubble__image"
           src={message.mediaUrl}
@@ -33,9 +45,35 @@ const MessageBody = ({ message, onMediaClick }) => {
           draggable={false}
           onClick={(e) => onMediaClick(e, message.mediaUrl, false)}
         />
-        {message.text ? (
-          <p className="msg-bubble__text">{message.text}</p>
-        ) : null}
+        {message.text ? <p className="msg-bubble__text">{message.text}</p> : null}
+      </div>
+    );
+  }
+
+  if (message.type === "video" && message.mediaUrl) {
+    return (
+      <div className="msg-bubble__media">
+        <video
+          className="msg-bubble__video"
+          src={message.mediaUrl}
+          controls
+          playsInline
+          preload="metadata"
+        />
+        {message.text ? <p className="msg-bubble__text">{message.text}</p> : null}
+      </div>
+    );
+  }
+
+  if (message.type === "audio" && message.mediaUrl) {
+    return (
+      <div className="msg-bubble__audio">
+        <VoiceMessage
+          src={message.mediaUrl}
+          duration={message.mediaDuration || 0}
+          mine={isMine}
+        />
+        {message.text ? <p className="msg-bubble__text">{message.text}</p> : null}
       </div>
     );
   }
@@ -89,50 +127,104 @@ const TickIcon = ({ seen, failed, pending }) => {
   );
 };
 
-const MessageBubble = ({ message, isMine, onDelete }) => {
+const MessageBubble = ({
+  message,
+  isMine,
+  currentUserId,
+  onDelete,
+  onReact,
+  onReply,
+  onForward,
+}) => {
   const [showOptions, setShowOptions] = useState(false);
   const pressTimer = useRef(null);
-  // True for the click that immediately follows a long-press, so opening media
-  // doesn't fire when the user was actually opening the delete menu.
   const suppressClickRef = useRef(false);
+  const lastTapRef = useRef(0);
+
+  const reactions = message.reactions || [];
+  const myReaction = reactions.find((r) => flatId(r.userId) === String(currentUserId))?.emoji;
+  const mineHas = !!myReaction;
+
+  // Double-tap to ❤️ — only on bubbles whose single tap does nothing (text/audio)
+  // so it never fights image-open or video controls.
+  const doubleTappable = message.type === "text" || message.type === "audio";
 
   const startPress = useCallback(() => {
-    if (!isMine) return;
     suppressClickRef.current = false;
     pressTimer.current = setTimeout(() => {
       suppressClickRef.current = true;
       setShowOptions(true);
     }, LONG_PRESS_MS);
-  }, [isMine]);
+  }, []);
 
   const cancelPress = useCallback(() => {
     clearTimeout(pressTimer.current);
   }, []);
 
   const handleMediaClick = useCallback((e, url, isFile) => {
-    // The click right after a long-press just opens the menu — don't navigate.
     if (suppressClickRef.current) {
       e.preventDefault();
       suppressClickRef.current = false;
       return;
     }
     if (!isFile) {
-      // Image: open full view in a new tab. (Files let the anchor default run.)
       e.preventDefault();
       window.open(url, "_blank", "noopener");
     }
   }, []);
 
-  const handleDeleteClick = useCallback(() => {
+  const handleContentClick = useCallback(() => {
+    if (!doubleTappable || suppressClickRef.current) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+      lastTapRef.current = 0;
+      onReact?.(message, "❤️");
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [doubleTappable, onReact, message]);
+
+  const closeMenu = useCallback(() => {
+    setShowOptions(false);
+    suppressClickRef.current = false;
+  }, []);
+
+  const handleReact = useCallback(
+    (emoji) => {
+      onReact?.(message, emoji);
+      closeMenu();
+    },
+    [onReact, message, closeMenu],
+  );
+
+  const handleReply = useCallback(() => {
+    onReply?.(message);
+    closeMenu();
+  }, [onReply, message, closeMenu]);
+
+  const handleForward = useCallback(() => {
+    onForward?.(message);
+    closeMenu();
+  }, [onForward, message, closeMenu]);
+
+  const handleDelete = useCallback(() => {
     setShowOptions(false);
     onDelete(message);
   }, [message, onDelete]);
+
+  const handleCopy = useCallback(() => {
+    if (message.text) {
+      navigator.clipboard?.writeText(message.text).catch(() => {});
+    }
+    closeMenu();
+  }, [message.text, closeMenu]);
 
   const cls = [
     "msg-bubble",
     isMine ? "msg-bubble--mine" : "msg-bubble--theirs",
     message.pending ? "msg-bubble--pending" : "",
     message.failed ? "msg-bubble--failed" : "",
+    reactions.length ? "msg-bubble--reacted" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -146,25 +238,34 @@ const MessageBubble = ({ message, isMine, onDelete }) => {
       onMouseDown={startPress}
       onMouseUp={cancelPress}
       onMouseLeave={cancelPress}
-      onContextMenu={(e) => {
-        // Suppress the native long-press/right-click menu so our own delete
-        // menu shows (and so images can be long-pressed to delete).
-        if (isMine) e.preventDefault();
-      }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <div className="msg-bubble-wrap">
         {showOptions && (
           <MessageOptions
             isMine={isMine}
-            onDelete={handleDeleteClick}
-            onClose={() => {
-              setShowOptions(false);
-              suppressClickRef.current = false;
-            }}
+            myReaction={myReaction}
+            canCopy={!!message.text}
+            onReact={handleReact}
+            onReply={handleReply}
+            onCopy={handleCopy}
+            onForward={handleForward}
+            onDelete={handleDelete}
+            onClose={closeMenu}
           />
         )}
-        <div className={cls}>
-          <MessageBody message={message} onMediaClick={handleMediaClick} />
+        <div className={cls} onClick={handleContentClick}>
+          {message.replyTo && (
+            <div className="msg-bubble__reply">
+              <span className="msg-bubble__reply-author">
+                {flatId(message.replyTo.senderId) === String(currentUserId) ? "You" : "Partner"}
+              </span>
+              <span className="msg-bubble__reply-text">{replyLabel(message.replyTo)}</span>
+            </div>
+          )}
+
+          <MessageBody message={message} isMine={isMine} onMediaClick={handleMediaClick} />
+
           <div className="msg-bubble__meta">
             <span className="msg-bubble__time">{formatTime(message.createdAt)}</span>
             {isMine && (
@@ -175,6 +276,15 @@ const MessageBubble = ({ message, isMine, onDelete }) => {
               />
             )}
           </div>
+
+          <ReactionBadge
+            reactions={reactions}
+            mineHas={mineHas}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowOptions(true);
+            }}
+          />
         </div>
       </div>
     </div>

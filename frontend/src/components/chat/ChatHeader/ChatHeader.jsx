@@ -16,8 +16,20 @@ const ChatHeader = ({ partner, partnerTyping }) => {
 
   const openPartner = () => navigate("/partner");
 
+  const goBack = () => {
+    const idx = window.history.state?.idx;
+    if (typeof idx === "number" && idx > 0) navigate(-1);
+    else navigate("/dashboard", { replace: true });
+  };
+
   return (
     <div className="chat-header">
+      <button className="chat-header__back" onClick={goBack} aria-label="Go back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       <button
         className="chat-header__partner"
         onClick={openPartner}

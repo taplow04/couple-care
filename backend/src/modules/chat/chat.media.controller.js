@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const asyncHandler = require("../../utils/asyncHandler");
 const cloudinary = require("../../config/cloudinary");
 const { getIo } = require("../../utils/realtime");
@@ -10,7 +11,8 @@ const { sendPushToUser } = require("../push/push.service");
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
 
-// Allowed file (non-image) mime types. Images are detected separately.
+// Allowed file (non-image) mime types. Images/audio/video are detected
+// separately by their mime prefix below.
 const ALLOWED_FILE_TYPES = new Set([
   "application/pdf",
   "text/plain",
@@ -22,10 +24,25 @@ const ALLOWED_FILE_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "application/zip",
   "application/x-zip-compressed",
+]);
+
+// Audio (voice notes) — MediaRecorder produces webm/opus on Android & desktop
+// Chrome/Firefox, and mp4/aac on iOS Safari. ogg covers Firefox fallbacks.
+const ALLOWED_AUDIO_TYPES = new Set([
+  "audio/webm",
+  "audio/ogg",
   "audio/mpeg",
   "audio/mp4",
+  "audio/aac",
+  "audio/wav",
+  "audio/x-m4a",
+]);
+
+// Video clips. mp4/quicktime cover phone cameras; webm covers desktop capture.
+const ALLOWED_VIDEO_TYPES = new Set([
   "video/mp4",
   "video/quicktime",
+  "video/webm",
 ]);
 
 // Wrap cloudinary's stream upload in a promise.
@@ -55,29 +72,51 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
 
   const couple = await getCoupleByUser(req.user._id);
 
-  const isImage = file.mimetype.startsWith("image/");
-  const type = isImage ? "image" : "file";
+  const mime = file.mimetype || "";
 
-  if (isImage && file.size > MAX_IMAGE_BYTES) {
+  // Resolve the message kind from the mime type. Images/audio/video are matched
+  // by prefix (and an allow-list for audio/video); everything else must be in
+  // the explicit document allow-list.
+  let type;
+  if (mime.startsWith("image/")) {
+    type = "image";
+  } else if (mime.startsWith("audio/") && ALLOWED_AUDIO_TYPES.has(mime)) {
+    type = "audio";
+  } else if (mime.startsWith("video/") && ALLOWED_VIDEO_TYPES.has(mime)) {
+    type = "video";
+  } else if (ALLOWED_FILE_TYPES.has(mime)) {
+    type = "file";
+  } else {
     return res
       .status(400)
-      .json({ success: false, message: "Image must be smaller than 10 MB" });
+      .json({ success: false, message: "This file type is not supported" });
   }
-  if (!isImage) {
-    if (file.size > MAX_FILE_BYTES) {
-      return res
-        .status(400)
-        .json({ success: false, message: "File must be smaller than 25 MB" });
-    }
-    if (!ALLOWED_FILE_TYPES.has(file.mimetype)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "This file type is not supported" });
-    }
+
+  // Size caps: images get the tighter image ceiling; everything else the larger.
+  const sizeCap = type === "image" ? MAX_IMAGE_BYTES : MAX_FILE_BYTES;
+  if (file.size > sizeCap) {
+    const mb = Math.round(sizeCap / (1024 * 1024));
+    return res
+      .status(400)
+      .json({ success: false, message: `File must be smaller than ${mb} MB` });
   }
 
   const caption =
     typeof req.body.text === "string" ? req.body.text.trim().slice(0, 1000) : "";
+
+  // Voice-note / video length (seconds) — best-effort from the client.
+  const durationRaw = Number(req.body.mediaDuration);
+  const mediaDuration =
+    Number.isFinite(durationRaw) && durationRaw > 0
+      ? Math.round(durationRaw)
+      : null;
+
+  // Optional quoted message id (reply).
+  const replyTo =
+    typeof req.body.replyTo === "string" &&
+    mongoose.Types.ObjectId.isValid(req.body.replyTo)
+      ? req.body.replyTo
+      : null;
 
   let result;
   try {
@@ -110,7 +149,17 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
     mimeType: file.mimetype,
     width: result.width || null,
     height: result.height || null,
+    mediaDuration,
+    replyTo,
   });
+
+  // Populate the quoted message so the client can render a reply preview live.
+  if (replyTo) {
+    await message.populate({
+      path: "replyTo",
+      select: "type text senderId fileName",
+    });
+  }
 
   const payload = {
     _id: message._id,
@@ -124,6 +173,9 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
     mimeType: message.mimeType,
     width: message.width,
     height: message.height,
+    mediaDuration: message.mediaDuration,
+    reactions: [],
+    replyTo: message.replyTo || null,
     seen: false,
     createdAt: message.createdAt,
   };
@@ -139,9 +191,17 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
   getPartnerId(req.user._id)
     .then((partnerId) => {
       if (!partnerId) return;
+      const pushBody =
+        type === "image"
+          ? "📷 Photo"
+          : type === "video"
+            ? "🎥 Video"
+            : type === "audio"
+              ? "🎤 Voice message"
+              : "📎 File";
       return sendPushToUser(partnerId, {
         title: req.user.name?.split(" ")[0] || "New message",
-        body: type === "image" ? "📷 Photo" : "📎 File",
+        body: pushBody,
         data: { url: "/chat" },
         tag: "chat",
       });
@@ -157,10 +217,10 @@ const getSharedMedia = asyncHandler(async (req, res) => {
 
   const media = await Message.find({
     coupleId: couple._id,
-    type: { $in: ["image", "file"] },
+    type: { $in: ["image", "file", "audio", "video"] },
   })
     .sort({ createdAt: -1 })
-    .limit(200);
+    .limit(300);
 
   res.status(200).json({ success: true, data: media });
 });

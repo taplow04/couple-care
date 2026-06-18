@@ -14,6 +14,24 @@
     />
     <meta name="theme-color" content="#ff5c8a" />
 
+    <!-- Apply the saved theme before first paint to avoid a light/dark flash. -->
+    <script>
+      (function () {
+        try {
+          var p = localStorage.getItem("cc-theme") || "system";
+          var dark =
+            p === "dark" ||
+            (p === "system" &&
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var resolved = dark ? "dark" : "light";
+          document.documentElement.setAttribute("data-theme", resolved);
+          var m = document.querySelector('meta[name="theme-color"]');
+          if (m) m.setAttribute("content", dark ? "#0d0d14" : "#ff5c8a");
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />

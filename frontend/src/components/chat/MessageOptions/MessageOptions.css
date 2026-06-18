@@ -1,11 +1,13 @@
 .msg-options {
   position: absolute;
   z-index: 100;
-  background: #262626;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
-  overflow: hidden;
-  animation: msg-options-in 0.13s ease;
+  width: max-content;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 6px;
+  box-shadow: var(--shadow-md);
+  animation: msg-options-in 0.14s var(--ease-spring);
 }
 
 /* Open above the bubble by default; below it when near the top of the screen. */
@@ -20,26 +22,45 @@
   to   { opacity: 1; transform: scale(1)   translateY(0);   }
 }
 
+.msg-options__actions {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
 .msg-options__btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   background: none;
   border: none;
-  padding: 13px 18px;
+  padding: 11px 14px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text);
   cursor: pointer;
   transition: background 0.15s;
   white-space: nowrap;
 }
 
-.msg-options__btn--delete {
-  color: #ed4956;
+.msg-options__btn:hover,
+.msg-options__btn:active {
+  background: var(--surface-2);
 }
 
+.msg-options__btn svg {
+  color: var(--text-secondary);
+}
+
+.msg-options__btn--delete {
+  color: var(--danger);
+}
+.msg-options__btn--delete svg {
+  color: var(--danger);
+}
 .msg-options__btn--delete:hover,
 .msg-options__btn--delete:active {
-  background: rgba(237, 73, 86, 0.12);
+  background: rgba(255, 82, 82, 0.12);
 }

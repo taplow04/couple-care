@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import { useCoupleEvents } from "../../../hooks/useCoupleEvents";
 import {
   getMyMoods,
@@ -64,17 +64,8 @@ const PageSkeleton = () => (
   </div>
 );
 
-/* ── Back icon ── */
-const BackIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M19 12H5M5 12L12 19M5 12L12 5"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
 /* ── Main Page ── */
 const MoodAnalyticsPage = () => {
-  const navigate         = useNavigate();
   const { user }         = useAuth();
 
   const [myMoods,        setMyMoods]        = useState([]);
@@ -155,15 +146,11 @@ const MoodAnalyticsPage = () => {
   if (!loading && noPartner) {
     return (
       <div className="map">
-        <div className="map__header">
-          <button className="map__back" onClick={() => navigate("/moods")} aria-label="Back">
-            <BackIcon />
-          </button>
-          <div>
-            <h1 className="map__title">Mood Analytics</h1>
-            <p className="map__sub">Emotional Intelligence Insights</p>
-          </div>
-        </div>
+        <BackHeader
+          title="Mood Analytics"
+          subtitle="Emotional Intelligence Insights"
+          fallback="/moods"
+        />
         <div className="map__no-partner">
           <span className="map__np-emoji">💔</span>
           <h2 className="map__np-title">No Active Relationship</h2>
@@ -175,16 +162,11 @@ const MoodAnalyticsPage = () => {
 
   return (
     <div className="map">
-      {/* Page header */}
-      <div className="map__header">
-        <button className="map__back" onClick={() => navigate("/moods")} aria-label="Back">
-          <BackIcon />
-        </button>
-        <div>
-          <h1 className="map__title">Mood Analytics</h1>
-          <p className="map__sub">Emotional Intelligence Insights</p>
-        </div>
-      </div>
+      <BackHeader
+        title="Mood Analytics"
+        subtitle="Emotional Intelligence Insights"
+        fallback="/moods"
+      />
 
       {loading ? (
         <div className="map__body">

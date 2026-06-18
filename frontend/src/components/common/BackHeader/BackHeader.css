@@ -1,0 +1,67 @@
+.back-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) var(--space-4) 10px;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.back-header__btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  transition: var(--transition-fast);
+}
+
+.back-header__btn:active {
+  background: var(--surface-2);
+  transform: scale(0.92);
+}
+
+.back-header__titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.back-header__title {
+  font-size: var(--font-h3);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back-header__sub {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back-header__right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Keeps the title visually centred when there are no right-side actions. */
+.back-header__spacer {
+  width: 40px;
+  flex-shrink: 0;
+}

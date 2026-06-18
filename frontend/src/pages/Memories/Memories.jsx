@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { getMemories, addMemory } from "../../services/memories.service";
+import BackHeader from "../../components/common/BackHeader/BackHeader";
 import "./Memories.css";
 
 const MEMORY_TYPE_ICON = {
@@ -71,20 +72,19 @@ const Memories = () => {
 
   return (
     <div className="mem-pg">
-      <div className="mem-pg-content">
-
-        {/* Header */}
-        <div className="mem-pg-header">
-          <div>
-            <h1 className="mem-pg-title">Our Memories</h1>
-            <p className="mem-pg-sub">Your shared story, captured</p>
-          </div>
-          {!addOpen ? (
+      <BackHeader
+        title="Our Memories"
+        subtitle="Your shared story, captured"
+        fallback="/dashboard"
+        right={
+          !addOpen ? (
             <button className="mem-pg-btn-add" onClick={openAdd}>+ Add</button>
           ) : (
             <button className="mem-pg-btn-cancel" onClick={cancelAdd}>Cancel</button>
-          )}
-        </div>
+          )
+        }
+      />
+      <div className="mem-pg-content">
 
         {/* Add Form */}
         {addOpen && (

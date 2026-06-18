@@ -15,10 +15,11 @@ const messageSchema = new mongoose.Schema(
     },
 
     // Message kind. Media messages store their file on Cloudinary (mediaUrl);
-    // binary is never stored in MongoDB.
+    // binary is never stored in MongoDB. "audio" = a recorded voice note;
+    // "video" = a shared clip.
     type: {
       type: String,
-      enum: ["text", "image", "file"],
+      enum: ["text", "image", "file", "audio", "video"],
       default: "text",
     },
 
@@ -40,6 +41,32 @@ const messageSchema = new mongoose.Schema(
     mimeType: { type: String, default: null },
     width: { type: Number, default: null },
     height: { type: Number, default: null },
+    // Voice-note / video length in seconds (best-effort, sent by the client).
+    mediaDuration: { type: Number, default: null },
+
+    // Emoji reactions. One reaction per user (toggled): re-reacting with a new
+    // emoji replaces the old one; reacting with the same emoji removes it.
+    reactions: {
+      type: [
+        {
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+          },
+          emoji: { type: String, required: true },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+
+    // Optional quoted message this one is replying to.
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      default: null,
+    },
 
     seen: {
       type: Boolean,

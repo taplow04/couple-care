@@ -8,6 +8,7 @@ import {
 } from "../../../services/notifications.service";
 import NotificationGroup from "../../../components/notifications/NotificationGroup/NotificationGroup";
 import EmptyNotifications from "../../../components/notifications/EmptyNotifications/EmptyNotifications";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import "./NotificationsPage.css";
 
 // ─── Date grouping ────────────────────────────────────────────────────────────
@@ -121,22 +122,17 @@ const NotificationsPage = () => {
 
   return (
     <div className="notif-pg">
-      <div className="notif-pg__content">
-
-        {/* Header */}
-        <div className="notif-pg__header">
-          <div className="notif-pg__header-text">
-            <h1 className="notif-pg__title">Notifications</h1>
-            {!loading && (
-              <p className="notif-pg__sub">
-                {unreadCount > 0
-                  ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
-                  : "All caught up"}
-              </p>
-            )}
-          </div>
-
-          {!loading && unreadCount > 0 && (
+      <BackHeader
+        title="Notifications"
+        subtitle={
+          loading
+            ? undefined
+            : unreadCount > 0
+              ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
+              : "All caught up"
+        }
+        right={
+          !loading && unreadCount > 0 ? (
             <button
               className="notif-pg__mark-all-btn"
               onClick={handleMarkAllRead}
@@ -144,8 +140,10 @@ const NotificationsPage = () => {
             >
               {markingAll ? "Marking…" : "Mark all read"}
             </button>
-          )}
-        </div>
+          ) : null
+        }
+      />
+      <div className="notif-pg__content">
 
         {/* Content */}
         {loading ? (

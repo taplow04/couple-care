@@ -1,12 +1,29 @@
 .chat-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  background: #fff;
-  border-bottom: 1px solid #efefef;
+  gap: 8px;
+  padding: 10px 14px;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   min-height: 60px;
+}
+
+.chat-header__back {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: none;
+  color: var(--text);
+  transition: var(--transition-fast);
+}
+.chat-header__back:active {
+  background: var(--surface-2);
+  transform: scale(0.92);
 }
 
 /* Clickable partner area (opens partner profile) */
@@ -42,12 +59,12 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #fff;
+  background: var(--card);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 2px solid #fff;
+  border: 2px solid var(--card);
 }
 
 .chat-header__avatar-img {
@@ -75,7 +92,7 @@
 .chat-header__name {
   font-size: 15px;
   font-weight: 700;
-  color: #262626;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -100,13 +117,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #262626;
+  color: var(--text);
   transition: background 0.15s;
   font-size: 18px;
 }
 
 .chat-header__icon-btn:hover {
-  background: #f5f5f5;
+  background: var(--surface-2);
 }
 
 .chat-header__call-btn {

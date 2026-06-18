@@ -1,0 +1,94 @@
+.voice-msg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+  max-width: 260px;
+  padding: 2px 0;
+}
+
+.voice-msg__play {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  transition: transform 0.12s ease;
+}
+.voice-msg__play:active {
+  transform: scale(0.9);
+}
+
+/* On my (pink) bubbles the play button inverts for contrast. */
+.voice-msg--mine .voice-msg__play {
+  background: #fff;
+  color: var(--primary);
+}
+
+.voice-msg__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.voice-msg__track {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border);
+}
+.voice-msg--mine .voice-msg__track {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.voice-msg__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--primary);
+}
+.voice-msg--mine .voice-msg__fill {
+  background: #fff;
+}
+
+/* Invisible range input overlaid for scrubbing. */
+.voice-msg__range {
+  position: absolute;
+  inset: -8px 0;
+  width: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.voice-msg__time {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  min-width: 30px;
+}
+.voice-msg--mine .voice-msg__time {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.voice-msg__speed {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+.voice-msg--mine .voice-msg__speed {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}

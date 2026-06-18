@@ -1,0 +1,101 @@
+.voice-rec__mic {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  touch-action: none; /* let us own the drag gesture */
+  transition: var(--transition-fast);
+}
+
+.voice-rec__mic:active {
+  color: var(--primary);
+}
+
+.voice-rec__mic--active {
+  background: var(--primary);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.voice-rec__mic:disabled {
+  opacity: 0.45;
+}
+
+/* Recording overlay covers the composer row. */
+.voice-rec__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  background: var(--card);
+  border-radius: 26px;
+  z-index: 5;
+  animation: cc-fade-in 0.15s ease both;
+}
+
+.voice-rec__overlay--cancel {
+  background: rgba(255, 82, 82, 0.12);
+}
+
+.voice-rec__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  flex-shrink: 0;
+  animation: cc-rec-pulse 1s ease-in-out infinite;
+}
+
+@keyframes cc-rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.voice-rec__time {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  flex-shrink: 0;
+  min-width: 36px;
+}
+
+.voice-rec__wave {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  height: 28px;
+  overflow: hidden;
+}
+
+.voice-rec__bar {
+  width: 3px;
+  min-height: 3px;
+  border-radius: 99px;
+  background: var(--primary);
+  transition: height 0.07s linear;
+}
+
+.voice-rec__overlay--cancel .voice-rec__bar {
+  background: var(--danger);
+}
+
+.voice-rec__hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.voice-rec__overlay--cancel .voice-rec__hint {
+  color: var(--danger);
+}

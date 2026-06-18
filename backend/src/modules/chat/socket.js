@@ -32,6 +32,9 @@ const userActiveCall = new Map();
 // How long an unanswered call rings before we mark it missed (ms).
 const RING_TIMEOUT_MS = 35000;
 
+// The fixed set of emoji reactions a message can carry (Instagram-style).
+const ALLOWED_REACTIONS = new Set(["❤️", "👍", "😂", "😢", "😍"]);
+
 const emitSocketError = (socket, message, details = null) => {
   socket.emit("socket:error", {
     success: false,
@@ -293,17 +296,34 @@ const initializeSocket = (io) => {
 
         await validateCoupleRoom(socket.user._id, message.coupleId);
 
+        // Optional reply-to (quoted message).
+        const replyTo =
+          typeof messageData?.replyTo === "string" &&
+          mongoose.Types.ObjectId.isValid(messageData.replyTo)
+            ? messageData.replyTo
+            : null;
+
         const savedMessage = await Message.create({
           coupleId: message.coupleId,
           senderId: socket.user._id,
           text: message.text,
+          replyTo,
         });
+
+        if (replyTo) {
+          await savedMessage.populate({
+            path: "replyTo",
+            select: "type text senderId fileName",
+          });
+        }
 
         io.to(message.coupleId).emit("message:receive", {
           _id: savedMessage._id,
           coupleId: message.coupleId,
           senderId: socket.user._id,
           text: message.text,
+          replyTo: savedMessage.replyTo || null,
+          reactions: [],
           seen: false,
           createdAt: savedMessage.createdAt,
         });
@@ -473,6 +493,67 @@ const initializeSocket = (io) => {
         io.to(coupleId).emit("message:deleted", { messageId, coupleId });
 
         sendAck(ack, { success: true, messageId });
+      } catch (error) {
+        emitSocketError(socket, error.message);
+        sendAck(ack, { success: false, message: error.message });
+      }
+    });
+
+    /*
+    ==========================
+    REACT TO MESSAGE (toggle one emoji per user)
+    ==========================
+    */
+
+    socket.on("message:react", async (payload, ack) => {
+      try {
+        if (!payload || typeof payload !== "object") {
+          throw new Error("Invalid payload");
+        }
+
+        const { coupleId, messageId, emoji } = payload;
+
+        if (!mongoose.Types.ObjectId.isValid(messageId)) {
+          throw new Error("Invalid message");
+        }
+        if (!ALLOWED_REACTIONS.has(emoji)) {
+          throw new Error("Invalid reaction");
+        }
+
+        await validateCoupleRoom(socket.user._id, coupleId);
+
+        const message = await Message.findOne({ _id: messageId, coupleId });
+        if (!message) throw new Error("Message not found");
+
+        const uid = socket.user._id.toString();
+        const existing = message.reactions.find(
+          (r) => r.userId.toString() === uid,
+        );
+
+        if (existing) {
+          if (existing.emoji === emoji) {
+            // Same emoji -> toggle off (remove).
+            message.reactions = message.reactions.filter(
+              (r) => r.userId.toString() !== uid,
+            );
+          } else {
+            // Different emoji -> replace.
+            existing.emoji = emoji;
+            existing.createdAt = new Date();
+          }
+        } else {
+          message.reactions.push({ userId: socket.user._id, emoji });
+        }
+
+        await message.save();
+
+        io.to(coupleId).emit("message:reaction", {
+          messageId: String(messageId),
+          coupleId,
+          reactions: message.reactions,
+        });
+
+        sendAck(ack, { success: true });
       } catch (error) {
         emitSocketError(socket, error.message);
         sendAck(ack, { success: false, message: error.message });

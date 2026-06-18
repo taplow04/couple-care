@@ -129,6 +129,7 @@ const updateSettings = async (userId, settings) => {
     "aiInsightsEnabled",
     "moodRemindersEnabled",
     "memoryRemindersEnabled",
+    "theme",
   ];
 
   allowedFields.forEach((field) => {

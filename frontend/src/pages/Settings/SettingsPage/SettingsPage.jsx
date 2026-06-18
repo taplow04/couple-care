@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import { getSettings, updateSettings } from "../../../services/security.service";
 import { getPrivacy, updatePrivacy } from "../../../services/privacy.service";
 import SettingsSection from "../../../components/settings/SettingsSection/SettingsSection";
 import SettingToggle from "../../../components/settings/SettingToggle/SettingToggle";
 import PrivacySelect from "../../../components/settings/PrivacySelect/PrivacySelect";
+import ThemeToggle from "../../../components/common/ThemeToggle/ThemeToggle";
 import {
   isPushSupported,
   getPermission,
@@ -15,13 +16,6 @@ import {
   sendTestPush,
 } from "../../../services/push.service";
 import "./SettingsPage.css";
-
-const BackIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M19 12H5M5 12L12 19M5 12L12 5"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const CheckIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -56,7 +50,6 @@ const PRIVACY_ROWS = [
 ];
 
 const SettingsPage = () => {
-  const navigate = useNavigate();
   const { updateUser } = useAuth();
 
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -171,22 +164,12 @@ const SettingsPage = () => {
 
   return (
     <div className="settings-pg">
+      <BackHeader
+        title="Settings"
+        subtitle="Customize your experience"
+        fallback="/profile"
+      />
       <div className="settings-pg__content">
-
-        {/* ── Header ── */}
-        <div className="settings-pg__header">
-          <button
-            className="settings-pg__back"
-            onClick={() => navigate("/profile")}
-            aria-label="Go back"
-          >
-            <BackIcon />
-          </button>
-          <div>
-            <h1 className="settings-pg__title">Settings</h1>
-            <p className="settings-pg__sub">Customize your experience</p>
-          </div>
-        </div>
 
         {/* ── Loading skeleton ── */}
         {loading ? (
@@ -202,6 +185,14 @@ const SettingsPage = () => {
           </div>
         ) : (
           <>
+            {/* ── Appearance ── */}
+            <SettingsSection
+              title="Appearance"
+              description="Choose how CoupleCare looks. System follows your device."
+            >
+              <ThemeToggle />
+            </SettingsSection>
+
             {/* ── Notification settings ── */}
             <SettingsSection
               title="Notifications"

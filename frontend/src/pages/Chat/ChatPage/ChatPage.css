@@ -12,7 +12,7 @@
   transform: translateY(var(--app-top, 0px));
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--background);
   z-index: 1;
   overflow: hidden;
 }
@@ -32,7 +32,7 @@ body.vv-lock {
   display: flex;
   flex-direction: column;
   -webkit-overflow-scrolling: touch;
-  background: #fff;
+  background: var(--background);
 }
 
 /* ── Message thread ──────────────────────────────── */
@@ -57,7 +57,7 @@ body.vv-lock {
 .chat-page__sk {
   height: 40px;
   border-radius: 22px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: chat-shimmer 1.6s infinite;
   max-width: 65%;
@@ -92,12 +92,12 @@ body.vv-lock {
 .chat-page__empty-title {
   font-size: 17px;
   font-weight: 700;
-  color: #262626;
+  color: var(--text);
 }
 
 .chat-page__empty-sub {
   font-size: 13.5px;
-  color: #8e8e8e;
+  color: var(--muted);
   line-height: 1.55;
   max-width: 260px;
 }
@@ -112,10 +112,10 @@ body.vv-lock {
 .chat-page__send-err {
   flex-shrink: 0;
   font-size: 12px;
-  color: #ed4956;
+  color: var(--danger);
   font-weight: 500;
   padding: 4px 16px 0;
-  background: #fff;
+  background: var(--card);
 }
 
 /* ── Desktop centering ───────────────────────────── */

@@ -109,6 +109,14 @@ const userSchema = new mongoose.Schema(
         type: Boolean,
         default: true,
       },
+
+      // Appearance preference. Synced across the user's devices; the frontend
+      // also mirrors it to localStorage for an instant, flash-free first paint.
+      theme: {
+        type: String,
+        enum: ["light", "dark", "system"],
+        default: "system",
+      },
     },
 
     // Granular privacy controls. In a two-person app "partner_only" and

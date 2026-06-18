@@ -5,7 +5,8 @@ import {
   getPartnerProfile,
   unmatchPartner,
 } from "../../../services/couple.service";
-import SharedMedia from "../../../components/chat/SharedMedia/SharedMedia";
+import SharedMediaGrid from "../../../components/chat/SharedMediaGrid/SharedMediaGrid";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import { getFirstName } from "../../../utils/getFirstName";
 import "./PartnerProfile.css";
 
@@ -86,9 +87,7 @@ const PartnerProfile = () => {
   if (error && !data) {
     return (
       <div className="pp">
-        <button className="pp__back" onClick={() => navigate(-1)} aria-label="Back">
-          ‹
-        </button>
+        <BackHeader title="Partner" fallback="/dashboard" />
         <div className="pp__error">{error}</div>
       </div>
     );
@@ -101,13 +100,7 @@ const PartnerProfile = () => {
 
   return (
     <div className="pp">
-      <div className="pp__topbar">
-        <button className="pp__back" onClick={() => navigate(-1)} aria-label="Back">
-          ‹
-        </button>
-        <span className="pp__topbar-title">Partner</span>
-        <div style={{ width: 36 }} />
-      </div>
+      <BackHeader title="Partner" fallback="/dashboard" />
 
       {/* Hero */}
       <div className="pp__hero">
@@ -210,8 +203,8 @@ const PartnerProfile = () => {
         </div>
       )}
 
-      {/* Shared photos & files exchanged in chat */}
-      <SharedMedia />
+      {/* Shared photos, videos, files & voice notes exchanged in chat */}
+      <SharedMediaGrid />
 
       <Chips title="Hobbies" items={partner.hobbies} tone="primary" />
       <Chips title="Likes" items={partner.likes} tone="success" />

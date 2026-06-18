@@ -1,4 +1,5 @@
 :root {
+  /* ── Brand (constant across themes) ─────────────────────────────────────── */
   --primary: #ff5c8a;
   --primary-dark: #e34a78;
   --primary-light: rgba(255, 92, 138, 0.10);
@@ -6,8 +7,12 @@
   --secondary: #7c5cff;
   --secondary-light: rgba(124, 92, 255, 0.10);
 
+  /* ── Surfaces & text (LIGHT defaults) ───────────────────────────────────── */
   --background: #f7f8fc;
   --card: #ffffff;
+  /* Slightly raised surface (inputs, hover rows, chips). */
+  --surface: #ffffff;
+  --surface-2: #f1f2f8;
 
   --text: #1a1a2e;
   --text-secondary: #444455;
@@ -19,16 +24,109 @@
 
   --border: rgba(0, 0, 0, 0.07);
 
+  /* ── Radii ──────────────────────────────────────────────────────────────── */
   --radius: 18px;
   --radius-sm: 12px;
   --radius-lg: 24px;
   --radius-xl: 32px;
 
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.10);
+  /* ── Shadows (LIGHT) — soft, layered, premium ───────────────────────────── */
+  --shadow-sm: 0 2px 8px rgba(20, 20, 50, 0.06);
+  --shadow: 0 6px 22px rgba(20, 20, 50, 0.08);
+  --shadow-md: 0 14px 40px rgba(20, 20, 50, 0.12);
+  --shadow-lg: 0 24px 60px rgba(20, 20, 50, 0.16);
 
+  /* ── Gradients ──────────────────────────────────────────────────────────── */
+  --gradient-romantic: linear-gradient(135deg, #ff5c8a 0%, #7c5cff 100%);
+  --gradient-romantic-soft: linear-gradient(
+    135deg,
+    rgba(255, 92, 138, 0.14) 0%,
+    rgba(124, 92, 255, 0.14) 100%
+  );
+  --gradient-card: linear-gradient(160deg, #ffffff 0%, #fbfaff 100%);
+
+  /* ── Glass (theme-aware translucent surface) ────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: 18px;
+
+  /* ── Typography scale ───────────────────────────────────────────────────── */
+  --font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-h1: 1.75rem;   /* 28px */
+  --font-h2: 1.375rem;  /* 22px */
+  --font-h3: 1.125rem;  /* 18px */
+  --font-body: 1rem;    /* 16px */
+  --font-sm: 0.875rem;  /* 14px */
+  --font-xs: 0.75rem;   /* 12px */
+  --leading-tight: 1.2;
+  --leading: 1.5;
+  --tracking-tight: -0.02em;
+
+  /* ── Spacing scale ──────────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
   --transition: all 0.22s ease;
+  --transition-fast: all 0.15s ease;
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
 
   --bottom-nav-height: 70px;
+
+  color-scheme: light;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DARK THEME — override surfaces, text, borders, shadows, glass. Brand hues
+   stay; only the soft tints lift slightly for contrast on dark surfaces.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root[data-theme="dark"] {
+  --primary-light: rgba(255, 92, 138, 0.18);
+  --secondary-light: rgba(124, 92, 255, 0.20);
+
+  --background: #0d0d14;
+  --card: #16161f;
+  --surface: #1c1c27;
+  --surface-2: #23232f;
+
+  --text: #f2f2f7;
+  --text-secondary: #b8b8c4;
+  --muted: #7a7a88;
+
+  --success: #3ad27a;
+  --warning: #ffb733;
+  --danger: #ff6b6b;
+
+  --border: rgba(255, 255, 255, 0.09);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.40);
+  --shadow: 0 6px 22px rgba(0, 0, 0, 0.50);
+  --shadow-md: 0 14px 40px rgba(0, 0, 0, 0.58);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.66);
+
+  --gradient-card: linear-gradient(160deg, #1a1a24 0%, #15151d 100%);
+
+  --glass-bg: rgba(22, 22, 31, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  color-scheme: dark;
+}
+
+/* Reusable glass surface (headers, overlays). Falls back to a solid surface
+   where backdrop-filter is unsupported. */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: saturate(180%) blur(var(--glass-blur));
+  backdrop-filter: saturate(180%) blur(var(--glass-blur));
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--card);
+  }
 }

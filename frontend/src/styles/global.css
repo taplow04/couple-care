@@ -4,10 +4,20 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: Inter, sans-serif;
+  font-family: var(--font, Inter, sans-serif);
   background: var(--background);
   color: var(--text);
+  font-size: var(--font-body);
+  line-height: var(--leading);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Smooth, contained theme switch — only colours animate (not layout). */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a {
@@ -18,9 +28,36 @@ a {
 button {
   border: none;
   cursor: pointer;
+  font-family: inherit;
 }
 
 input,
 textarea {
   outline: none;
+  font-family: inherit;
+}
+
+/* Themed text selection. */
+::selection {
+  background: var(--primary-light);
+  color: var(--text);
+}
+
+/* Consistent, themed focus ring for keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Honour reduced-motion globally — kill long animations/transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

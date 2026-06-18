@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getHealthScore, getWeeklySummary, getMoodAnalysis } from "../../services/ai.service";
 import AIReport from "../../components/ai/AIReport/AIReport";
+import BackHeader from "../../components/common/BackHeader/BackHeader";
 import "./AI.css";
 
 const CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -61,12 +62,15 @@ const AI = () => {
 
   return (
     <div className="ai-pg">
+      <BackHeader
+        title="AI Insights"
+        subtitle="Relationship intelligence powered by AI"
+        fallback="/dashboard"
+      />
       <div className="ai-pg-content">
 
         {/* Page header */}
         <div className="ai-pg-header">
-          <h1 className="ai-pg-title">AI Insights</h1>
-          <p className="ai-pg-sub">Relationship intelligence powered by AI</p>
           <Link to="/ai-center" className="ai-pg-center-link">
             ✨ Open Full AI Center →
           </Link>

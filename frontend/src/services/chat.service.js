@@ -33,10 +33,12 @@ export const deleteMessage = async (messageId) => {
 // Uploads an image/file to the chat. The server stores it on Cloudinary,
 // creates the Message, and broadcasts it over the socket — so the caller does
 // not need to add the message manually; it arrives via "message:receive".
-export const uploadChatMedia = async (file, caption = "", onProgress) => {
+export const uploadChatMedia = async (file, caption = "", onProgress, meta = {}) => {
   const formData = new FormData();
   formData.append("file", file);
   if (caption) formData.append("text", caption);
+  if (meta.mediaDuration) formData.append("mediaDuration", String(meta.mediaDuration));
+  if (meta.replyTo) formData.append("replyTo", String(meta.replyTo));
 
   // Do NOT set Content-Type manually — the browser must add the multipart
   // boundary itself. Setting "multipart/form-data" by hand drops the boundary

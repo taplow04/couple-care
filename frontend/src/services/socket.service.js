@@ -80,3 +80,12 @@ export const emitMessageDelete = (coupleId, messageId, ack) => {
   if (!coupleId || !messageId || !socket?.connected) return;
   socket.emit("message:delete", { coupleId, messageId }, ack);
 };
+
+// Toggle an emoji reaction on a message. Server broadcasts "message:reaction".
+export const emitReaction = (coupleId, messageId, emoji, ack) => {
+  if (!coupleId || !messageId || !emoji || !socket?.connected) {
+    if (typeof ack === "function") ack({ success: false, message: "Not connected" });
+    return;
+  }
+  socket.emit("message:react", { coupleId, messageId, emoji }, ack);
+};

@@ -16,6 +16,7 @@ import {
   emitMessageSend,
   emitMessageSeen,
   emitMessageDelete,
+  emitReaction,
 } from "../../../services/socket.service";
 import ChatHeader from "../../../components/chat/ChatHeader/ChatHeader";
 import MessageBubble from "../../../components/chat/MessageBubble/MessageBubble";
@@ -43,6 +44,7 @@ const ChatPage = () => {
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [sendError, setSendError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [replyDraft, setReplyDraft] = useState(null);
 
   const bottomRef = useRef(null);
   const typingStopRef = useRef(null);
@@ -142,6 +144,14 @@ const ChatPage = () => {
       setMessages((prev) => prev.filter((m) => String(m._id) !== String(messageId)));
     };
 
+    const onMessageReaction = ({ messageId, reactions }) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          String(m._id) === String(messageId) ? { ...m, reactions } : m
+        )
+      );
+    };
+
     if (socket.connected) {
       joinCoupleRoom(coupleId);
     }
@@ -153,6 +163,7 @@ const ChatPage = () => {
     socket.on("typing:stop", onTypingStop);
     socket.on("message:seen", onMessageSeen);
     socket.on("message:deleted", onMessageDeleted);
+    socket.on("message:reaction", onMessageReaction);
 
     return () => {
       socket.off("connect", onConnect);
@@ -162,6 +173,7 @@ const ChatPage = () => {
       socket.off("typing:stop", onTypingStop);
       socket.off("message:seen", onMessageSeen);
       socket.off("message:deleted", onMessageDeleted);
+      socket.off("message:reaction", onMessageReaction);
       clearTimeout(typingStopRef.current);
       clearTimeout(typingEmitRef.current);
     };
@@ -189,7 +201,7 @@ const ChatPage = () => {
   }, [coupleId]);
 
   const handleSend = useCallback(
-    (text) => {
+    (text, replyTo = null) => {
       if (!text || !coupleId) return;
 
       clearTimeout(typingEmitRef.current);
@@ -207,12 +219,16 @@ const ChatPage = () => {
         seen: false,
         createdAt: new Date().toISOString(),
         pending: true,
+        // Optimistic quote preview (replaced by the populated server copy).
+        replyTo: replyTo
+          ? messages.find((m) => String(m._id) === String(replyTo)) || null
+          : null,
       };
 
       setMessages((prev) => [...prev, optimistic]);
       setSendError("");
 
-      emitMessageSend({ coupleId, text }, (ack) => {
+      emitMessageSend({ coupleId, text, replyTo }, (ack) => {
         if (!ack?.success) {
           setMessages((prev) =>
             prev.map((m) =>
@@ -223,15 +239,57 @@ const ChatPage = () => {
         }
       });
     },
-    [coupleId, user?._id]
+    [coupleId, user?._id, messages]
   );
 
   // Media upload: REST → Cloudinary → server broadcasts via "message:receive",
-  // so we don't add anything optimistically here.
+  // so we don't add anything optimistically here. `meta` carries optional
+  // mediaDuration (voice notes) and replyTo.
   const handleUploadMedia = useCallback(
-    (file, caption, onProgress) => uploadChatMedia(file, caption, onProgress),
+    (file, caption, onProgress, meta) =>
+      uploadChatMedia(file, caption, onProgress, meta),
     [],
   );
+
+  // ── Reactions / reply / forward ──
+  const handleReact = useCallback(
+    (message, emoji) => {
+      if (!coupleId || !message?._id) return;
+      // Pending (optimistic) messages have no server id yet.
+      if (String(message._id).startsWith("temp_")) return;
+
+      // Optimistic toggle for instant feedback; server broadcast confirms.
+      const uid = String(user._id);
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (String(m._id) !== String(message._id)) return m;
+          const list = (m.reactions || []).filter(
+            (r) => String(r.userId?._id || r.userId) !== uid
+          );
+          const had = (m.reactions || []).find(
+            (r) => String(r.userId?._id || r.userId) === uid
+          );
+          if (!(had && had.emoji === emoji)) {
+            list.push({ userId: uid, emoji });
+          }
+          return { ...m, reactions: list };
+        })
+      );
+
+      emitReaction(coupleId, message._id, emoji);
+    },
+    [coupleId, user?._id]
+  );
+
+  const handleReply = useCallback((message) => {
+    setReplyDraft(message);
+  }, []);
+
+  const handleForward = useCallback(() => {
+    // Forwarding is future-ready (UI present); destination picker not built yet.
+    setSendError("Forwarding is coming soon. 💗");
+    setTimeout(() => setSendError(""), 2500);
+  }, []);
 
   const handleDeleteRequest = useCallback((message) => {
     setDeleteTarget(message);
@@ -296,7 +354,11 @@ const ChatPage = () => {
                 key={msg._id}
                 message={msg}
                 isMine={flatSenderId(msg.senderId) === String(user?._id)}
+                currentUserId={user?._id}
                 onDelete={handleDeleteRequest}
+                onReact={handleReact}
+                onReply={handleReply}
+                onForward={handleForward}
               />
             ))}
             {isPartnerTyping && <TypingIndicator />}
@@ -316,6 +378,8 @@ const ChatPage = () => {
         onTyping={handleTyping}
         onUploadMedia={handleUploadMedia}
         disabled={false}
+        replyDraft={replyDraft}
+        onCancelReply={() => setReplyDraft(null)}
       />
 
       {deleteTarget && (

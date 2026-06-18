@@ -29,6 +29,7 @@ const getMessages = async (userId, page = 1, limit = 50) => {
     coupleId: couple._id,
   })
     .populate("senderId", "name profilePhoto")
+    .populate("replyTo", "type text senderId fileName")
     .sort({
       createdAt: -1,
     })
