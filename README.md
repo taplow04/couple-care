@@ -4,7 +4,7 @@
 
 **Your relationship companion — chat, calls, moods, memories, milestones, and AI insights, all in one place.**
 
-A full-stack app for couples to stay close: real-time 1:1 messaging with media sharing, voice/video calls, mood tracking, shared memories, a relationship journey timeline, and AI-powered relationship insights.
+A full-stack app for couples to stay close: a premium Instagram-DM-style messenger with media sharing, voice notes & reactions, voice/video calls, mood tracking, shared memories, a relationship journey timeline, and AI-powered relationship insights — all in an installable, native-feeling PWA with light/dark themes.
 
 </div>
 
@@ -14,7 +14,8 @@ A full-stack app for couples to stay close: real-time 1:1 messaging with media s
 
 - **Secure onboarding** — email + password registration gated by a **6-digit OTP** (verified before the account is created), plus forgot/reset password.
 - **Pair with one partner** — connect via a unique pair code; soft unmatch keeps your data.
-- **Real-time chat** — 1:1 messaging over Socket.io with typing indicators, seen receipts, delete, and **media sharing** (images & files via Cloudinary) with a shared-media gallery.
+- **Premium romantic chat** — 1:1 Socket.io messaging with an Instagram-DM-style love theme (soft gradients, frosted-glass header/composer), typing indicators, seen receipts, and message **reactions** (❤️ 👍 😂 😢 😍), **reply / copy / delete** via a long-press menu, and double-tap-to-❤️.
+- **Rich media sharing** — quick **camera**, gallery (photos + **video**), files, and **voice notes** (tap-to-record with live waveform + cancel/send), all via Cloudinary, with a tabbed **shared-media gallery** (Photos · Videos · Files · Voice).
 - **Voice & video calls** — WebRTC peer-to-peer calling between partners (STUN/TURN), with full call lifecycle and history.
 - **Live presence** — true online / last-seen / in-call / typing status.
 - **Mood tracking** — log moods with intensity & notes; partner mood alerts; analytics, trends, heatmaps & compatibility.
@@ -22,8 +23,9 @@ A full-stack app for couples to stay close: real-time 1:1 messaging with media s
 - **Relationship journey** — days-together, milestones, and stats based on your real start date.
 - **AI insights** — concise, bulleted relationship health score, weekly summaries, and mood analysis (Groq / Llama 3.3).
 - **Smart reminders** — automated mood, birthday, and anniversary notifications (real-time + scheduled).
+- **Light / Dark / System theme** — instant, persisted theme switching (CSS variables + `data-theme`), synced to user settings and localStorage.
 - **Privacy controls** — granular per-data-type visibility settings.
-- **Installable PWA** — branded icons, manifest, and mobile-first UI.
+- **Native-feeling PWA** — installable with shortcuts & offline shell; no text-selection / tap-highlight / pull-to-refresh / double-tap-zoom; safe-area aware; universal back navigation.
 
 ---
 
@@ -70,11 +72,12 @@ couple-care/
     └── src/
         ├── api/              # axios instance
         ├── services/         # one module per API domain
-        ├── context/          # Auth, Call, Notifications providers
-        ├── hooks/            # presence, realtime notifications
-        ├── components/       # UI (chat, call, dashboard, ai, journey…)
+        ├── context/          # Auth, Theme, Call, Notifications, ChatUnread providers
+        ├── hooks/            # presence, realtime notifications, visual viewport
+        ├── components/       # UI (chat, call, dashboard, ai, journey, common…)
         ├── pages/            # route pages
-        └── utils/            # getFirstName, etc.
+        ├── styles/           # variables (themes/tokens), global, animations
+        └── utils/            # getFirstName, compressImage, etc.
 ```
 
 The backend follows a consistent module pattern: `*.model.js` (schema), `*.service.js` (logic), `*.controller.js` (HTTP), `*.routes.js` (router). All API responses use `{ success, data }`.
