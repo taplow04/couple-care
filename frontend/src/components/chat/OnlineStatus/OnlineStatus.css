@@ -8,24 +8,24 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #c7c7c7;
+  background: var(--muted);
   flex-shrink: 0;
   transition: background 0.3s;
 }
 
 .online-status--online .online-status__dot {
-  background: #3897f0;
-  box-shadow: 0 0 0 2px rgba(56, 151, 240, 0.2);
+  background: var(--success);
+  box-shadow: 0 0 0 2px rgba(50, 195, 108, 0.22);
 }
 
 .online-status__text {
   font-size: 12px;
-  color: #8e8e8e;
+  color: var(--muted);
   font-weight: 400;
 }
 
 .online-status--online .online-status__text {
-  color: #3897f0;
+  color: var(--success);
 }
 
 /* In-call */
@@ -39,9 +39,9 @@
 
 /* Typing */
 .online-status--typing .online-status__dot {
-  background: #3897f0;
+  background: var(--primary);
 }
 .online-status--typing .online-status__text {
-  color: #3897f0;
+  color: var(--primary);
   font-style: italic;
 }

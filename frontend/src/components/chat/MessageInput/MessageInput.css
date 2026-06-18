@@ -1,6 +1,9 @@
 .msg-input-wrap {
-  background: var(--card);
-  border-top: 1px solid var(--border);
+  /* Frosted glass over the romantic chat wash. */
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-top: 1px solid var(--glass-border);
   flex-shrink: 0;
 }
 
@@ -12,7 +15,7 @@
   padding: 8px 10px 12px;
   /* Sit above the home indicator / gesture bar on notched phones. */
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  background: var(--card);
+  background: transparent;
 }
 
 /* Toolbar icon buttons (camera / gallery / attach) */

@@ -6,10 +6,13 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  /* Theme-aware glass surface — adapts to light/dark so the icon (var(--text))
+     always contrasts. The old hardcoded white made the light dark-mode icon
+     invisible. */
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
   box-shadow: var(--shadow-sm);
   color: var(--text);
   display: flex;
@@ -19,8 +22,18 @@
   transition: var(--transition);
 }
 
+.notif-bell:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
 .notif-bell:active {
   transform: scale(0.92);
+}
+
+.notif-bell:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .notif-bell__badge {
@@ -39,11 +52,10 @@
   align-items: center;
   justify-content: center;
   padding: 0 3px;
-  border: 2px solid #fff;
+  /* Match the page background so the badge "cuts out" cleanly in both themes. */
+  border: 2px solid var(--background);
 }
 
-/* On the dashboard the TopHeader already provides chrome; nudge the bell so it
-   sits inside the header row area cleanly. */
 @media (min-width: 768px) {
   .notif-bell {
     width: 44px;

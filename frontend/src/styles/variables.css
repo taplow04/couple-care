@@ -50,6 +50,15 @@
   --glass-border: rgba(255, 255, 255, 0.5);
   --glass-blur: 18px;
 
+  /* ── Love chat theme (LIGHT) — soft pink→lavender wash + romantic glows ──── */
+  --chat-bg: linear-gradient(168deg, #fff4f8 0%, #fbf3fb 45%, #f3f1fe 100%);
+  --chat-glow-1: rgba(255, 92, 138, 0.16); /* warm pink */
+  --chat-glow-2: rgba(124, 92, 255, 0.14); /* lavender  */
+  /* Partner bubble: clean elevated "glass" panel that reads on the wash. */
+  --chat-bubble-their: rgba(255, 255, 255, 0.86);
+  --chat-bubble-their-border: rgba(120, 90, 160, 0.10);
+  --chat-bubble-mine-shadow: 0 4px 16px rgba(255, 92, 138, 0.28);
+
   /* ── Typography scale ───────────────────────────────────────────────────── */
   --font: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-h1: 1.75rem;   /* 28px */
@@ -113,6 +122,15 @@
 
   --glass-bg: rgba(22, 22, 31, 0.72);
   --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Love chat theme (DARK) — deep romantic gradient, no pure black, soft
+     purple/pink glows. */
+  --chat-bg: linear-gradient(168deg, #181020 0%, #140e1c 50%, #0f0c16 100%);
+  --chat-glow-1: rgba(255, 92, 138, 0.20);
+  --chat-glow-2: rgba(124, 92, 255, 0.24);
+  --chat-bubble-their: rgba(255, 255, 255, 0.07);
+  --chat-bubble-their-border: rgba(255, 255, 255, 0.10);
+  --chat-bubble-mine-shadow: 0 4px 18px rgba(255, 92, 138, 0.22);
 
   color-scheme: dark;
 }

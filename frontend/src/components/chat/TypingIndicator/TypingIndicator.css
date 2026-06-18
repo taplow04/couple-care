@@ -9,15 +9,18 @@
   align-items: center;
   gap: 4px;
   padding: 12px 16px;
-  background: #efefef;
+  background: var(--chat-bubble-their);
+  border: 1px solid var(--chat-bubble-their-border);
   border-radius: 22px 22px 22px 4px;
+  box-shadow: var(--shadow-sm);
+  animation: cc-scale-in 0.2s var(--ease-spring) both;
 }
 
 .typing-indicator__dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #8e8e8e;
+  background: var(--primary);
   animation: typing-bounce 1.4s ease-in-out infinite;
 }
 

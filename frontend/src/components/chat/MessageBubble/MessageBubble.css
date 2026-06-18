@@ -17,19 +17,29 @@
 
 /* Base bubble */
 .msg-bubble {
+  position: relative;
   padding: 10px 14px;
   display: inline-flex;
   flex-direction: column;
   gap: 3px;
   word-break: break-word;
   transition: opacity 0.2s;
+  /* Subtle entrance — fade + tiny rise. GPU-friendly (opacity/transform). */
+  animation: msg-in 0.26s var(--ease-spring) both;
 }
 
-/* Partner bubble — neutral surface (theme-aware) */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);     }
+}
+
+/* Partner bubble — elegant translucent "glass" panel on the romantic wash. */
 .msg-bubble--theirs {
-  background: var(--surface-2);
+  background: var(--chat-bubble-their);
+  border: 1px solid var(--chat-bubble-their-border);
   border-radius: 22px 22px 22px 4px;
   color: var(--text);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Extra bottom room so the reaction badge (overhangs the bubble) doesn't
@@ -38,11 +48,12 @@
   margin-bottom: 12px;
 }
 
-/* Own bubble — brand gradient */
+/* Own bubble — romantic gradient (pink → soft violet) with a warm glow. */
 .msg-bubble--mine {
-  background: linear-gradient(135deg, var(--primary) 0%, #e34a78 100%);
+  background: linear-gradient(135deg, #ff6fa0 0%, var(--primary) 50%, #a86bff 130%);
   border-radius: 22px 22px 4px 22px;
   color: #fff;
+  box-shadow: var(--chat-bubble-mine-shadow);
 }
 
 .msg-bubble--pending {
