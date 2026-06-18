@@ -2,10 +2,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Native-app feel: no blue tap flash anywhere. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Kill browser pull-to-refresh + elastic overscroll chaining. */
+  overscroll-behavior: none;
+  /* Keep pinch-zoom (a11y) but remove the double-tap-to-zoom + 300ms delay. */
+  touch-action: manipulation;
+  height: 100%;
 }
 
 body {
@@ -18,6 +25,32 @@ body {
   text-rendering: optimizeLegibility;
   /* Smooth, contained theme switch — only colours animate (not layout). */
   transition: background-color 0.3s ease, color 0.3s ease;
+  overscroll-behavior: none;
+  /* Disable text selection + iOS long-press callout app-wide for a native
+     feel. Re-enabled below for real text inputs and opt-in .selectable nodes. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Allow selection / callout only where it's meaningful: real editable fields
+   and anything explicitly marked selectable. */
+input,
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""],
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Prevent accidental image dragging / long-press save across the app. */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 a {

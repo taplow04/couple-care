@@ -1,11 +1,87 @@
-/* CoupleCare service worker — web push + notification routing. */
+/* CoupleCare service worker — web push + notification routing + offline shell.
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+   Caching strategy is deliberately conservative to avoid the classic PWA
+   "stuck on an old build" trap:
+     • Navigations (HTML): network-FIRST → online users ALWAYS get the latest
+       app shell; the cached copy is only a fallback when offline.
+     • Hashed build assets (/assets/*) + static icons: cache-FIRST (immutable —
+       Vite fingerprints filenames, so a new build = new URLs, never stale).
+     • API / socket / Cloudinary / cross-origin: never cached (always network).
+*/
+
+const CACHE = "couple-care-v1";
+const OFFLINE_URL = "/index.html";
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const cache = await caches.open(CACHE);
+        await cache.add(OFFLINE_URL);
+      } catch {
+        /* offline at install — fetch handler will populate later */
+      }
+      self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    (async () => {
+      // Drop caches from previous versions.
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })(),
+  );
+});
+
+const isStaticAsset = (url) =>
+  url.pathname.startsWith("/assets/") ||
+  /\.(?:png|svg|ico|webmanifest|woff2?)$/.test(url.pathname);
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  // Only handle our own origin; never touch API/socket/Cloudinary/etc.
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/")) return;
+
+  // Navigations → network-first with offline fallback.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(request);
+          const cache = await caches.open(CACHE);
+          cache.put(OFFLINE_URL, fresh.clone());
+          return fresh;
+        } catch {
+          return (await caches.match(OFFLINE_URL)) || Response.error();
+        }
+      })(),
+    );
+    return;
+  }
+
+  // Immutable hashed assets → cache-first.
+  if (isStaticAsset(url)) {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        const res = await fetch(request);
+        if (res.ok) {
+          const cache = await caches.open(CACHE);
+          cache.put(request, res.clone());
+        }
+        return res;
+      })(),
+    );
+  }
 });
 
 // Incoming push → show an OS notification.
