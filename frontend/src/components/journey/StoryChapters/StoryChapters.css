@@ -1,0 +1,226 @@
+.story {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.story__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.story__title {
+  margin: 0;
+  font-size: var(--font-h3);
+  font-weight: 800;
+  color: var(--text);
+}
+.story__sub {
+  margin: 2px 0 0;
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+.story__add-btn {
+  flex-shrink: 0;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  cursor: pointer;
+}
+
+.story__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.story__form-row {
+  display: flex;
+  gap: var(--space-2);
+}
+.story__emoji-input {
+  width: 54px;
+  text-align: center;
+}
+.story__input,
+.story__emoji-input {
+  padding: 10px 12px;
+  font-size: var(--font-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+}
+.story__input {
+  flex: 1;
+  width: 100%;
+}
+.story__input:focus,
+.story__emoji-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.story__textarea {
+  resize: vertical;
+}
+.story__save {
+  align-self: flex-end;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--gradient-romantic);
+  color: #fff;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.story__save:disabled {
+  opacity: 0.55;
+}
+
+.story__timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.story-ch {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.story-ch__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+}
+/* Connecting line between dots. */
+.story-ch__rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.story-ch:first-child .story-ch__rail::before {
+  top: 18px;
+}
+.story-ch:last-child .story-ch__rail::before {
+  bottom: calc(100% - 18px);
+}
+
+.story-ch__dot {
+  position: relative;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: var(--card);
+  border: 2px solid var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.story-ch__card {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.story-ch__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.story-ch__num {
+  font-size: var(--font-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+}
+.story-ch__date {
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+.story-ch__title {
+  margin: 4px 0 0;
+  font-size: var(--font-body);
+  font-weight: 700;
+  color: var(--text);
+}
+.story-ch__desc {
+  margin: 4px 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading);
+}
+.story-ch__del {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.45;
+  font-size: 0.85rem;
+}
+.story-ch__del:hover {
+  opacity: 1;
+}
+
+.story__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.story__sk {
+  height: 70px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  animation: story-pulse 1.4s ease-in-out infinite;
+}
+
+.story__empty {
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  line-height: var(--leading);
+}
+.story__empty-emoji {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+@keyframes story-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}

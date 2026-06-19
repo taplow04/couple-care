@@ -19,6 +19,7 @@ import RelationshipStats  from "../../../components/journey/RelationshipStats/Re
 import MilestoneProgress  from "../../../components/journey/MilestoneProgress/MilestoneProgress";
 import MilestoneCard      from "../../../components/journey/MilestoneCard/MilestoneCard";
 import TimelineCard       from "../../../components/journey/TimelineCard/TimelineCard";
+import StoryChapters      from "../../../components/journey/StoryChapters/StoryChapters";
 import "./JourneyPage.css";
 
 /* ── Skeleton ── */
@@ -185,6 +186,11 @@ const JourneyPage = () => {
 
         {/* Milestone progress track */}
         <MilestoneProgress daysTogether={daysTogether} />
+
+        {/* Story Timeline — auto-assembled chapters of the relationship */}
+        <section className="jp__section">
+          <StoryChapters />
+        </section>
 
         {/* AI Insights */}
         <section className="jp__section">
