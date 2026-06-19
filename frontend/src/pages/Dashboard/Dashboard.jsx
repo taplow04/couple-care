@@ -10,7 +10,8 @@ import { useCoupleEvents } from "../../hooks/useCoupleEvents";
 import TopHeader from "../../components/navigation/TopHeader/TopHeader";
 import WelcomeCard from "../../components/dashboard/WelcomeCard/WelcomeCard";
 import UpcomingBirthdayCard from "../../components/dashboard/UpcomingBirthdayCard/UpcomingBirthdayCard";
-import HealthScoreCard from "../../components/dashboard/HealthScoreCard/HealthScoreCard";
+import StreakCard from "../../components/engagement/StreakCard/StreakCard";
+import LoveMeter from "../../components/engagement/LoveMeter/LoveMeter";
 import RelationshipStatusCard from "../../components/dashboard/RelationshipStatusCard/RelationshipStatusCard";
 import RecentMoodCard from "../../components/dashboard/RecentMoodCard/RecentMoodCard";
 import AIInsightCard from "../../components/dashboard/AIInsightCard/AIInsightCard";
@@ -67,6 +68,7 @@ const Dashboard = () => {
 
   const [dashData, setDashData] = useState(null);
   const [memories, setMemories] = useState(undefined);
+  const [engagement, setEngagement] = useState(null);
   const [aiScore, setAiScore] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(true);
@@ -86,6 +88,7 @@ const Dashboard = () => {
       const res = await getDashboard();
       setDashData(res.data);
       if (res.data?.health) setAiScore(res.data.health);
+      if (res.data?.engagement) setEngagement(res.data.engagement);
     } catch {
       /* keep current data on a failed refresh */
     }
@@ -94,6 +97,9 @@ const Dashboard = () => {
   useCoupleEvents({
     "health:update": (payload) => {
       if (payload?.score != null) setAiScore(payload);
+    },
+    "engagement:update": (payload) => {
+      if (payload) setEngagement((prev) => ({ ...prev, ...payload }));
     },
     "couple:activity": () => {
       refreshDashboard();
@@ -104,6 +110,7 @@ const Dashboard = () => {
     try {
       const res = await getDashboard();
       setDashData(res.data);
+      if (res.data?.engagement) setEngagement(res.data.engagement);
       setLoading(false);
       loadSecondary();
     } catch (err) {
@@ -161,14 +168,19 @@ const Dashboard = () => {
           </div>
         )}
 
+        <div className="db-fade-in" style={{ animationDelay: "50ms" }}>
+          <StreakCard engagement={engagement} loading={loading} />
+        </div>
+
         <div className="dashboard-grid-2">
-          <div className="db-fade-in" style={{ animationDelay: "60ms" }}>
-            <HealthScoreCard
-              aiScore={aiScore}
+          <div className="db-fade-in" style={{ animationDelay: "80ms" }}>
+            <LoveMeter
               health={dashData?.health}
+              aiScore={aiScore}
+              engagement={engagement}
             />
           </div>
-          <div className="db-fade-in" style={{ animationDelay: "100ms" }}>
+          <div className="db-fade-in" style={{ animationDelay: "110ms" }}>
             <RelationshipStatusCard relationship={dashData?.relationship} />
           </div>
         </div>

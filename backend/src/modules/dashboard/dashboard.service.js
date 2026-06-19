@@ -5,6 +5,10 @@ const { getMoodAnalytics } = require("../moods/mood.service");
 const History = require("../histories/history.model");
 const { getDaysTogether, getRelationshipStart } = require("../couples/couple.helpers");
 const { computeCoupleHealth } = require("../couples/health.service");
+const {
+  getOrCreateEngagement,
+  buildSummary,
+} = require("../engagement/engagement.service");
 
 const getDashboardData = async (userId) => {
   const user = await User.findById(userId);
@@ -60,6 +64,17 @@ const getDashboardData = async (userId) => {
     console.error("[dashboard] health compute failed:", e.message);
   }
 
+  // Shared engagement (streak + XP + level) — same for both partners. Included
+  // here so the dashboard StreakCard / LoveMeter render from one fetch. Never
+  // let an engagement failure break the dashboard.
+  let engagement = null;
+  try {
+    const eng = await getOrCreateEngagement(couple._id);
+    engagement = buildSummary(eng);
+  } catch (e) {
+    console.error("[dashboard] engagement load failed:", e.message);
+  }
+
   return {
     partner,
 
@@ -72,6 +87,8 @@ const getDashboardData = async (userId) => {
     },
 
     health,
+
+    engagement,
 
     moodAnalytics,
 

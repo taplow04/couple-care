@@ -11,6 +11,13 @@ const URL_FOR_TYPE = {
   relationship_milestone: "/journey",
   birthday_reminder: "/dashboard",
   weekly_summary_ready: "/ai",
+  streak_reminder: "/dashboard",
+  streak_milestone: "/dashboard",
+  achievement_unlocked: "/journey",
+  bucket_completed: "/bucket-list",
+  surprise_ready: "/dashboard",
+  love_letter_received: "/ai-center",
+  sleep_reminder: "/sleep",
 };
 
 const createNotification = async (data) => {

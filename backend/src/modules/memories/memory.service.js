@@ -2,6 +2,8 @@ const Memory = require("./memory.model");
 
 const User = require("../users/user.model");
 const { recomputeAndBroadcast } = require("../couples/health.service");
+const { recordActivity } = require("../engagement/engagement.service");
+const { ACTIVITY_TYPES } = require("../engagement/engagement.constants");
 
 const createError = (message, statusCode = 400) => {
   const error = new Error(message);
@@ -37,6 +39,12 @@ const createMemory = async (userId, data) => {
 
   // Memories feed the couple health score — recompute + push live to both.
   await recomputeAndBroadcast(coupleId, "memory");
+
+  // Feed the shared engagement loop (streak / XP / achievements). Never blocks.
+  await recordActivity(coupleId, userId, ACTIVITY_TYPES.MEMORY, {
+    title: memory.title,
+    memoryType: memory.memoryType,
+  });
 
   return memory;
 };

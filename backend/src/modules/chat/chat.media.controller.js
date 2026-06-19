@@ -5,6 +5,8 @@ const { getIo } = require("../../utils/realtime");
 const Message = require("./message.model");
 const { getCoupleByUser, getPartnerId } = require("./chat.helpers");
 const { sendPushToUser } = require("../push/push.service");
+const { recordActivity } = require("../engagement/engagement.service");
+const { ACTIVITY_TYPES } = require("../engagement/engagement.constants");
 
 // Size caps (bytes). Images are compressed by Cloudinary anyway; raw files are
 // stored as-is, so they get a higher ceiling.
@@ -160,6 +162,9 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
       select: "type text senderId fileName",
     });
   }
+
+  // Sharing media counts toward the daily engagement streak (fire-and-forget).
+  recordActivity(couple._id, req.user._id, ACTIVITY_TYPES.CHAT, { type });
 
   const payload = {
     _id: message._id,

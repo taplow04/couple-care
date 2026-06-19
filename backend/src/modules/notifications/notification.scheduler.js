@@ -4,8 +4,13 @@ const User = require("../users/user.model");
 
 const Mood = require("../moods/mood.model");
 const Couple = require("../couples/couple.model");
+const Engagement = require("../engagement/engagement.model");
+const ActivityLog = require("../engagement/activityLog.model");
 
 const { createNotification } = require("./notification.service");
+
+// UTC YYYY-MM-DD — must match engagement.service.dayKey.
+const todayKey = () => new Date().toISOString().slice(0, 10);
 
 // Whole days from today until the next occurrence of a birthday (ignores year).
 const daysUntilBirthday = (birthday) => {
@@ -92,6 +97,45 @@ const startNotificationJobs = () => {
             metadata: { celebrantId: celebrant._id, daysUntil: days },
           });
         }
+      }
+    }
+  });
+
+  // Daily streak reminder (7pm): gently nudge couples with a live streak who
+  // haven't done any activity today, so it doesn't break. Encouraging, NOT
+  // punishing — and only sent when there's an active streak worth protecting.
+  cron.schedule("0 19 * * *", async () => {
+    console.log("Running Streak Reminder Job");
+
+    const day = todayKey();
+
+    const streaks = await Engagement.find({ currentStreak: { $gte: 1 } });
+
+    for (const eng of streaks) {
+      // Skip if they've already kept the streak alive today.
+      const activeToday = await ActivityLog.exists({
+        coupleId: eng.coupleId,
+        day,
+      });
+      if (activeToday) continue;
+
+      const couple = await Couple.findById(eng.coupleId).select(
+        "partnerOneId partnerTwoId relationshipStatus",
+      );
+      if (!couple || couple.relationshipStatus !== "active") continue;
+
+      const recipients = [couple.partnerOneId, couple.partnerTwoId].filter(
+        Boolean,
+      );
+      for (const userId of recipients) {
+        await createNotification({
+          userId,
+          title: `🔥 Keep your ${eng.currentStreak}-day streak alive`,
+          message:
+            "A quick mood, message, or memory today keeps your streak going. You've got this! 💕",
+          type: "streak_reminder",
+          metadata: { streak: eng.currentStreak },
+        });
       }
     }
   });

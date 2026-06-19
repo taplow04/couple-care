@@ -8,6 +8,7 @@ import IncomingCallModal from "../components/call/IncomingCallModal/IncomingCall
 import OutgoingCallModal from "../components/call/OutgoingCallModal/OutgoingCallModal.jsx";
 import CallErrorToast from "../components/call/CallErrorToast/CallErrorToast.jsx";
 import PushPrompt from "../components/push/PushPrompt/PushPrompt.jsx";
+import AchievementToast from "../components/engagement/AchievementToast/AchievementToast.jsx";
 import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications.js";
 import { useChatUnread } from "../hooks/useChatUnread.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -62,6 +63,9 @@ const AppLayout = () => {
       {showFloatingBell(pathname) && <NotificationBell />}
       {!immersive && <BottomNav />}
       {!immersive && <PushPrompt />}
+
+      {/* Global engagement celebration (achievement unlocks for both partners) */}
+      <AchievementToast />
 
       {/* Global call overlays */}
       <IncomingCallModal />

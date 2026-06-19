@@ -4,6 +4,8 @@ const Couple = require("../couples/couple.model");
 const { getPartnerId } = require("../chat/chat.helpers");
 const { createNotification } = require("../notifications/notification.service");
 const { recomputeAndBroadcast } = require("../couples/health.service");
+const { recordActivity } = require("../engagement/engagement.service");
+const { ACTIVITY_TYPES } = require("../engagement/engagement.constants");
 
 // Negative moods that should proactively alert the partner so they can offer
 // support. Maps mood type -> the phrase used in the notification copy.
@@ -73,6 +75,11 @@ const createMood = async (userId, data) => {
   // Recompute the couple's health and push it live to BOTH partners so every
   // surface (dashboard, analytics, journey, health card) updates in real time.
   await recomputeAndBroadcast(user.currentCoupleId, "mood");
+
+  // Feed the shared engagement loop (streak / XP / achievements). Never blocks.
+  await recordActivity(user.currentCoupleId, userId, ACTIVITY_TYPES.MOOD, {
+    moodType: mood.moodType,
+  });
 
   return mood;
 };

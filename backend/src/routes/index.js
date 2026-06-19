@@ -23,6 +23,7 @@ const securityRoutes = require("../modules/security/security.routes");
 const userRoutes = require("../modules/users/user.routes");
 const callRoutes = require("../modules/calls/call.routes");
 const pushRoutes = require("../modules/push/push.routes");
+const engagementRoutes = require("../modules/engagement/engagement.routes");
 
 router.use("/auth", authRoutes);
 
@@ -46,6 +47,7 @@ router.use("/security", securityRoutes);
 router.use("/users", userRoutes);
 router.use("/calls", callRoutes);
 router.use("/push", pushRoutes);
+router.use("/engagement", engagementRoutes);
 
 router.get("/", (req, res) => {
   res.json({

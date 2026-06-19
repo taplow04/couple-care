@@ -6,6 +6,8 @@ const Message = require("./message.model");
 const { isCoupleMember, getPartnerId } = require("./chat.helpers");
 const callService = require("../calls/call.service");
 const { sendPushToUser } = require("../push/push.service");
+const { recordActivity } = require("../engagement/engagement.service");
+const { ACTIVITY_TYPES } = require("../engagement/engagement.constants");
 const {
   setIo,
   addOnlineSocket,
@@ -327,6 +329,14 @@ const initializeSocket = (io) => {
           seen: false,
           createdAt: savedMessage.createdAt,
         });
+
+        // Feed the shared engagement loop (keeps the daily streak alive). Fire-
+        // and-forget — recordActivity never throws and must not delay the ack.
+        recordActivity(
+          message.coupleId,
+          socket.user._id,
+          ACTIVITY_TYPES.CHAT,
+        );
 
         // OS push to the partner (delivers when their app is closed). Best-
         // effort — never block the message send.
