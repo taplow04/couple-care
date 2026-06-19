@@ -1,0 +1,108 @@
+.addbucket__cta {
+  width: 100%;
+  padding: var(--space-4);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--primary);
+  font-size: var(--font-body);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.addbucket__cta:hover {
+  background: var(--primary-light);
+}
+.addbucket__cta-plus {
+  font-size: 1.1em;
+}
+
+.addbucket {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.addbucket__input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: var(--font-body); /* >=16px avoids iOS zoom */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+}
+.addbucket__input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.addbucket__textarea {
+  resize: vertical;
+}
+
+.addbucket__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.addbucket__cat {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.addbucket__cat--on {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.addbucket__label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.addbucket__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+.addbucket__btn {
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+.addbucket__btn--ghost {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+.addbucket__btn--primary {
+  background: var(--gradient-romantic);
+  color: #fff;
+}
+.addbucket__btn--primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

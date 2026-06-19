@@ -1,0 +1,43 @@
+.bucketcard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.bucketcard:active {
+  transform: scale(0.99);
+}
+
+.bucketcard__text {
+  min-width: 0;
+}
+
+.bucketcard__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bucketcard__emoji {
+  font-size: 1.2rem;
+}
+
+.bucketcard__title {
+  margin: 0;
+  font-size: var(--font-h3);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bucketcard__sub {
+  margin: 4px 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}

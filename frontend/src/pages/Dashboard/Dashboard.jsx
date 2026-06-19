@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getDashboard } from "../../services/dashboard.service";
 import { getMemories } from "../../services/memories.service";
 import { getHealthScore, getWeeklySummary } from "../../services/ai.service";
+import { getBucketStats } from "../../services/bucket.service";
 import { useCoupleEvents } from "../../hooks/useCoupleEvents";
 
 import TopHeader from "../../components/navigation/TopHeader/TopHeader";
@@ -17,6 +18,7 @@ import RecentMoodCard from "../../components/dashboard/RecentMoodCard/RecentMood
 import AIInsightCard from "../../components/dashboard/AIInsightCard/AIInsightCard";
 import QuickActionsCard from "../../components/dashboard/QuickActionsCard/QuickActionsCard";
 import RecentMemoriesCard from "../../components/dashboard/RecentMemoriesCard/RecentMemoriesCard";
+import BucketListCard from "../../components/dashboard/BucketListCard/BucketListCard";
 
 import "./Dashboard.css";
 
@@ -73,6 +75,7 @@ const Dashboard = () => {
   const [aiSummary, setAiSummary] = useState(null);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(true);
   const [memoriesLoading, setMemoriesLoading] = useState(true);
+  const [bucketStats, setBucketStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noPartner, setNoPartner] = useState(false);
 
@@ -123,10 +126,11 @@ const Dashboard = () => {
   };
 
   const loadSecondary = async () => {
-    const [memoriesRes, scoreRes, summaryRes] = await Promise.allSettled([
+    const [memoriesRes, scoreRes, summaryRes, bucketRes] = await Promise.allSettled([
       getMemories(),
       getHealthScore(),
       getWeeklySummary(),
+      getBucketStats(),
     ]);
 
     if (memoriesRes.status === "fulfilled") {
@@ -135,6 +139,10 @@ const Dashboard = () => {
       setMemories([]);
     }
     setMemoriesLoading(false);
+
+    if (bucketRes.status === "fulfilled") {
+      setBucketStats(bucketRes.value.data || null);
+    }
 
     if (scoreRes.status === "fulfilled") {
       setAiScore(scoreRes.value.data);
@@ -200,6 +208,10 @@ const Dashboard = () => {
 
         <div className="db-fade-in" style={{ animationDelay: "220ms" }}>
           <QuickActionsCard />
+        </div>
+
+        <div className="db-fade-in" style={{ animationDelay: "240ms" }}>
+          <BucketListCard stats={bucketStats} loading={memoriesLoading} />
         </div>
 
         <div className="db-fade-in" style={{ animationDelay: "260ms" }}>

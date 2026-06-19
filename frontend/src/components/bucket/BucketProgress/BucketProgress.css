@@ -1,0 +1,23 @@
+.bucket-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bucket-progress__bar {
+  transition: stroke-dashoffset 0.7s var(--ease-spring);
+}
+
+.bucket-progress__pct {
+  fill: var(--text);
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--font);
+}
+
+.bucket-progress__caption {
+  font-size: var(--font-xs);
+  color: var(--muted);
+  font-weight: 600;
+}

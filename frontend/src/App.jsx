@@ -28,6 +28,7 @@ import CoupleSuccess from "./pages/Couple/CoupleSuccess/CoupleSuccess";
 import VoiceCallPage from "./pages/Call/VoiceCallPage/VoiceCallPage";
 import VideoCallPage from "./pages/Call/VideoCallPage/VideoCallPage";
 import PartnerProfile from "./pages/Partner/PartnerProfile/PartnerProfile";
+import BucketListPage from "./pages/BucketList/BucketListPage/BucketListPage";
 
 function App() {
   return (
@@ -83,6 +84,7 @@ function App() {
             <Route path="/call/voice" element={<VoiceCallPage />} />
             <Route path="/call/video" element={<VideoCallPage />} />
             <Route path="/partner" element={<PartnerProfile />} />
+            <Route path="/bucket-list" element={<BucketListPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
