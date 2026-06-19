@@ -1,0 +1,44 @@
+.sleepcard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: var(--transition);
+}
+.sleepcard:active {
+  transform: scale(0.99);
+}
+.sleepcard__emoji {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+.sleepcard__text {
+  flex: 1;
+  min-width: 0;
+}
+.sleepcard__title {
+  margin: 0;
+  font-size: var(--font-h3);
+  font-weight: 700;
+  color: var(--text);
+}
+.sleepcard__sub {
+  margin: 2px 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+.sleepcard__hours {
+  flex-shrink: 0;
+  font-size: var(--font-h2);
+  font-weight: 800;
+  color: var(--secondary);
+}
+.sleepcard__hours small {
+  font-size: 0.55em;
+  font-weight: 700;
+}

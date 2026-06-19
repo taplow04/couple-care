@@ -28,6 +28,7 @@ const bucketRoutes = require("../modules/bucket/bucket.routes");
 const letterRoutes = require("../modules/letters/letter.routes");
 const coachRoutes = require("../modules/coach/coach.routes");
 const storyRoutes = require("../modules/story/story.routes");
+const sleepRoutes = require("../modules/sleep/sleep.routes");
 
 router.use("/auth", authRoutes);
 
@@ -56,6 +57,7 @@ router.use("/bucket", bucketRoutes);
 router.use("/letters", letterRoutes);
 router.use("/coach", coachRoutes);
 router.use("/story", storyRoutes);
+router.use("/sleep", sleepRoutes);
 
 router.get("/", (req, res) => {
   res.json({

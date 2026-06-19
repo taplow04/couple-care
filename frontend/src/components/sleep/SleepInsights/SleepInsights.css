@@ -1,0 +1,64 @@
+.sleep-insights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sleep-insights__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.sleep-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.sleep-stat__value {
+  font-size: var(--font-h3);
+  font-weight: 800;
+  color: var(--secondary);
+}
+.sleep-stat__label {
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+
+.sleep-insights__report {
+  /* AIReport brings its own section styling */
+}
+
+.sleep-insights__empty {
+  font-size: var(--font-sm);
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+}
+
+.sleep-insights__shimmer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sleep-insights__line {
+  height: 12px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  animation: sleep-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes sleep-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}

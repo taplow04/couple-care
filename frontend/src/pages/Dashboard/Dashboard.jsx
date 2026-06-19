@@ -6,6 +6,7 @@ import { getDashboard } from "../../services/dashboard.service";
 import { getMemories } from "../../services/memories.service";
 import { getHealthScore, getWeeklySummary } from "../../services/ai.service";
 import { getBucketStats } from "../../services/bucket.service";
+import { getMySleep } from "../../services/sleep.service";
 import { useCoupleEvents } from "../../hooks/useCoupleEvents";
 
 import TopHeader from "../../components/navigation/TopHeader/TopHeader";
@@ -19,6 +20,7 @@ import AIInsightCard from "../../components/dashboard/AIInsightCard/AIInsightCar
 import QuickActionsCard from "../../components/dashboard/QuickActionsCard/QuickActionsCard";
 import RecentMemoriesCard from "../../components/dashboard/RecentMemoriesCard/RecentMemoriesCard";
 import BucketListCard from "../../components/dashboard/BucketListCard/BucketListCard";
+import SleepCard from "../../components/dashboard/SleepCard/SleepCard";
 
 import "./Dashboard.css";
 
@@ -76,6 +78,7 @@ const Dashboard = () => {
   const [aiSummaryLoading, setAiSummaryLoading] = useState(true);
   const [memoriesLoading, setMemoriesLoading] = useState(true);
   const [bucketStats, setBucketStats] = useState(null);
+  const [lastSleep, setLastSleep] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noPartner, setNoPartner] = useState(false);
 
@@ -126,11 +129,12 @@ const Dashboard = () => {
   };
 
   const loadSecondary = async () => {
-    const [memoriesRes, scoreRes, summaryRes, bucketRes] = await Promise.allSettled([
+    const [memoriesRes, scoreRes, summaryRes, bucketRes, sleepRes] = await Promise.allSettled([
       getMemories(),
       getHealthScore(),
       getWeeklySummary(),
       getBucketStats(),
+      getMySleep(),
     ]);
 
     if (memoriesRes.status === "fulfilled") {
@@ -142,6 +146,10 @@ const Dashboard = () => {
 
     if (bucketRes.status === "fulfilled") {
       setBucketStats(bucketRes.value.data || null);
+    }
+
+    if (sleepRes.status === "fulfilled") {
+      setLastSleep(sleepRes.value.data?.[0] || null);
     }
 
     if (scoreRes.status === "fulfilled") {
@@ -212,6 +220,10 @@ const Dashboard = () => {
 
         <div className="db-fade-in" style={{ animationDelay: "240ms" }}>
           <BucketListCard stats={bucketStats} loading={memoriesLoading} />
+        </div>
+
+        <div className="db-fade-in" style={{ animationDelay: "260ms" }}>
+          <SleepCard lastLog={lastSleep} />
         </div>
 
         <div className="db-fade-in" style={{ animationDelay: "260ms" }}>

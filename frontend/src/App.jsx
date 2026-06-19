@@ -29,6 +29,7 @@ import VoiceCallPage from "./pages/Call/VoiceCallPage/VoiceCallPage";
 import VideoCallPage from "./pages/Call/VideoCallPage/VideoCallPage";
 import PartnerProfile from "./pages/Partner/PartnerProfile/PartnerProfile";
 import BucketListPage from "./pages/BucketList/BucketListPage/BucketListPage";
+import SleepPage from "./pages/Sleep/SleepPage/SleepPage";
 
 function App() {
   return (
@@ -85,6 +86,7 @@ function App() {
             <Route path="/call/video" element={<VideoCallPage />} />
             <Route path="/partner" element={<PartnerProfile />} />
             <Route path="/bucket-list" element={<BucketListPage />} />
+            <Route path="/sleep" element={<SleepPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
