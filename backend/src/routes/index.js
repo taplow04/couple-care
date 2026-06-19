@@ -29,6 +29,7 @@ const letterRoutes = require("../modules/letters/letter.routes");
 const coachRoutes = require("../modules/coach/coach.routes");
 const storyRoutes = require("../modules/story/story.routes");
 const sleepRoutes = require("../modules/sleep/sleep.routes");
+const surpriseRoutes = require("../modules/surprise/surprise.routes");
 
 router.use("/auth", authRoutes);
 
@@ -58,6 +59,7 @@ router.use("/letters", letterRoutes);
 router.use("/coach", coachRoutes);
 router.use("/story", storyRoutes);
 router.use("/sleep", sleepRoutes);
+router.use("/surprise", surpriseRoutes);
 
 router.get("/", (req, res) => {
   res.json({

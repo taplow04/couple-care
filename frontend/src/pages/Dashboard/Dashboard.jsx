@@ -21,6 +21,7 @@ import QuickActionsCard from "../../components/dashboard/QuickActionsCard/QuickA
 import RecentMemoriesCard from "../../components/dashboard/RecentMemoriesCard/RecentMemoriesCard";
 import BucketListCard from "../../components/dashboard/BucketListCard/BucketListCard";
 import SleepCard from "../../components/dashboard/SleepCard/SleepCard";
+import SurpriseBox from "../../components/surprise/SurpriseBox/SurpriseBox";
 
 import "./Dashboard.css";
 
@@ -183,6 +184,10 @@ const Dashboard = () => {
             <UpcomingBirthdayCard partner={dashData.partner} />
           </div>
         )}
+
+        <div className="db-fade-in" style={{ animationDelay: "40ms" }}>
+          <SurpriseBox />
+        </div>
 
         <div className="db-fade-in" style={{ animationDelay: "50ms" }}>
           <StreakCard engagement={engagement} loading={loading} />
