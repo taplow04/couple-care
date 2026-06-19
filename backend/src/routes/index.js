@@ -25,6 +25,7 @@ const callRoutes = require("../modules/calls/call.routes");
 const pushRoutes = require("../modules/push/push.routes");
 const engagementRoutes = require("../modules/engagement/engagement.routes");
 const bucketRoutes = require("../modules/bucket/bucket.routes");
+const letterRoutes = require("../modules/letters/letter.routes");
 
 router.use("/auth", authRoutes);
 
@@ -50,6 +51,7 @@ router.use("/calls", callRoutes);
 router.use("/push", pushRoutes);
 router.use("/engagement", engagementRoutes);
 router.use("/bucket", bucketRoutes);
+router.use("/letters", letterRoutes);
 
 router.get("/", (req, res) => {
   res.json({

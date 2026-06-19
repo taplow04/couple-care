@@ -1,0 +1,221 @@
+.llg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.llg__head {
+  text-align: center;
+}
+.llg__title {
+  margin: 0;
+  font-size: var(--font-h2);
+  font-weight: 800;
+  color: var(--text);
+}
+.llg__sub {
+  margin: 4px 0 0;
+  font-size: var(--font-sm);
+  color: var(--muted);
+}
+
+.llg__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+.llg__type {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.llg__type--on {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.llg__type-emoji {
+  font-size: 1em;
+}
+
+.llg__generate {
+  padding: 14px;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--gradient-romantic);
+  color: #fff;
+  font-size: var(--font-body);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.llg__generate:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.llg__error {
+  text-align: center;
+  color: var(--danger);
+  font-size: var(--font-sm);
+  margin: 0;
+}
+
+.llg__paper {
+  position: relative;
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+}
+.llg__paper-badge {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 12px;
+  white-space: nowrap;
+}
+.llg__paper-text {
+  margin: 0;
+  font-size: var(--font-body);
+  line-height: 1.7;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.llg__paper--loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.llg__shimmer {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: llg-shimmer 1.3s ease-in-out infinite;
+}
+
+.llg__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.llg__act {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--font-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.llg__act--primary {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.llg__act:disabled {
+  opacity: 0.6;
+}
+
+.llg__saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.llg__saved-title {
+  margin: 0;
+  font-size: var(--font-h3);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.llg-saved-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-3) var(--space-4);
+}
+.llg-saved-item__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.llg-saved-item__type {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--primary);
+}
+.llg-saved-item__date {
+  font-size: var(--font-xs);
+  color: var(--muted);
+}
+.llg-saved-item__text {
+  margin: 0 0 10px;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.llg-saved-item__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.llg-saved-item__btn {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.llg-saved-item__btn--del {
+  margin-left: auto;
+  border: none;
+  background: none;
+}
+.llg-saved-item__shared {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--success);
+}
+
+@keyframes llg-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

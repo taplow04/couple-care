@@ -15,12 +15,14 @@ import ConversationStarters from "../../../components/ai/ConversationStarters/Co
 import ConflictAssistant    from "../../../components/ai/ConflictAssistant/ConflictAssistant";
 import MemoryIntelligence   from "../../../components/ai/MemoryIntelligence/MemoryIntelligence";
 import GrowthRoadmap        from "../../../components/ai/GrowthRoadmap/GrowthRoadmap";
+import LoveLetterGenerator  from "../../../components/ai/LoveLetterGenerator/LoveLetterGenerator";
 import AIHistory            from "../../../components/ai/AIHistory/AIHistory";
 import "./AICenterPage.css";
 
 const TABS = [
   { id: "coach",   emoji: "🤖", label: "Coach"   },
   { id: "health",  emoji: "❤️", label: "Health"  },
+  { id: "letter",  emoji: "💌", label: "Letter"  },
   { id: "dates",   emoji: "💑", label: "Dates"   },
   { id: "talk",    emoji: "💬", label: "Talk"    },
   { id: "resolve", emoji: "🕊️", label: "Resolve" },
@@ -165,6 +167,7 @@ const AICenterPage = () => {
           onRefresh={loadHealth}
         />
       );
+      case "letter":  return <LoveLetterGenerator />;
       case "dates":   return <DatePlanner />;
       case "talk":    return <ConversationStarters onSaved={handleSaved} />;
       case "resolve": return <ConflictAssistant />;
