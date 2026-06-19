@@ -17,19 +17,26 @@ const STAGES = [
 
 const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 
-const LoveMeter = ({ health, aiScore, engagement }) => {
+const LoveMeter = ({ value, health, aiScore, engagement }) => {
   const [animated, setAnimated] = useState(false);
 
   // Relationship Health is the couple metric (identical for both partners).
   const score = aiScore?.score ?? health?.score ?? null;
   const streak = engagement?.currentStreak ?? 0;
 
-  // Blend: health leads, an active streak adds warmth (up to +12).
+  // The Love Meter is ONE couple value. The canonical formula matches the
+  // server's: round(health*0.9 + min(streak,30)*0.4). Health is now a cached
+  // couple value (identical for both partners), so this blend yields the SAME
+  // number for both and updates live. The server `value` is only a fallback for
+  // the brief moment before health has loaded.
   const love = useMemo(() => {
-    if (score == null) return null;
-    const streakBoost = Math.min(streak, 30) * 0.4;
-    return clamp(Math.round(score * 0.9 + streakBoost));
-  }, [score, streak]);
+    if (score != null) {
+      const streakBoost = Math.min(streak, 30) * 0.4;
+      return clamp(Math.round(score * 0.9 + streakBoost));
+    }
+    if (value != null) return clamp(Math.round(value));
+    return null;
+  }, [value, score, streak]);
 
   const hasData = love != null;
   const filled = hasData ? Math.round(love / 20) : 0;

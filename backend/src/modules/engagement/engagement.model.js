@@ -19,8 +19,12 @@ const engagementSchema = new mongoose.Schema(
     currentStreak: { type: Number, default: 0 },
     longestStreak: { type: Number, default: 0 },
 
-    // UTC YYYY-MM-DD of the last day the couple did any activity.
+    // UTC YYYY-MM-DD of the last day the couple did any activity (either partner).
     lastActiveDay: { type: String, default: null },
+
+    // UTC YYYY-MM-DD of the last MUTUAL day (both partners active). The shared
+    // streak counts consecutive mutual days — see engagement.service.
+    lastMutualDay: { type: String, default: null },
 
     // Lifetime XP + derived level.
     totalXP: { type: Number, default: 0 },

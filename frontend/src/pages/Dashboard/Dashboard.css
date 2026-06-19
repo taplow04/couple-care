@@ -17,12 +17,26 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 13px;
+  align-items: stretch; /* both cells share the tallest row height */
+}
+
+/* The cards are wrapped in .db-fade-in (the actual grid items). Make those
+   wrappers fill the row height and let the card inside fill the wrapper, so
+   paired cards (e.g. Love Meter + Days Together) are always EQUAL height. */
+.dashboard-grid-2 > .db-fade-in {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dashboard-grid-2 > .db-fade-in > * {
+  flex: 1;
 }
 
 /* Skeleton loader */
 .db-skeleton {
   border-radius: var(--radius);
-  background: linear-gradient(90deg, #efefef 25%, #e6e6e6 50%, #efefef 75%);
+  /* Theme-aware so skeletons aren't bright blobs in dark mode. */
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: db-shimmer 1.6s ease-in-out infinite;
 }

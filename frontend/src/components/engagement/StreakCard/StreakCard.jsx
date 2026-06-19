@@ -19,14 +19,21 @@ const tierFor = (streak) => {
 const nextMilestone = (streak) =>
   [...MILESTONES].reverse().find((m) => m > streak) ?? null;
 
-const encouragement = (streak, activeToday) => {
+// Shared-streak messaging — the streak only advances when BOTH partners are
+// active, so nudge toward whichever side is missing (helpful, not harsh).
+const encouragement = (streak, { bothActiveToday, youActiveToday, partnerActiveToday }) => {
+  if (bothActiveToday) {
+    const next = nextMilestone(streak);
+    if (next) return `You're both in today 🔥 ${next - streak} day${next - streak === 1 ? "" : "s"} to your next milestone!`;
+    return "You're both in today — incredible, you two are unstoppable! 💞";
+  }
+  if (youActiveToday && !partnerActiveToday)
+    return "You've done your part today 💗 Nudge your partner so your streak counts!";
+  if (!youActiveToday && partnerActiveToday)
+    return "Your partner showed up today 💌 Your turn — log something to lock in the streak!";
   if (streak === 0)
-    return "Start your streak today — log a mood, send a message, or add a memory 💕";
-  if (!activeToday)
-    return "Do one thing together today to keep it alive! You've got this 💪";
-  const next = nextMilestone(streak);
-  if (next) return `${next - streak} day${next - streak === 1 ? "" : "s"} to your next milestone 🎯`;
-  return "Incredible — you two are unstoppable! 💞";
+    return "Start your streak together — both of you do one thing today 💕";
+  return "Keep your streak alive — you BOTH need to be active today 💪";
 };
 
 const StreakCard = ({ engagement, loading }) => {
@@ -36,7 +43,9 @@ const StreakCard = ({ engagement, loading }) => {
 
   const streak = engagement?.currentStreak ?? 0;
   const longest = engagement?.longestStreak ?? 0;
-  const activeToday = engagement?.activeToday ?? false;
+  const bothActiveToday = engagement?.bothActiveToday ?? false;
+  const youActiveToday = engagement?.youActiveToday ?? false;
+  const partnerActiveToday = engagement?.partnerActiveToday ?? false;
   const tier = tierFor(streak);
   const lit = streak > 0;
 
@@ -59,10 +68,20 @@ const StreakCard = ({ engagement, loading }) => {
               </span>
             )}
           </div>
-          <p className="streakcard__msg">{encouragement(streak, activeToday)}</p>
-          {longest > 0 && (
-            <span className="streakcard__longest">Longest: {longest} days</span>
-          )}
+          <p className="streakcard__msg">
+            {encouragement(streak, { bothActiveToday, youActiveToday, partnerActiveToday })}
+          </p>
+          <div className="streakcard__today">
+            <span className={`streakcard__who ${youActiveToday ? "streakcard__who--on" : ""}`}>
+              {youActiveToday ? "✓" : "○"} You
+            </span>
+            <span className={`streakcard__who ${partnerActiveToday ? "streakcard__who--on" : ""}`}>
+              {partnerActiveToday ? "✓" : "○"} Partner
+            </span>
+            {longest > 0 && (
+              <span className="streakcard__longest">Best: {longest}d</span>
+            )}
+          </div>
         </div>
       </div>
 

@@ -295,13 +295,37 @@ const computeCoupleHealth = async (coupleId) => {
   return { score, level, breakdown };
 };
 
-// Resolve the caller's couple then compute. Used by the AI/dashboard layers.
+/**
+ * Read the couple's CACHED health (the single source of truth for reads). This
+ * is what makes the score identical for both partners and across surfaces: reads
+ * return the same cached number rather than each recomputing at their own load
+ * time (which was the cause of divergent Love Meter values). The cache is kept
+ * fresh by recomputeAndBroadcast on every mood/memory write; we only compute
+ * here when it has never been computed.
+ */
+const getCachedHealth = async (coupleId) => {
+  const couple = await Couple.findById(coupleId).select(
+    "healthScore healthLevel healthBreakdown",
+  );
+  if (!couple) throw new Error("Couple not found");
+  if (couple.healthScore == null) {
+    return computeCoupleHealth(coupleId); // first time only
+  }
+  return {
+    score: couple.healthScore,
+    level: couple.healthLevel,
+    breakdown: couple.healthBreakdown || null,
+  };
+};
+
+// Resolve the caller's couple then return the cached couple health. Used by the
+// AI/dashboard layers — both read the SAME cached value (identical per partner).
 const getCoupleHealthForUser = async (userId) => {
   const user = await User.findById(userId).select("currentCoupleId");
   if (!user || !user.currentCoupleId) {
     throw new Error("No active relationship");
   }
-  return computeCoupleHealth(user.currentCoupleId);
+  return getCachedHealth(user.currentCoupleId);
 };
 
 // Push a couple-scoped event to BOTH partners (no room-join required).
@@ -333,6 +357,7 @@ const recomputeAndBroadcast = async (coupleId, activityType) => {
 
 module.exports = {
   computeCoupleHealth,
+  getCachedHealth,
   getCoupleHealthForUser,
   recomputeAndBroadcast,
   emitToCouple,

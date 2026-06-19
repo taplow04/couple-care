@@ -196,6 +196,7 @@ const Dashboard = () => {
         <div className="dashboard-grid-2">
           <div className="db-fade-in" style={{ animationDelay: "80ms" }}>
             <LoveMeter
+              value={dashData?.loveMeter}
               health={dashData?.health}
               aiScore={aiScore}
               engagement={engagement}

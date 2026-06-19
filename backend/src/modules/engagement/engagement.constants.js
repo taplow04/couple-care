@@ -41,6 +41,18 @@ const XP_VALUES = {
 // Streak day-counts that unlock a celebration (notification + achievement).
 const STREAK_MILESTONES = [7, 30, 100, 365];
 
+// ─── Couple XP (mutual participation) ────────────────────────────────────────
+// XP is a COUPLE metric earned per DAY based on mutual participation, NOT per
+// individual action. A day where BOTH partners were active is worth far more
+// than a day where only one was — this is what encourages teamwork.
+const DAILY_XP_BOTH = 10; // both partners active that day
+const DAILY_XP_ONE = 2; // only one partner active that day
+
+// Streak grace: a mutual streak survives a gap of up to this many days (so a
+// partner can miss a single day without a harsh reset). 2 = "yesterday or the
+// day before still counts".
+const STREAK_GRACE_DAYS = 2;
+
 // ─── Leveling ────────────────────────────────────────────────────────────────
 // Cumulative XP required to BE a given level. Level 1 = 0 XP, 2 = 100, 3 = 300,
 // 4 = 600 … (quadratic so later levels take longer). Deterministic, no I/O.
@@ -65,6 +77,9 @@ module.exports = {
   ACTIVITY_TYPE_LIST,
   XP_VALUES,
   STREAK_MILESTONES,
+  DAILY_XP_BOTH,
+  DAILY_XP_ONE,
+  STREAK_GRACE_DAYS,
   xpToReachLevel,
   levelForXP,
 };

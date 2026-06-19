@@ -61,14 +61,20 @@ const RelationshipHealth = ({ score, level, loading, onRefresh }) => {
       <div className="rh__card">
         <div className="rh__ring-area">
           <div className="rh__ring-wrap">
-            <svg width="140" height="140" viewBox="0 0 110 110">
+            <svg
+              viewBox="0 0 110 110"
+              className="rh__ring-svg"
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {/* Track — always a valid theme color (never append alpha to a var). */}
               <circle
                 cx="55" cy="55" r="46" fill="none" strokeWidth="8"
-                stroke={`${color}28`}
+                stroke="var(--surface-2)"
               />
+              {/* Progress arc — colored only when loaded; hidden (offset=CIRC) while loading. */}
               <circle
                 cx="55" cy="55" r="46" fill="none" strokeWidth="8"
-                stroke={color}
+                stroke={loading ? "var(--border)" : color}
                 strokeLinecap="round"
                 strokeDasharray={CIRC}
                 strokeDashoffset={offset}

@@ -4,11 +4,17 @@ const Mood = require("../moods/mood.model");
 const { getMoodAnalytics } = require("../moods/mood.service");
 const History = require("../histories/history.model");
 const { getDaysTogether, getRelationshipStart } = require("../couples/couple.helpers");
-const { computeCoupleHealth } = require("../couples/health.service");
-const {
-  getOrCreateEngagement,
-  buildSummary,
-} = require("../engagement/engagement.service");
+const { getCachedHealth } = require("../couples/health.service");
+const { getEngagementSummary } = require("../engagement/engagement.service");
+
+// The Love Meter is a single COUPLE value: cached health (couple metric) lifted
+// slightly by the shared streak. Pure function of couple-level inputs, so both
+// partners and every surface show EXACTLY the same number.
+const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
+const computeLoveMeter = (healthScore, streak) => {
+  if (healthScore == null) return null;
+  return clamp(Math.round(healthScore * 0.9 + Math.min(streak || 0, 30) * 0.4));
+};
 
 const getDashboardData = async (userId) => {
   const user = await User.findById(userId);
@@ -56,12 +62,14 @@ const getDashboardData = async (userId) => {
   // Couple-level health (identical for both partners). Computed here so the
   // dashboard card shows the shared score immediately, without waiting on the
   // separate AI endpoint. Never let a health failure break the dashboard.
+  // Couple health — read the CACHED value (identical for both partners). Reads
+  // never recompute (that caused divergent scores); writes keep the cache fresh.
   let health = null;
   try {
-    const { score, level } = await computeCoupleHealth(couple._id);
+    const { score, level } = await getCachedHealth(couple._id);
     health = { score, level };
   } catch (e) {
-    console.error("[dashboard] health compute failed:", e.message);
+    console.error("[dashboard] health read failed:", e.message);
   }
 
   // Shared engagement (streak + XP + level) — same for both partners. Included
@@ -69,11 +77,19 @@ const getDashboardData = async (userId) => {
   // let an engagement failure break the dashboard.
   let engagement = null;
   try {
-    const eng = await getOrCreateEngagement(couple._id);
-    engagement = buildSummary(eng);
+    const { summary, todayUsers, partnerIds } = await getEngagementSummary(couple._id);
+    const partnerId = partnerIds.find((id) => id !== String(userId)) || null;
+    engagement = {
+      ...summary,
+      youActiveToday: todayUsers.includes(String(userId)),
+      partnerActiveToday: partnerId ? todayUsers.includes(partnerId) : false,
+    };
   } catch (e) {
     console.error("[dashboard] engagement load failed:", e.message);
   }
+
+  // Single couple-level Love Meter value (same everywhere).
+  const loveMeter = computeLoveMeter(health?.score ?? null, engagement?.currentStreak ?? 0);
 
   return {
     partner,
@@ -89,6 +105,8 @@ const getDashboardData = async (userId) => {
     health,
 
     engagement,
+
+    loveMeter,
 
     moodAnalytics,
 

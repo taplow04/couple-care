@@ -1,13 +1,17 @@
 .rsc-card {
-  background: var(--card);
+  /* Match the shared dashboard card style (Love Meter, Bucket, Sleep cards):
+     same gradient surface, border, radius, and soft shadow. */
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 14px 20px;
-  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-3);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  min-height: 190px;
+  min-height: 178px;
+  height: 100%; /* fill the equal-height grid cell */
   justify-content: center;
 }
 
