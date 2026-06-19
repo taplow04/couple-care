@@ -9,7 +9,10 @@
      • API / socket / Cloudinary / cross-origin: never cached (always network).
 */
 
-const CACHE = "couple-care-v1";
+// Bump this on every release that must invalidate stale clients. Changing these
+// bytes makes the browser re-install the SW; `activate` then purges old caches,
+// so users always pick up the latest build (V2.0 engagement features included).
+const CACHE = "couple-care-v2";
 const OFFLINE_URL = "/index.html";
 
 self.addEventListener("install", (event) => {

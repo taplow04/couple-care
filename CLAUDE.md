@@ -329,4 +329,42 @@ Mobile-first CSS: base at 390px, breakpoint at `768px` for tablet/desktop.
 - **Voice notes are tap-to-record, NOT hold/slide** (`components/chat/VoiceRecorder`): tap mic → records (live waveform via Web Audio `AnalyserNode` + timer); explicit **Cancel (trash)** and **Send (stop)** buttons. The old hold + slide-to-cancel gesture was unreliable on desktop — don't reintroduce it. Playback via `components/chat/VoiceMessage` (play/seek/speed). Images are compressed client-side before upload (`utils/compressImage.js`).
 - **Universal back button**: `components/common/BackHeader` (sticky, glass, safe-area aware) navigates via React Router with a safe `fallback` route when there's no history (deep-link/refresh). Adopted on **secondary** pages only (Settings, Notifications, Mood Analytics, Partner Profile, Memories, AI) + a back chevron on the chat header. **Bottom-nav tab roots (Dashboard/Moods/AI Center/Journey/Profile) intentionally have NO back button** (standard mobile UX).
 - **Native-app feel (PWA layer)** in `styles/global.css`: app-wide `user-select: none` (re-enabled for `input/textarea/[contenteditable]` + `.selectable`), `-webkit-tap-highlight-color: transparent`, `-webkit-touch-callout: none`, `img { -webkit-user-drag: none }`, `touch-action: manipulation` (kills double-tap zoom but **keeps pinch-zoom** — no `maximum-scale` lock), and `overscroll-behavior: none` (no pull-to-refresh / bounce). Don't reintroduce `maximum-scale=1` (a11y).
-- **Service worker caching** (`public/sw.js`): conservative to avoid the "stuck on old build" trap — **network-first for navigations** (online users always get the latest shell; cached `index.html` is only an offline fallback), **cache-first only for immutable hashed `/assets/*`** + static icons, old caches purged on `activate`. **API/socket/Cloudinary/cross-origin are never cached.** Bump `CACHE` when changing SW logic. Manifest has `shortcuts` (Chat/Mood/Journey).
+- **Service worker caching** (`public/sw.js`): conservative to avoid the "stuck on old build" trap — **network-first for navigations** (online users always get the latest shell; cached `index.html` is only an offline fallback), **cache-first only for immutable hashed `/assets/*`** + static icons, old caches purged on `activate`. **API/socket/Cloudinary/cross-origin are never cached.** **Bump `CACHE` (the version string) on any release that must invalidate stale clients** — changing `sw.js`'s bytes is what makes the browser re-install the SW and purge old caches. If a deploy "isn't reflected" for users, bumping `CACHE` is the fix (currently `couple-care-v2`). Manifest has `shortcuts` (Chat/Mood/Journey).
+- **Route code-splitting** (`App.jsx`): only the auth pages + `Dashboard` are eagerly imported; every other page is `React.lazy` + a single `<Suspense fallback={<Loader fullScreen />}>`. Keeps the initial bundle ~340 KB. New pages should be added as `lazy()` imports too.
+
+---
+
+## CoupleCare V2.0 — Relationship Engagement System
+
+V2.0 turns the app into a daily companion. **The non-negotiable rule: no isolated features.** Eight systems all feed ONE shared engagement loop.
+
+### The engagement backbone (`modules/engagement/`) — the spine
+Every feature calls ONE entry point: **`engagement.service.recordActivity(coupleId, userId, type, meta)`** (modeled on `health.service.recomputeAndBroadcast`). It logs an `ActivityLog`, updates the couple **Streak** + **XP**, evaluates **Achievements**, and emits `engagement:update` + `achievement:unlocked` to BOTH partners via `realtime.emitToUser`. **It never throws** (engagement must never break the action that triggered it). Already wired into mood/memory/chat writes; new features call it in their own services.
+- **Activity types & XP** live once in `engagement.constants.js`. **Streak is weighted (not chat-only)**: any activity keeps it alive; it's **day-based** (UTC `YYYY-MM-DD`), updated on the first activity of the day; non-punishing.
+- **XP is awarded once per activity TYPE per day** (varied activity earns more, spamming one action does not inflate). Level curve is deterministic (`levelForXP`): L2=100, L3=300, L4=600, L5=1000 cumulative XP.
+- **Achievements**: catalog (definitions + `check(stats)`) is code in `achievements.catalog.js`; the `Achievement` collection only stores unlocks (unique `{coupleId, key}`). 16 couple badges.
+- `recordActivity` does **NOT** recompute health (mood/memory already do via `recomputeAndBroadcast`, and bucket/sleep aren't health inputs) — avoids double work. The **Love Meter** blends health + streak on the client.
+- Read API: `GET /engagement`, `GET /engagement/achievements`. Engagement summary is also embedded in the **dashboard payload** (`engagement`) so the StreakCard/LoveMeter render from one fetch. Frontend: `useEngagement` hook (shared socket, live), `components/engagement/*` (StreakCard, XPBar, LoveMeter, AchievementToast — mounted globally in `AppLayout`).
+- Streak reminder cron (7pm) only nudges couples with a live streak who haven't acted today (encouraging).
+
+### Shared AI context (`modules/ai/ai.context.js`)
+`buildRelationshipContext(userId)` + `formatContext(ctx)` assemble a compact snapshot (partner profile, days together, health, both partners' moods, memories, bucket list) reused by ALL V2 AI features. **Reuse the existing `ai.engine` only** — `generateAIResponse` (single prompt) and `generateChatResponse` (messages array, for the coach). All prompts centralize in `ai.prompts.js` (`buildLoveLetterPrompt`, `buildCoachReplyPrompt`, `buildSurprisePrompt`, `buildSleepAnalysisPrompt`). No new AI service/SDK.
+
+### Feature modules (all couple-scoped, follow the standard module pattern)
+| Module | Routes | Notes |
+|---|---|---|
+| `bucket` | `/bucket` (CRUD + `/stats`, `PATCH /:id/complete`) | Co-owned `BucketItem` (9 categories). Completing fires `recordActivity(BUCKET_COMPLETE)` + `bucket_completed` partner notif. |
+| `letters` | `/letters` (`/generate`, save, list, `/:id/share`, delete) | `LoveLetter` (7 types). Save → `LOVE_LETTER` activity; share → `love_letter_received` notif. Couple-visible. |
+| `coach` | `/coach/conversations` (+ `/:id/message`, id `"new"` starts fresh) | `CoachConversation` (per-user private threads). Interactive chat using context system prompt + windowed history → `generateChatResponse`. `COACH` activity. |
+| `story` | `/story/chapters` (CRUD) | **Story Timeline.** `getChapters` ASSEMBLES chapters from start + memories + day-milestones + completed bucket + letters + achievements; `StoryChapter` collection holds only CUSTOM chapters. Rendered as a section in the existing **Journey page** (not a new page). |
+| `sleep` | `/sleep` (+ `/partner`, `/analysis`) | `SleepLog` (per-user, couple-scoped). `getAnalysis` computes avg hours/quality/partner-sync %, then narrates via AI (Strengths/Opportunities/Suggestions → reuses `AIReport`). `SLEEP` activity. |
+| `surprise` | `/surprise/today`, `/surprise/open` | `SurpriseBox`, **unique `{userId, day}` index = one open/day** (DB-enforced; `openToday` is idempotent + race-safe). AI reward via `buildSurprisePrompt`. `SURPRISE_OPEN` activity. |
+
+### New notification types
+`streak_reminder`, `streak_milestone`, `achievement_unlocked`, `bucket_completed`, `surprise_ready`, `love_letter_received`, `sleep_reminder` — added to `notification.model` enum + `notification.service` `URL_FOR_TYPE`.
+
+### New collections
+`Engagement` (1/couple), `ActivityLog`, `Achievement`, `BucketItem`, `LoveLetter`, `CoachConversation`, `SleepLog`, `SurpriseBox`, `StoryChapter`. No migration required — all created on first write; `getOrCreateEngagement` upserts the per-couple doc.
+
+### Frontend surfaces
+New services (one per domain): `engagement`, `bucket`, `letters`, `coach`, `sleep`, `surprise`, `story`. New routes: `/bucket-list`, `/sleep`. New **AI Center tabs**: `Ask AI` (CoachChat) + `Letter` (LoveLetterGenerator) — existing tabs untouched. Dashboard adds SurpriseBox, StreakCard, LoveMeter (replaces the static HealthScoreCard), BucketListCard, SleepCard. Journey adds the Story Timeline section.

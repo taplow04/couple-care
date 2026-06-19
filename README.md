@@ -27,6 +27,19 @@ A full-stack app for couples to stay close: a premium Instagram-DM-style messeng
 - **Privacy controls** — granular per-data-type visibility settings.
 - **Native-feeling PWA** — installable with shortcuts & offline shell; no text-selection / tap-highlight / pull-to-refresh / double-tap-zoom; safe-area aware; universal back navigation.
 
+### 🔥 V2.0 — Relationship Engagement System
+
+A daily-companion layer where every feature feeds one shared engagement loop (streak · XP · achievements · health · journey):
+
+- **Relationship Streak & XP** — a weighted daily streak (chat, mood, memory, bucket goal, sleep, love letter, AI coach, surprise, story chapter all count — not chat-only), couple XP & levels, and a **Love Meter** (animated hearts that react to health + streak). Encouraging, never punishing.
+- **Achievements** — 16 couple badges that unlock live with a celebration toast for both partners.
+- **Surprise Box** — one AI-generated daily delight (date idea, love quote, tip, challenge, compliment, mood booster…) with a wrapped-gift open animation.
+- **AI Love Letters** — personalized romantic / apology / appreciation / anniversary / birthday letters (Groq), with regenerate / copy / save / send-to-partner.
+- **AI Relationship Coach** — an interactive, contextual chat coach (not a report) that knows your moods, memories, health & goals and keeps conversation history.
+- **Couple Bucket List** — a shared, co-owned list across 9 categories with deadlines, progress %, and completion that feeds XP & achievements.
+- **Story Timeline** — your relationship auto-assembled into numbered chapters (start, memories, milestones, completed goals, love letters, achievements) plus custom chapters, inside the Journey page.
+- **Sleep Tracker** — both partners log sleep; AI analyzes consistency, partner sync, and fatigue.
+
 ---
 
 ## 🏗️ Tech Stack
