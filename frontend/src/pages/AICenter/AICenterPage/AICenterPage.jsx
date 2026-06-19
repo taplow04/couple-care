@@ -16,11 +16,13 @@ import ConflictAssistant    from "../../../components/ai/ConflictAssistant/Confl
 import MemoryIntelligence   from "../../../components/ai/MemoryIntelligence/MemoryIntelligence";
 import GrowthRoadmap        from "../../../components/ai/GrowthRoadmap/GrowthRoadmap";
 import LoveLetterGenerator  from "../../../components/ai/LoveLetterGenerator/LoveLetterGenerator";
+import CoachChat            from "../../../components/ai/CoachChat/CoachChat";
 import AIHistory            from "../../../components/ai/AIHistory/AIHistory";
 import "./AICenterPage.css";
 
 const TABS = [
   { id: "coach",   emoji: "🤖", label: "Coach"   },
+  { id: "ask",     emoji: "🫂", label: "Ask AI"  },
   { id: "health",  emoji: "❤️", label: "Health"  },
   { id: "letter",  emoji: "💌", label: "Letter"  },
   { id: "dates",   emoji: "💑", label: "Dates"   },
@@ -117,7 +119,7 @@ const AICenterPage = () => {
     try {
       const res = await getMemoryStats();
       patch("memStats", { data: res.data ?? null });
-    } catch {}
+    } catch { /* stats are optional */ }
   }, [patch]);
 
   const refreshCoach  = useCallback(() => Promise.all([loadSummary(), loadAnalysis(), loadInsights()]), [loadSummary, loadAnalysis, loadInsights]);
@@ -167,6 +169,7 @@ const AICenterPage = () => {
           onRefresh={loadHealth}
         />
       );
+      case "ask":     return <CoachChat />;
       case "letter":  return <LoveLetterGenerator />;
       case "dates":   return <DatePlanner />;
       case "talk":    return <ConversationStarters onSaved={handleSaved} />;
