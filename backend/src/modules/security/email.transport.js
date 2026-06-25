@@ -63,11 +63,19 @@ const smtpTransport = () => {
   const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null; // fallback not configured
   if (!_smtp) {
+    const host = SMTP_HOST.trim();
+    const user = SMTP_USER.trim();
+    let pass = SMTP_PASS.trim();
+    // Gmail App Passwords are shown in 4-char groups separated by spaces but must
+    // be supplied WITHOUT them; strip internal whitespace for Gmail specifically
+    // (a very common copy-paste footgun that otherwise fails auth silently).
+    if (/gmail\.com$/i.test(host)) pass = pass.replace(/\s+/g, "");
+
     _smtp = nodemailer.createTransport({
-      host: SMTP_HOST,
+      host,
       port: Number(process.env.SMTP_PORT) || 587,
       secure: String(process.env.SMTP_SECURE) === "true",
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      auth: { user, pass },
     });
   }
   return _smtp;
