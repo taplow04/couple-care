@@ -240,7 +240,59 @@ const sendViaSendgrid = async (msg) => {
   }
 };
 
+// Mailjet HTTP API (port 443) — works on Render. FREE FOREVER (6k/mo, 200/day),
+// no domain required (verify a single sender email). Basic auth with two keys.
+const sendViaMailjet = async (msg) => {
+  const apiKey = process.env.MAILJET_API_KEY;
+  const secret = process.env.MAILJET_SECRET_KEY;
+  if (!apiKey || !secret) return "skip";
+
+  const auth = Buffer.from(`${apiKey.trim()}:${secret.trim()}`).toString("base64");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
+  try {
+    const res = await fetch("https://api.mailjet.com/v3.1/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        Messages: [
+          {
+            From: { Email: fromEmail(), Name: FROM_NAME },
+            To: [{ Email: msg.to }],
+            Subject: msg.subject,
+            TextPart: msg.textContent,
+            HTMLPart: msg.htmlContent,
+          },
+        ],
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw Object.assign(new Error(`Mailjet responded ${res.status}`), {
+        statusCode: res.status,
+        body,
+      });
+    }
+    return "sent";
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw Object.assign(
+        new Error(`mailjet.send timed out after ${SEND_TIMEOUT_MS}ms`),
+        { code: "ETIMEDOUT", isTimeout: true },
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 const PROVIDERS = {
+  mailjet: sendViaMailjet,
   sendgrid: sendViaSendgrid,
   brevo: sendViaBrevo,
   smtp: sendViaSmtp,
@@ -249,13 +301,16 @@ const PROVIDERS = {
 // Provider order is env-driven so delivery can be routed AROUND a blocked path
 // without a code change. NOTE: Render blocks outbound SMTP ports, so prefer the
 // HTTP-API providers (sendgrid/brevo) in production.
-//   EMAIL_PROVIDER=sendgrid    → SendGrid HTTP API only  (recommended on Render)
-//   EMAIL_PROVIDER=brevo       → Brevo HTTP API only
+//   EMAIL_PROVIDER=mailjet     → Mailjet HTTP API only  (free forever — recommended)
+//   EMAIL_PROVIDER=sendgrid    → SendGrid HTTP API only
+//   EMAIL_PROVIDER=brevo       → Brevo HTTP API only    (free forever)
 //   EMAIL_PROVIDER=smtp        → SMTP only  (does NOT work on Render)
 //   EMAIL_PROVIDER=smtp_first  → SMTP, then Brevo fallback
-//   (default / auto)           → SendGrid → Brevo → SMTP (first configured wins)
+//   (default / auto)           → Mailjet → SendGrid → Brevo → SMTP (first configured wins)
 const providerOrder = () => {
   switch (String(process.env.EMAIL_PROVIDER || "auto").toLowerCase()) {
+    case "mailjet":
+      return ["mailjet"];
     case "sendgrid":
       return ["sendgrid"];
     case "brevo":
@@ -265,7 +320,7 @@ const providerOrder = () => {
     case "smtp_first":
       return ["smtp", "brevo"];
     default:
-      return ["sendgrid", "brevo", "smtp"];
+      return ["mailjet", "sendgrid", "brevo", "smtp"];
   }
 };
 
@@ -332,6 +387,9 @@ const emailConfigSummary = () => {
   return {
     EMAIL_PROVIDER: String(process.env.EMAIL_PROVIDER || "auto").toLowerCase(),
     order: providerOrder().join(" → "),
+    MAILJET: process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY
+      ? `configured (${mask(process.env.MAILJET_API_KEY)})`
+      : "(unset)",
     SENDGRID_API_KEY: process.env.SENDGRID_API_KEY
       ? mask(process.env.SENDGRID_API_KEY)
       : "(unset)",
