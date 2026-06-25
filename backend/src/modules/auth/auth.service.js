@@ -71,7 +71,7 @@ const requestRegistration = async (data) => {
       lastSentAt: new Date(now),
       sendCount: 1,
     },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
   );
 
   // Diagnostic: OTP generated + about to send. Never log the OTP or full email.

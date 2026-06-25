@@ -191,24 +191,81 @@ const sendViaSmtp = async (msg) => {
   return "sent";
 };
 
-const PROVIDERS = { brevo: sendViaBrevo, smtp: sendViaSmtp };
+// SendGrid HTTP API (port 443) — works on Render, where outbound SMTP ports
+// (25/465/587) are blocked. Dependency-free via global fetch (Node 18+). Single
+// Sender Verification lets you send to ANY recipient without owning a domain.
+const sendViaSendgrid = async (msg) => {
+  const key = process.env.SENDGRID_API_KEY;
+  if (!key) return "skip";
 
-// Provider order is env-driven so delivery can be routed AROUND a blocked
-// provider without a code change (e.g. Brevo's "Authorised IPs" 401 from Render):
-//   EMAIL_PROVIDER=smtp        → SMTP only
-//   EMAIL_PROVIDER=brevo       → Brevo only
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
+  try {
+    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key.trim()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: msg.to }] }],
+        from: { email: fromEmail(), name: FROM_NAME },
+        subject: msg.subject,
+        // SendGrid requires text/plain BEFORE text/html.
+        content: [
+          { type: "text/plain", value: msg.textContent },
+          { type: "text/html", value: msg.htmlContent },
+        ],
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw Object.assign(new Error(`SendGrid responded ${res.status}`), {
+        statusCode: res.status,
+        body,
+      });
+    }
+    return "sent";
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw Object.assign(
+        new Error(`sendgrid.send timed out after ${SEND_TIMEOUT_MS}ms`),
+        { code: "ETIMEDOUT", isTimeout: true },
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+const PROVIDERS = {
+  sendgrid: sendViaSendgrid,
+  brevo: sendViaBrevo,
+  smtp: sendViaSmtp,
+};
+
+// Provider order is env-driven so delivery can be routed AROUND a blocked path
+// without a code change. NOTE: Render blocks outbound SMTP ports, so prefer the
+// HTTP-API providers (sendgrid/brevo) in production.
+//   EMAIL_PROVIDER=sendgrid    → SendGrid HTTP API only  (recommended on Render)
+//   EMAIL_PROVIDER=brevo       → Brevo HTTP API only
+//   EMAIL_PROVIDER=smtp        → SMTP only  (does NOT work on Render)
 //   EMAIL_PROVIDER=smtp_first  → SMTP, then Brevo fallback
-//   (default / auto)           → Brevo, then SMTP fallback
+//   (default / auto)           → SendGrid → Brevo → SMTP (first configured wins)
 const providerOrder = () => {
   switch (String(process.env.EMAIL_PROVIDER || "auto").toLowerCase()) {
-    case "smtp":
-      return ["smtp"];
+    case "sendgrid":
+      return ["sendgrid"];
     case "brevo":
       return ["brevo"];
+    case "smtp":
+      return ["smtp"];
     case "smtp_first":
       return ["smtp", "brevo"];
     default:
-      return ["brevo", "smtp"];
+      return ["sendgrid", "brevo", "smtp"];
   }
 };
 
@@ -275,6 +332,9 @@ const emailConfigSummary = () => {
   return {
     EMAIL_PROVIDER: String(process.env.EMAIL_PROVIDER || "auto").toLowerCase(),
     order: providerOrder().join(" → "),
+    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY
+      ? mask(process.env.SENDGRID_API_KEY)
+      : "(unset)",
     BREVO_API_KEY: process.env.BREVO_API_KEY ? mask(process.env.BREVO_API_KEY) : "(unset)",
     EMAIL_FROM: process.env.EMAIL_FROM || "(unset)",
     APP_URL: process.env.APP_URL || "(unset)",
