@@ -144,12 +144,12 @@ const describe = (err) => {
 };
 
 // ─── Providers ────────────────────────────────────────────────────────────────
+// Each provider returns "sent" on success, "skip" when not configured, or throws
+// on a real failure. This lets the orchestrator distinguish "try the next
+// provider" (skip) from "this provider failed" (throw → maybe retry/fallback).
 const sendViaBrevo = async (msg) => {
   const client = brevoClient();
-  if (!client)
-    throw Object.assign(new Error("BREVO_API_KEY is not configured"), {
-      code: "ENOCONFIG",
-    });
+  if (!client) return "skip"; // BREVO_API_KEY not set
 
   await withTimeout(
     client.transactionalEmails.sendTransacEmail({
@@ -162,13 +162,12 @@ const sendViaBrevo = async (msg) => {
     SEND_TIMEOUT_MS,
     "brevo.sendTransacEmail",
   );
+  return "sent";
 };
 
-// Returns false when no SMTP fallback is configured (so the caller can tell the
-// difference between "not configured" and "configured but failed").
 const sendViaSmtp = async (msg) => {
   const transport = smtpTransport();
-  if (!transport) return false;
+  if (!transport) return "skip"; // SMTP_* not set
 
   await withTimeout(
     transport.sendMail({
@@ -181,12 +180,34 @@ const sendViaSmtp = async (msg) => {
     SEND_TIMEOUT_MS,
     "smtp.sendMail",
   );
-  return true;
+  return "sent";
+};
+
+const PROVIDERS = { brevo: sendViaBrevo, smtp: sendViaSmtp };
+
+// Provider order is env-driven so delivery can be routed AROUND a blocked
+// provider without a code change (e.g. Brevo's "Authorised IPs" 401 from Render):
+//   EMAIL_PROVIDER=smtp        → SMTP only
+//   EMAIL_PROVIDER=brevo       → Brevo only
+//   EMAIL_PROVIDER=smtp_first  → SMTP, then Brevo fallback
+//   (default / auto)           → Brevo, then SMTP fallback
+const providerOrder = () => {
+  switch (String(process.env.EMAIL_PROVIDER || "auto").toLowerCase()) {
+    case "smtp":
+      return ["smtp"];
+    case "brevo":
+      return ["brevo"];
+    case "smtp_first":
+      return ["smtp", "brevo"];
+    default:
+      return ["brevo", "smtp"];
+  }
 };
 
 /**
- * Send an email resiliently. Resolves on the first successful provider; throws
- * EmailDeliveryError (safe message) only if EVERY path fails.
+ * Send an email resiliently across the configured providers. Resolves on the
+ * first provider that delivers; throws EmailDeliveryError (safe message) only if
+ * EVERY configured provider fails.
  *
  * @param {{to,subject,htmlContent,textContent}} msg
  * @param {{userMessage?:string}} opts  user-facing message on total failure
@@ -200,40 +221,62 @@ const sendEmail = async (msg, { userMessage } = {}) => {
   }
 
   let lastErr = null;
+  let anyConfigured = false;
 
-  // 1) Primary provider (Brevo) with bounded retries on transient failures only.
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      await sendViaBrevo(msg);
-      if (attempt > 1)
-        console.info(`[email] delivered via Brevo on attempt ${attempt} → ${msg.to}`);
-      return { ok: true, provider: "brevo" };
-    } catch (err) {
-      lastErr = err;
-      const { kind, retryable } = classify(err);
-      console.error(
-        `[email] Brevo attempt ${attempt}/${MAX_ATTEMPTS} failed (${kind}) → ${msg.to}: ${describe(err)}`,
-      );
-      if (!retryable) break; // e.g. the "unrecognised IP" 401 — go straight to fallback
-      if (attempt < MAX_ATTEMPTS) await sleep(BASE_BACKOFF_MS * 2 ** (attempt - 1));
+  for (const name of providerOrder()) {
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const result = await PROVIDERS[name](msg);
+        if (result === "skip") break; // provider not configured → next provider
+        anyConfigured = true;
+        if (attempt > 1 || name !== providerOrder()[0]) {
+          console.info(`[email] delivered via ${name} (attempt ${attempt}) → ${msg.to}`);
+        }
+        return { ok: true, provider: name };
+      } catch (err) {
+        anyConfigured = true;
+        lastErr = err;
+        const { kind, retryable } = classify(err);
+        console.error(
+          `[email] ${name} attempt ${attempt}/${MAX_ATTEMPTS} failed (${kind}) → ${msg.to}: ${describe(err)}`,
+        );
+        if (!retryable) break; // e.g. the "unrecognised IP" 401 — go to next provider
+        if (attempt < MAX_ATTEMPTS) await sleep(BASE_BACKOFF_MS * 2 ** (attempt - 1));
+      }
     }
   }
 
-  // 2) Optional SMTP fallback (bypasses the Brevo HTTP API / its IP allowlist).
-  try {
-    const used = await sendViaSmtp(msg);
-    if (used) {
-      console.warn(`[email] Brevo unavailable; delivered via SMTP fallback → ${msg.to}`);
-      return { ok: true, provider: "smtp" };
-    }
-  } catch (err) {
-    lastErr = err;
-    console.error(`[email] SMTP fallback failed → ${msg.to}: ${describe(err)}`);
+  if (!anyConfigured) {
+    console.error(
+      "[email] NO email provider configured — set BREVO_API_KEY or SMTP_HOST/SMTP_USER/SMTP_PASS.",
+    );
   }
-
-  // 3) Everything failed → clean, user-safe error. Raw provider detail stays in logs.
   console.error(`[email] all providers failed → ${msg.to}. Last error: ${describe(lastErr)}`);
   throw new EmailDeliveryError(safeMessage, { cause: lastErr });
 };
 
-module.exports = { sendEmail, EmailDeliveryError, DEFAULT_USER_MESSAGE };
+// Masked, secret-safe summary of the email config for startup diagnostics.
+const mask = (v) =>
+  v ? `${String(v).slice(0, 4)}…(len ${String(v).length})` : "(unset)";
+const emailConfigSummary = () => {
+  const smtpReady = !!(
+    process.env.SMTP_HOST &&
+    process.env.SMTP_USER &&
+    process.env.SMTP_PASS
+  );
+  return {
+    EMAIL_PROVIDER: String(process.env.EMAIL_PROVIDER || "auto").toLowerCase(),
+    order: providerOrder().join(" → "),
+    BREVO_API_KEY: process.env.BREVO_API_KEY ? mask(process.env.BREVO_API_KEY) : "(unset)",
+    EMAIL_FROM: process.env.EMAIL_FROM || "(unset)",
+    APP_URL: process.env.APP_URL || "(unset)",
+    SMTP: smtpReady ? `configured (${process.env.SMTP_HOST})` : "not configured",
+  };
+};
+
+module.exports = {
+  sendEmail,
+  EmailDeliveryError,
+  DEFAULT_USER_MESSAGE,
+  emailConfigSummary,
+};

@@ -15,6 +15,14 @@ const MAX_SENDS_PER_WINDOW = 6; // per pending row (TTL'd hourly)
 
 const generateOtp = () => String(crypto.randomInt(100000, 1000000)); // 6 digits
 
+// Mask an email for logs: "jane.doe@gmail.com" → "ja***@gmail.com". Never log
+// the full address or the OTP itself — only enough to correlate a flow.
+const maskEmail = (email) => {
+  const [local = "", domain = ""] = String(email).split("@");
+  const head = local.slice(0, 2);
+  return `${head}${local.length > 2 ? "***" : "***"}@${domain}`;
+};
+
 const badRequest = (message, statusCode = 400) => {
   const err = new Error(message);
   err.statusCode = statusCode;
@@ -66,7 +74,10 @@ const requestRegistration = async (data) => {
     { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 
+  // Diagnostic: OTP generated + about to send. Never log the OTP or full email.
+  console.info(`[auth] OTP generated for ${maskEmail(email)} — sending verification email…`);
   await sendOtpEmail(email, otp, name);
+  console.info(`[auth] verification email dispatched for ${maskEmail(email)}`);
 
   return { email };
 };

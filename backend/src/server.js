@@ -33,6 +33,12 @@ if (missingRecommended.length) {
   );
 }
 
+// Startup email diagnostics (secret-safe). Surfaces the active provider order
+// and whether each transport is configured, so production (Render) logs show
+// the real email config state at boot — invaluable when delivery is failing.
+const { emailConfigSummary } = require("./modules/security/email.transport");
+console.info("[diag] email config →", JSON.stringify(emailConfigSummary()));
+
 const app = require("./app");
 
 const connectDB = require("./config/db");
