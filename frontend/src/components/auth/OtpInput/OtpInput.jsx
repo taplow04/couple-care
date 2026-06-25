@@ -3,7 +3,9 @@ import "./OtpInput.css";
 
 // Controlled 6-digit OTP input. `value` is the full string; `onChange` receives
 // the updated string. Handles paste, backspace, and arrow navigation.
-const OtpInput = ({ value = "", onChange, length = 6, disabled = false }) => {
+// `status` ("error" | "success" | "") drives the validation styling so the user
+// immediately sees error / success states on the boxes.
+const OtpInput = ({ value = "", onChange, length = 6, disabled = false, status = "" }) => {
   const refs = useRef([]);
 
   const digits = value.split("").slice(0, length);
@@ -63,7 +65,10 @@ const OtpInput = ({ value = "", onChange, length = 6, disabled = false }) => {
   };
 
   return (
-    <div className="otp-input" onPaste={handlePaste}>
+    <div
+      className={`otp-input ${status ? `otp-input--${status}` : ""}`}
+      onPaste={handlePaste}
+    >
       {digits.map((d, i) => (
         <input
           key={i}

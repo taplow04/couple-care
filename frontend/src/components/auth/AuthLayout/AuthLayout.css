@@ -64,7 +64,9 @@
 }
 
 .auth__card {
-  background: white;
+  /* Theme-aware so the card + its inputs/OTP adapt in dark mode (was hardcoded
+     white, which left theme-token children like the OTP digits invisible). */
+  background: var(--card);
 
   border-radius: 28px;
 

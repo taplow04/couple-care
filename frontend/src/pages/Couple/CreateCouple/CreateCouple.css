@@ -11,8 +11,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: #fff;
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -33,7 +33,7 @@
 }
 
 .create-couple__back:hover {
-  background: #efefef;
+  background: var(--surface-2);
 }
 
 .create-couple__logout {
@@ -135,7 +135,7 @@
   padding: 15px;
   background: transparent;
   color: var(--text-secondary);
-  border: 1.5px solid #e0e0e0;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 600;

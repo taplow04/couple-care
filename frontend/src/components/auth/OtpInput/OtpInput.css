@@ -11,17 +11,35 @@
   text-align: center;
   font-size: 24px;
   font-weight: 700;
+  /* Theme-aware so digits are readable in BOTH light and dark mode. The old
+     hardcoded `#fff` background made white --text invisible in dark mode. */
   color: var(--text);
-  border: 1.5px solid #e2e4ee;
+  caret-color: var(--primary);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  background: #fff;
+  background: var(--surface);
   outline: none;
   transition: var(--transition);
+}
+
+.otp-input__box::selection {
+  background: var(--primary-light);
 }
 
 .otp-input__box:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Validation states — make error / success immediately visible on the boxes. */
+.otp-input--error .otp-input__box {
+  border-color: var(--danger);
+}
+.otp-input--error .otp-input__box:focus {
+  box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.18);
+}
+.otp-input--success .otp-input__box {
+  border-color: var(--success);
 }
 
 .otp-input__box:disabled {

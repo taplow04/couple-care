@@ -4,7 +4,9 @@
   flex-direction: column;
   justify-content: center;
   padding: 40px 24px 48px;
-  background: linear-gradient(160deg, #fff5f8 0%, #f5f2ff 50%, #fff 100%);
+  /* Soft romantic tint (rgba) layered over the theme background, so it stays
+     readable in BOTH themes — the old hardcoded light gradient broke dark mode. */
+  background: var(--gradient-romantic-soft), var(--background);
 }
 
 /* Hero */
@@ -115,9 +117,11 @@
 }
 
 .couple-landing__btn--secondary {
-  background: #fff;
+  /* Was hardcoded white with theme --text → looked "disabled/faded" in dark
+     mode (near-white text on white). Theme tokens fix the contrast. */
+  background: var(--card);
   color: var(--text);
-  border: 1.5px solid #e8e0ff;
+  border: 1.5px solid var(--border);
 }
 
 .couple-landing__btn--secondary:hover {

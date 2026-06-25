@@ -120,7 +120,15 @@ const Register = () => {
           {error && <div className="register-error">{error}</div>}
           {info && <div className="register-success">{info}</div>}
 
-          <OtpInput value={otp} onChange={setOtp} disabled={loading} />
+          <OtpInput
+            value={otp}
+            onChange={(v) => {
+              setOtp(v);
+              if (error) setError("");
+            }}
+            disabled={loading}
+            status={error ? "error" : otp.length === 6 ? "success" : ""}
+          />
 
           <AuthButton loading={loading}>Verify &amp; Continue</AuthButton>
 

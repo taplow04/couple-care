@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   padding: 32px 24px;
-  background: linear-gradient(160deg, #fff5f8 0%, #f5f2ff 60%, #fff 100%);
+  background: var(--gradient-romantic-soft), var(--background);
   position: relative;
   overflow: hidden;
 }
@@ -42,7 +42,7 @@
 
 /* Main card */
 .couple-success__card {
-  background: #fff;
+  background: var(--card);
   border-radius: var(--radius-lg);
   padding: 40px 28px;
   text-align: center;
@@ -113,11 +113,13 @@
 .couple-success__date-input {
   width: 100%;
   padding: 13px 14px;
-  border: 1.5px solid #ececf2;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 15px;
+  /* 16px avoids iOS focus-zoom on this date field. */
+  font-size: 16px;
   color: var(--text);
-  background: #fafafd;
+  background: var(--surface);
+  caret-color: var(--primary);
   transition: var(--transition);
   -webkit-appearance: none;
   appearance: none;
@@ -126,7 +128,7 @@
 .couple-success__date-input:focus {
   outline: none;
   border-color: var(--primary);
-  background: #fff;
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .couple-success__date-hint {

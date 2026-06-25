@@ -1,6 +1,6 @@
 .privacy-select {
   padding: 14px 16px;
-  border-bottom: 1px solid #f0f0f5;
+  border-bottom: 1px solid var(--border);
 }
 .privacy-select:last-child {
   border-bottom: none;
@@ -41,7 +41,7 @@
 
 .privacy-select__seg {
   display: flex;
-  background: #f1f1f6;
+  background: var(--surface-2);
   border-radius: 10px;
   padding: 3px;
   gap: 3px;
@@ -62,7 +62,7 @@
 }
 
 .privacy-select__opt--active {
-  background: #fff;
+  background: var(--card);
   color: var(--primary-dark, #e34a78);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
