@@ -89,3 +89,22 @@ export const emitReaction = (coupleId, messageId, emoji, ack) => {
   }
   socket.emit("message:react", { coupleId, messageId, emoji }, ack);
 };
+
+// ── CoupleCare Moments (same shared socket) ──────────────────────────────────
+// Register a view receipt for a partner's Moment (server emits "moment:viewed").
+export const emitMomentView = (momentId, ack) => {
+  if (!momentId || !socket?.connected) {
+    if (typeof ack === "function") ack({ success: false, message: "Not connected" });
+    return;
+  }
+  socket.emit("moment:view", { momentId }, ack);
+};
+
+// Toggle a reaction on a Moment (server broadcasts "moment:reaction").
+export const emitMomentReaction = (momentId, emoji, ack) => {
+  if (!momentId || !emoji || !socket?.connected) {
+    if (typeof ack === "function") ack({ success: false, message: "Not connected" });
+    return;
+  }
+  socket.emit("moment:react", { momentId, emoji }, ack);
+};

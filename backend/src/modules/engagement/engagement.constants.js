@@ -19,6 +19,7 @@ const ACTIVITY_TYPES = {
   COACH: "coach",
   SURPRISE_OPEN: "surprise_open",
   STORY_CHAPTER: "story_chapter",
+  MOMENT: "moment", // CoupleCare Moments (story share)
   CHALLENGE: "challenge", // future-ready (Couple Challenges)
 };
 
@@ -35,6 +36,7 @@ const XP_VALUES = {
   coach: 10,
   surprise_open: 5,
   story_chapter: 15,
+  moment: 12,
   challenge: 25,
 };
 

@@ -22,6 +22,7 @@ import RecentMemoriesCard from "../../components/dashboard/RecentMemoriesCard/Re
 import BucketListCard from "../../components/dashboard/BucketListCard/BucketListCard";
 import SleepCard from "../../components/dashboard/SleepCard/SleepCard";
 import SurpriseBox from "../../components/surprise/SurpriseBox/SurpriseBox";
+import MomentsBar from "../../components/moments/MomentsBar/MomentsBar";
 
 import "./Dashboard.css";
 
@@ -178,6 +179,11 @@ const Dashboard = () => {
             onPartnerClick={() => navigate("/partner")}
             onSelfClick={() => navigate("/profile")}
           />
+        </div>
+
+        {/* CoupleCare Moments — Instagram-style story circles (self + partner) */}
+        <div className="db-fade-in" style={{ animationDelay: "20ms" }}>
+          <MomentsBar />
         </div>
 
         {dashData?.partner?.birthday && (

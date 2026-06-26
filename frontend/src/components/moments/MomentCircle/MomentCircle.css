@@ -1,0 +1,139 @@
+.moment-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 76px;
+  flex: 0 0 auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.moment-circle__ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  padding: 3px;
+  transition: var(--transition);
+}
+
+/* New, unseen → animated rotating romantic gradient ring. */
+.moment-circle__ring--unseen {
+  background: conic-gradient(
+    from var(--angle, 0deg),
+    #ff5c8a,
+    #7c5cff,
+    #ff8fab,
+    #ff5c8a
+  );
+  animation: moment-ring-spin 3.6s linear infinite;
+}
+
+/* Seen → faded static ring. */
+.moment-circle__ring--seen {
+  background: var(--border);
+}
+
+/* Your circle when you have moments uses the same gradient but no spin handled
+   by the unseen/seen classes above; empty/add states below. */
+.moment-circle__ring--empty {
+  background: var(--surface-2);
+}
+
+.moment-circle__ring--add {
+  background: transparent;
+  border: 2px dashed var(--primary);
+}
+
+.moment-circle__inner {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 2px solid var(--card);
+}
+
+.moment-circle__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.moment-circle__initials {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--primary);
+}
+
+.moment-circle__add {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gradient-romantic);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 2px solid var(--card);
+}
+
+.moment-circle__label {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  max-width: 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes moment-ring-spin {
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* Fallback for browsers without @property angle animation — gentle pulse. */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .moment-circle__ring--unseen {
+    background: var(--gradient-romantic);
+    animation: moment-ring-pulse 1.8s ease-in-out infinite;
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes moment-ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moment-circle__ring--unseen {
+    animation: none;
+  }
+}

@@ -8,6 +8,7 @@ import ProfileHeader from "../../components/profile/ProfileHeader/ProfileHeader"
 import ProfileStats from "../../components/profile/ProfileStats/ProfileStats";
 import JourneyCard from "../../components/profile/JourneyCard/JourneyCard";
 import PersonalGallery from "../../components/gallery/PersonalGallery/PersonalGallery";
+import ProfileMoments from "../../components/moments/ProfileMoments/ProfileMoments";
 import "./Profile.css";
 
 const fileToDataUrl = (file) =>
@@ -95,6 +96,9 @@ const Profile = () => {
         <div className="prof-pg-card">
           <PersonalGallery scope="personal" editable title="Gallery" />
         </div>
+
+        {/* Saved Moments (Feature 17) — renders nothing when empty */}
+        <ProfileMoments ownerId="me" title="Your Moments" />
 
         {/* CoupleCare Journey */}
         {journey && <JourneyCard journey={journey} />}

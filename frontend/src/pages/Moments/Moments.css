@@ -1,0 +1,19 @@
+.moments-page {
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.moments-page__content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 16px;
+}
+
+.moments-page__hint {
+  font-size: var(--font-sm);
+  color: var(--muted);
+  text-align: center;
+  margin: 4px 0 24px;
+  line-height: 1.5;
+}

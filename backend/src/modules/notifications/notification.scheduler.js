@@ -8,6 +8,7 @@ const Engagement = require("../engagement/engagement.model");
 const ActivityLog = require("../engagement/activityLog.model");
 
 const { createNotification } = require("./notification.service");
+const { expireMoments } = require("../moments/moment.service");
 
 // UTC YYYY-MM-DD — must match engagement.service.dayKey.
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -137,6 +138,18 @@ const startNotificationJobs = () => {
           metadata: { streak: eng.currentStreak },
         });
       }
+    }
+  });
+
+  // Moments expiry sweep (every 10 minutes). Save-aware: kept / highlighted /
+  // journey moments survive; `save_journey` moments auto-create a Memory; the
+  // rest have their Cloudinary asset destroyed and the doc removed (Feature 10).
+  cron.schedule("*/10 * * * *", async () => {
+    try {
+      const destroyed = await expireMoments();
+      if (destroyed > 0) console.log(`Moments expiry: removed ${destroyed}`);
+    } catch (e) {
+      console.error("Moments expiry job failed:", e.message);
     }
   });
 };

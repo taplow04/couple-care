@@ -18,6 +18,10 @@ const URL_FOR_TYPE = {
   surprise_ready: "/dashboard",
   love_letter_received: "/ai-center",
   sleep_reminder: "/sleep",
+  moment_new: "/moments",
+  moment_viewed: "/moments",
+  moment_reaction: "/moments",
+  couple_moment_ready: "/moments",
 };
 
 const createNotification = async (data) => {

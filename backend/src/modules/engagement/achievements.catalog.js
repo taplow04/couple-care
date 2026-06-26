@@ -108,6 +108,20 @@ const ACHIEVEMENTS = [
     check: (s) => s.counts.story_chapter >= 1,
   },
   {
+    key: "first_moment",
+    title: "Caught the Moment",
+    emoji: "📸",
+    description: "Shared your first Moment.",
+    check: (s) => s.counts.moment >= 1,
+  },
+  {
+    key: "moment_maker",
+    title: "Moment Makers",
+    emoji: "✨",
+    description: "Shared 25 Moments together.",
+    check: (s) => s.counts.moment >= 25,
+  },
+  {
     key: "level_5",
     title: "Rising Together",
     emoji: "⭐",

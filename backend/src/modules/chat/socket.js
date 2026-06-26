@@ -8,6 +8,7 @@ const callService = require("../calls/call.service");
 const { sendPushToUser } = require("../push/push.service");
 const { recordActivity } = require("../engagement/engagement.service");
 const { ACTIVITY_TYPES } = require("../engagement/engagement.constants");
+const { registerMomentSocket } = require("../moments/moment.socket");
 const {
   setIo,
   addOnlineSocket,
@@ -229,6 +230,9 @@ const initializeSocket = (io) => {
     socket.on("presence:get", () => {
       sendPartnerPresenceTo(socket);
     });
+
+    // CoupleCare Moments — story reactions + view receipts on the shared socket.
+    registerMomentSocket(socket);
 
     /*
     ==========================

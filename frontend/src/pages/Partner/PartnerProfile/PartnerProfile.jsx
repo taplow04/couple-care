@@ -7,6 +7,7 @@ import ProfileHeader from "../../../components/profile/ProfileHeader/ProfileHead
 import GalleryGrid from "../../../components/gallery/GalleryGrid/GalleryGrid";
 import MediaViewer from "../../../components/gallery/MediaViewer/MediaViewer";
 import BackHeader from "../../../components/common/BackHeader/BackHeader";
+import ProfileMoments from "../../../components/moments/ProfileMoments/ProfileMoments";
 import { getFirstName } from "../../../utils/getFirstName";
 import "./PartnerProfile.css";
 
@@ -188,6 +189,11 @@ const PartnerProfile = () => {
         <Chips title="Hobbies" items={partner.hobbies} tone="primary" />
         <Chips title="Likes" items={partner.likes} tone="success" />
         <Chips title="Dislikes" items={partner.dislikes} tone="muted" />
+
+        {/* Partner's saved Moments (Feature 17) — renders nothing when empty */}
+        {partner?._id && (
+          <ProfileMoments ownerId={partner._id} title={`${firstName}'s Moments`} />
+        )}
 
         {error && <p className="pp__inline-error">{error}</p>}
 

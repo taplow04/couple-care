@@ -1,0 +1,315 @@
+.moment-capture {
+  position: fixed;
+  inset: 0;
+  z-index: 5100;
+  background: #0b0b10;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: moment-capture-in 0.2s var(--ease-spring);
+}
+
+@keyframes moment-capture-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.moment-capture__top {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.moment-capture__close,
+.moment-capture__flip {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.moment-capture__stage {
+  flex: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.moment-capture__preview,
+.moment-capture__captured img,
+.moment-capture__captured video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.moment-capture__preview--mirror {
+  transform: scaleX(-1);
+}
+
+.moment-capture__captured {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.moment-capture__error {
+  position: absolute;
+  top: 20px;
+  left: 16px;
+  right: 16px;
+  z-index: 2;
+  background: rgba(255, 82, 82, 0.92);
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Voice */
+.moment-capture__voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.moment-capture__mic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 3.2rem;
+  background: var(--gradient-romantic);
+}
+
+.moment-capture__mic--rec {
+  animation: moment-capture-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes moment-capture-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 92, 138, 0.6); }
+  50% { box-shadow: 0 0 0 24px rgba(255, 92, 138, 0); }
+}
+
+.moment-capture__timer {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 82, 82, 0.92);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Controls */
+.moment-capture__controls {
+  padding: 16px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.moment-capture__modes {
+  display: flex;
+  gap: 8px;
+}
+
+.moment-capture__mode {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.moment-capture__mode--active {
+  background: var(--gradient-romantic);
+}
+
+.moment-capture__shutter {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-spring);
+}
+
+.moment-capture__shutter:active {
+  transform: scale(0.92);
+}
+
+.moment-capture__shutter--record {
+  background: var(--danger);
+  border-color: #fff;
+}
+
+.moment-capture__shutter--rec {
+  background: var(--danger);
+  border-radius: 18px;
+}
+
+.moment-capture__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  opacity: 0.6;
+}
+
+/* Compose */
+.moment-capture__compose {
+  padding: 14px 16px calc(20px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.moment-capture__caption {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 12px;
+}
+
+.moment-capture__caption::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.moment-capture__privacy {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.moment-capture__priv {
+  flex: 1;
+  min-width: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid transparent;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.moment-capture__priv--active {
+  border-color: var(--primary);
+  background: rgba(255, 92, 138, 0.22);
+}
+
+.moment-capture__progress {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.moment-capture__progress-fill {
+  height: 100%;
+  background: var(--gradient-romantic);
+  transition: width 0.2s ease;
+}
+
+.moment-capture__compose-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.moment-capture__retake {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.14);
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 14px 20px;
+  cursor: pointer;
+}
+
+.moment-capture__share {
+  flex: 1;
+  background: var(--gradient-romantic);
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moment-capture__share:disabled,
+.moment-capture__retake:disabled {
+  opacity: 0.6;
+}
+
+/* AI success */
+.moment-capture__ai {
+  text-align: center;
+  padding: 24px;
+  max-width: 360px;
+}
+
+.moment-capture__ai-check {
+  font-size: 3rem;
+}
+
+.moment-capture__ai-text {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.moment-capture__ai-q {
+  margin-top: 18px;
+  opacity: 0.8;
+}
+
+.moment-capture__ai-moods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 10px 0 20px;
+}
+
+.moment-capture__ai-moods button {
+  background: rgba(255, 92, 138, 0.22);
+  border: 1px solid var(--primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 16px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.moment-capture__ai-skip {
+  background: rgba(255, 255, 255, 0.14);
+  border: none;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px 28px;
+  cursor: pointer;
+}

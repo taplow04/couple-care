@@ -1,0 +1,144 @@
+.moment-highlights {
+  margin-top: 8px;
+}
+
+.moment-highlights__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.moment-highlights__title {
+  margin: 0;
+  font-size: var(--font-h3);
+  color: var(--text);
+}
+
+.moment-highlights__new {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moment-highlights__create {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.moment-highlights__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.moment-highlights__presets button {
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: var(--font-sm);
+  cursor: pointer;
+}
+
+.moment-highlights__preset--active {
+  border-color: var(--primary) !important;
+  background: var(--primary-light) !important;
+}
+
+.moment-highlights__create-row {
+  display: flex;
+  gap: 8px;
+}
+
+.moment-highlights__create-row input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+}
+
+.moment-highlights__save {
+  background: var(--gradient-romantic);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moment-highlights__empty {
+  color: var(--muted);
+  font-size: var(--font-sm);
+  text-align: center;
+  padding: 16px;
+}
+
+.moment-highlights__row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.moment-highlights__row::-webkit-scrollbar {
+  display: none;
+}
+
+.moment-highlights__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  width: 76px;
+}
+
+.moment-highlights__cover {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+}
+
+.moment-highlights__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.moment-highlights__emoji {
+  font-size: 1.8rem;
+}
+
+.moment-highlights__name {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  max-width: 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

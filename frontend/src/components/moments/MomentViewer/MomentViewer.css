@@ -1,0 +1,340 @@
+.moment-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: #0b0b10;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  overscroll-behavior: contain;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: moment-viewer-in 0.2s var(--ease-spring);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes moment-viewer-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Progress bars */
+.moment-viewer__bars {
+  display: flex;
+  gap: 4px;
+  padding: 10px 12px 6px;
+}
+
+.moment-viewer__bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  overflow: hidden;
+}
+
+.moment-viewer__bar-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 3px;
+  /* width is set inline; keep the transition subtle so rAF photo updates and
+     media-driven updates both look smooth without jank. */
+  transition: width 0.08s linear;
+  will-change: width;
+}
+
+/* Header */
+.moment-viewer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+}
+
+.moment-viewer__author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.moment-viewer__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+}
+
+.moment-viewer__avatar--ph {
+  display: grid;
+  place-items: center;
+  background: var(--gradient-romantic);
+  font-size: 1rem;
+}
+
+.moment-viewer__meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.moment-viewer__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.moment-viewer__time {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.moment-viewer__head-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.moment-viewer__icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+/* Stage */
+.moment-viewer__stage {
+  flex: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  min-height: 0;
+  touch-action: none;
+}
+
+.moment-viewer__media {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Voice moment */
+.moment-viewer__voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.moment-viewer__voice-orb {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+  background: var(--gradient-romantic);
+  box-shadow: 0 0 50px rgba(255, 92, 138, 0.5);
+  animation: moment-orb 2.4s ease-in-out infinite;
+}
+
+@keyframes moment-orb {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.moment-viewer__waveform {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+}
+
+.moment-viewer__waveform span {
+  width: 4px;
+  height: 12px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  animation: moment-wave 0.9s ease-in-out infinite;
+}
+
+@keyframes moment-wave {
+  0%, 100% { height: 10px; }
+  50% { height: 38px; }
+}
+
+/* Floating reaction burst */
+.moment-viewer__float {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  font-size: 4rem;
+  pointer-events: none;
+  animation: moment-float 1s var(--ease-spring) forwards;
+}
+
+@keyframes moment-float {
+  0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; }
+  30% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -120px) scale(0.9); opacity: 0; }
+}
+
+/* Caption + AI */
+.moment-viewer__caption-wrap {
+  padding: 0 18px 6px;
+}
+
+.moment-viewer__caption {
+  margin: 0;
+  font-size: 0.95rem;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.moment-viewer__ai {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* Footer */
+.moment-viewer__footer {
+  padding: 10px 16px 18px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.moment-viewer__partner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.moment-viewer__reply-btn {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.moment-viewer__reply {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.moment-viewer__reply-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 16px; /* ≥16px so iOS doesn't auto-zoom */
+  outline: none;
+}
+
+.moment-viewer__reply-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.moment-viewer__reply-send {
+  width: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--gradient-romantic);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Seen receipt (author view) */
+.moment-viewer__seen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.moment-viewer__seen-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.moment-viewer__seen--no {
+  opacity: 0.65;
+}
+
+.moment-viewer__seen-react {
+  margin-left: auto;
+  font-size: 1.1rem;
+}
+
+/* Author menu */
+.moment-viewer__menu {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  background: #1c1c27;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.moment-viewer__menu button {
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 16px;
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.moment-viewer__menu button:disabled {
+  opacity: 0.5;
+}
+
+.moment-viewer__menu--danger {
+  color: var(--danger) !important;
+}
+
+@media (min-width: 768px) {
+  .moment-viewer {
+    max-width: 440px;
+    margin: 0 auto;
+    border-radius: 16px;
+    inset: 12px auto;
+    left: 50%;
+    transform: translateX(-50%);
+    height: calc(100% - 24px);
+  }
+}

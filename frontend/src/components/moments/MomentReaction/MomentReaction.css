@@ -1,0 +1,33 @@
+.moment-reaction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.moment-reaction__btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.16s var(--ease-spring);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.moment-reaction__btn:active {
+  transform: scale(1.35);
+}
+
+.moment-reaction__btn--active {
+  transform: scale(1.25);
+  filter: drop-shadow(0 0 8px rgba(255, 92, 138, 0.8));
+}
