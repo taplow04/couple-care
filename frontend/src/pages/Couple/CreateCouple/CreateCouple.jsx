@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
-import { createCouple, getMyCouple } from "../../../services/couple.service";
+import {
+  createCouple,
+  getMyCouple,
+  cancelPendingCouple,
+} from "../../../services/couple.service";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import PairCodeCard from "../../../components/couple/PairCodeCard/PairCodeCard";
 import ShareCodeCard from "../../../components/couple/ShareCodeCard/ShareCodeCard";
 import ConnectionStatus from "../../../components/couple/ConnectionStatus/ConnectionStatus";
@@ -99,23 +104,33 @@ const CreateCouple = () => {
     navigate("/login", { replace: true });
   };
 
+  // Back to the Create / Join selection. Instant (explicit route, no browser
+  // history) and non-blocking: we optimistically detach the user client-side so
+  // CoupleLanding doesn't bounce us straight back, then discard the still-
+  // pending couple in the background so the user is free to Join instead.
+  const handleBack = () => {
+    clearInterval(pollRef.current);
+    if (couple && !couple.partnerTwoId) {
+      updateUser({ currentCoupleId: null });
+      cancelPendingCouple().catch(() => {
+        /* best-effort — a stale pending couple self-heals on next create */
+      });
+    }
+    navigate("/couple", { replace: true });
+  };
+
   return (
     <div className="create-couple">
-      <div className="create-couple__header">
-        {couple ? (
+      <BackHeader
+        title="Your Pair Code"
+        onBack={handleBack}
+        fallback="/couple"
+        right={
           <button className="create-couple__logout" onClick={handleLogout}>
             Log out
           </button>
-        ) : (
-          <button className="create-couple__back" onClick={() => navigate("/couple")}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        )}
-        <h1 className="create-couple__title">Your Pair Code</h1>
-        <div style={{ width: 64 }} />
-      </div>
+        }
+      />
 
       <div className="create-couple__body">
         {loading ? (

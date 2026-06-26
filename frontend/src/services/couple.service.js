@@ -10,6 +10,14 @@ export const joinCouple = async (pairCode) => {
   return res.data;
 };
 
+// Cancel a still-pending (un-joined) couple so the user can back out of the
+// "Create" flow and switch to "Join" without being stuck "Already in a
+// relationship". Safe no-op if there's nothing to cancel.
+export const cancelPendingCouple = async () => {
+  const res = await api.post("/couples/cancel");
+  return res.data;
+};
+
 export const getMyCouple = async () => {
   const res = await api.get("/couples/me");
   return res.data;

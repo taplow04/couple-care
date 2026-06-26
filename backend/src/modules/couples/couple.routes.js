@@ -7,6 +7,7 @@ const authenticateUser = require("../../middleware/authMiddleware");
 const {
   create,
   join,
+  cancelPending,
   dashboard,
   me,
   startDate,
@@ -17,6 +18,7 @@ const {
 router.get("/me", authenticateUser, me);
 router.post("/create", authenticateUser, create);
 router.post("/join", authenticateUser, join);
+router.post("/cancel", authenticateUser, cancelPending);
 router.get("/dashboard", authenticateUser, dashboard);
 router.patch("/start-date", authenticateUser, startDate);
 router.get("/partner-profile", authenticateUser, partnerProfile);

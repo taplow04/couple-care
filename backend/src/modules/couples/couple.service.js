@@ -91,6 +91,44 @@ const joinCouple = async (userId, pairCode) => {
 
   return couple;
 };
+/**
+ * Cancel a still-pending (un-joined) couple the user created. Lets a user back
+ * out of the "Create" flow and switch to "Join" without being stuck as
+ * "Already in a relationship". Refuses once a partner has joined (use unmatch
+ * for an active couple). Idempotent: a no-op if the user has no couple.
+ */
+const cancelPendingCouple = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user || !user.currentCoupleId) {
+    return { success: true, cancelled: false };
+  }
+
+  const couple = await Couple.findById(user.currentCoupleId);
+
+  // Nothing to cancel (already gone) — just detach the user.
+  if (!couple) {
+    user.currentCoupleId = null;
+    await user.save();
+    return { success: true, cancelled: false };
+  }
+
+  // A real partner joined — this is an active couple, not a pending one.
+  if (couple.partnerTwoId) {
+    throw new Error("Couple already active");
+  }
+
+  // Only the creator can cancel their own pending couple.
+  if (couple.partnerOneId.toString() !== userId.toString()) {
+    throw new Error("Not allowed");
+  }
+
+  await Couple.deleteOne({ _id: couple._id });
+  user.currentCoupleId = null;
+  await user.save();
+
+  return { success: true, cancelled: true };
+};
+
 const getDashboard = async (userId) => {
   const user = await User.findById(userId);
 
@@ -308,6 +346,7 @@ const unmatchPartner = async (userId) => {
 module.exports = {
   createCouple,
   joinCouple,
+  cancelPendingCouple,
   getDashboard,
   getMyCouple,
   setRelationshipStartDate,

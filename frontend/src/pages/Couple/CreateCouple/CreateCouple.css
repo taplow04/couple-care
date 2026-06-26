@@ -5,37 +5,7 @@
   background: var(--background);
 }
 
-/* Header */
-.create-couple__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.create-couple__back {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: var(--background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--text);
-  transition: background 0.15s;
-}
-
-.create-couple__back:hover {
-  background: var(--surface-2);
-}
-
+/* Logout action — rendered in the BackHeader's right slot */
 .create-couple__logout {
   background: none;
   border: none;
@@ -45,19 +15,10 @@
   cursor: pointer;
   text-decoration: underline;
   padding: 8px 4px;
-  width: 64px;
-  text-align: left;
 }
 
 .create-couple__logout:hover {
   color: var(--text-secondary);
-}
-
-.create-couple__title {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
 }
 
 /* Body */

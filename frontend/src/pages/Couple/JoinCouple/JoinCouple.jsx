@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { joinCouple } from "../../../services/couple.service";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import JoinCodeForm from "../../../components/couple/JoinCodeForm/JoinCodeForm";
 import "./JoinCouple.css";
 
@@ -49,15 +50,11 @@ const JoinCouple = () => {
 
   return (
     <div className="join-couple">
-      <div className="join-couple__header">
-        <button className="join-couple__back" onClick={() => navigate("/couple")}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <h1 className="join-couple__title">Join Partner</h1>
-        <div style={{ width: 40 }} />
-      </div>
+      <BackHeader
+        title="Join Partner"
+        onBack={() => navigate("/couple", { replace: true })}
+        fallback="/couple"
+      />
 
       <div className="join-couple__body">
         <div className="join-couple__hero">

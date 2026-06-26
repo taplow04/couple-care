@@ -1,6 +1,7 @@
 const {
   createCouple,
   joinCouple,
+  cancelPendingCouple,
   getDashboard,
   getMyCouple,
   setRelationshipStartDate,
@@ -29,6 +30,15 @@ const join = async (req, res, next) => {
       success: true,
       data: couple,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const cancelPending = async (req, res, next) => {
+  try {
+    const data = await cancelPendingCouple(req.user._id);
+    res.status(200).json({ success: true, data });
   } catch (error) {
     next(error);
   }
@@ -89,6 +99,7 @@ const unmatch = async (req, res, next) => {
 module.exports = {
   create,
   join,
+  cancelPending,
   dashboard,
   me,
   startDate,
