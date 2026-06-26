@@ -12,6 +12,7 @@ const {
   me,
   startDate,
   partnerProfile,
+  photos,
   unmatch,
 } = require("./couple.controller");
 
@@ -22,6 +23,7 @@ router.post("/cancel", authenticateUser, cancelPending);
 router.get("/dashboard", authenticateUser, dashboard);
 router.patch("/start-date", authenticateUser, startDate);
 router.get("/partner-profile", authenticateUser, partnerProfile);
+router.patch("/photos", authenticateUser, photos);
 router.post("/unmatch", authenticateUser, unmatch);
 
 module.exports = router;

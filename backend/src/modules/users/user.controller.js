@@ -3,7 +3,17 @@ const asyncHandler = require("../../utils/asyncHandler");
 const User = require("./user.model");
 
 const updateProfile = asyncHandler(async (req, res) => {
-  const { name, bio, hobbies, likes, dislikes, profilePhoto, birthday } = req.body;
+  const {
+    name,
+    bio,
+    hobbies,
+    likes,
+    dislikes,
+    profilePhoto,
+    coverPhoto,
+    username,
+    birthday,
+  } = req.body;
 
   const user = await User.findById(req.user._id);
   if (!user) throw new Error("User not found");
@@ -14,6 +24,32 @@ const updateProfile = asyncHandler(async (req, res) => {
   if (Array.isArray(likes)) user.likes = likes.slice(0, 15);
   if (Array.isArray(dislikes)) user.dislikes = dislikes.slice(0, 15);
   if (profilePhoto !== undefined) user.profilePhoto = profilePhoto;
+  if (coverPhoto !== undefined) user.coverPhoto = coverPhoto;
+
+  if (username !== undefined) {
+    // Optional handle: empty clears it; otherwise normalize + validate.
+    const handle = String(username).trim().toLowerCase();
+    if (handle === "") {
+      user.username = null;
+    } else if (!/^[a-z0-9_.]{3,20}$/.test(handle)) {
+      const err = new Error(
+        "Username must be 3–20 chars (letters, numbers, _ or .)",
+      );
+      err.statusCode = 400;
+      throw err;
+    } else {
+      const taken = await User.findOne({
+        username: handle,
+        _id: { $ne: user._id },
+      }).select("_id");
+      if (taken) {
+        const err = new Error("That username is already taken");
+        err.statusCode = 409;
+        throw err;
+      }
+      user.username = handle;
+    }
+  }
 
   if (birthday !== undefined) {
     if (birthday === null || birthday === "") {
@@ -45,7 +81,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 });
 
 const uploadPhoto = asyncHandler(async (req, res) => {
-  const { imageData } = req.body;
+  const { imageData, type } = req.body;
 
   if (!imageData || typeof imageData !== "string") {
     return res
@@ -68,13 +104,18 @@ const uploadPhoto = asyncHandler(async (req, res) => {
     });
   }
 
+  // Covers are a wide banner (no face crop); avatars are a square face crop.
+  const isCover = type === "cover";
+  const folder = isCover ? "couple-care/covers" : "couple-care/avatars";
+  const transformation = isCover
+    ? [{ width: 1200, height: 480, crop: "fill", gravity: "auto", quality: "auto" }]
+    : [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" }];
+
   let result;
   try {
     result = await cloudinary.uploader.upload(imageData, {
-      folder: "couple-care/avatars",
-      transformation: [
-        { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" },
-      ],
+      folder,
+      transformation,
       resource_type: "image",
     });
   } catch (err) {
@@ -96,6 +137,15 @@ const PRIVACY_KEYS = [
   "aiVisibility",
   "profileVisibility",
   "activityVisibility",
+  // Granular controls added with the Profile Ecosystem.
+  "bioVisibility",
+  "birthdayVisibility",
+  "sleepVisibility",
+  "galleryVisibility",
+  "videoVisibility",
+  "journeyCountVisibility",
+  "transparencyVisibility",
+  "relationshipGalleryVisibility",
 ];
 const PRIVACY_VALUES = ["private", "partner_only", "shared"];
 

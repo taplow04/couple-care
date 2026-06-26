@@ -308,6 +308,44 @@ const getPartnerProfile = async (userId) => {
 };
 
 /**
+ * Set the couple's shared cover photo and/or relationship picture. Either
+ * partner may update them (co-owned). Pass already-uploaded Cloudinary URLs.
+ */
+const setCouplePhotos = async (userId, { coverPhoto, relationshipPhoto }) => {
+  const user = await User.findById(userId);
+  if (!user || !user.currentCoupleId) {
+    throw new Error("No active relationship");
+  }
+
+  const couple = await Couple.findById(user.currentCoupleId);
+  if (!couple) {
+    throw new Error("Couple not found");
+  }
+
+  if (coverPhoto !== undefined) couple.coverPhoto = coverPhoto || "";
+  if (relationshipPhoto !== undefined) {
+    couple.relationshipPhoto = relationshipPhoto || "";
+  }
+
+  await couple.save();
+
+  // Let the partner's Relationship Profile refresh live.
+  const partnerId = resolvePartnerId(couple, userId);
+  if (partnerId) {
+    try {
+      emitToUser(partnerId, "couple:profile-updated", {
+        coverPhoto: couple.coverPhoto,
+        relationshipPhoto: couple.relationshipPhoto,
+      });
+    } catch {
+      /* offline */
+    }
+  }
+
+  return couple;
+};
+
+/**
  * Soft unmatch: mark the relationship broken and detach both users (so the app
  * gates them back to onboarding) WITHOUT deleting any shared data
  * (moods/memories/chat/calls are retained). Notifies the partner in realtime.
@@ -351,5 +389,6 @@ module.exports = {
   getMyCouple,
   setRelationshipStartDate,
   getPartnerProfile,
+  setCouplePhotos,
   unmatchPartner,
 };

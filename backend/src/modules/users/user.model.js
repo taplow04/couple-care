@@ -27,6 +27,22 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Cover photo for the Personal Profile header (wide banner, unlike the
+    // square face-cropped profilePhoto). Uploaded via users.uploadPhoto("cover").
+    coverPhoto: {
+      type: String,
+      default: "",
+    },
+
+    // Optional public handle shown on the profile (e.g. "@alex"). Sparse-unique
+    // so multiple users can leave it unset (null) without collisions.
+    username: {
+      type: String,
+      default: null,
+      lowercase: true,
+      trim: true,
+    },
+
     bio: {
       type: String,
       default: "",
@@ -156,12 +172,66 @@ const userSchema = new mongoose.Schema(
         enum: ["private", "partner_only", "shared"],
         default: "partner_only",
       },
+
+      // ── Granular controls added with the Profile Ecosystem ──
+      // Bio text on the profile.
+      bioVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Birthday date.
+      birthdayVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Sleep logs / analysis.
+      sleepVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Personal gallery photos.
+      galleryVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Personal gallery videos.
+      videoVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // CoupleCare Journey / relationship-history COUNT (never the details).
+      journeyCountVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Transparency report / Trust Center figures.
+      transparencyVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Relationship (co-owned) gallery. Co-owned data stays visible to the
+      // partner by design; this is a stored preference for any future surface.
+      relationshipGalleryVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
     },
   },
   {
     timestamps: true,
   },
 );
+
+// Optional handle: unique only among users who actually set one.
+userSchema.index({ username: 1 }, { unique: true, sparse: true });
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) {

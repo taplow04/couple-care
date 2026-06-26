@@ -30,6 +30,8 @@ const coachRoutes = require("../modules/coach/coach.routes");
 const storyRoutes = require("../modules/story/story.routes");
 const sleepRoutes = require("../modules/sleep/sleep.routes");
 const surpriseRoutes = require("../modules/surprise/surprise.routes");
+const galleryRoutes = require("../modules/gallery/gallery.routes");
+const profileRoutes = require("../modules/profile/profile.routes");
 
 router.use("/auth", authRoutes);
 
@@ -60,6 +62,8 @@ router.use("/coach", coachRoutes);
 router.use("/story", storyRoutes);
 router.use("/sleep", sleepRoutes);
 router.use("/surprise", surpriseRoutes);
+router.use("/gallery", galleryRoutes);
+router.use("/profile", profileRoutes);
 
 router.get("/", (req, res) => {
   res.json({

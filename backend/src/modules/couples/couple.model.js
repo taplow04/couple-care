@@ -19,6 +19,18 @@ const coupleSchema = new mongoose.Schema(
       unique: true,
     },
 
+    // ── Relationship Profile media (shared, either partner can set) ──
+    // Wide banner for the Relationship Profile header.
+    coverPhoto: {
+      type: String,
+      default: "",
+    },
+    // The couple "relationship picture" (the two of them together).
+    relationshipPhoto: {
+      type: String,
+      default: "",
+    },
+
     relationshipStatus: {
       type: String,
       enum: ["active", "paused", "broken_up"],
