@@ -87,6 +87,19 @@ const ProfileForm = ({ values, onChange, errors }) => {
         />
       </Field>
 
+      {/* Username */}
+      <Field label="Username" error={errors?.username} hint="Optional · 3–20 chars (letters, numbers, _ or .)">
+        <input
+          className={`pf__input ${errors?.username ? "pf__input--err" : ""}`}
+          type="text"
+          value={values.username}
+          onChange={(e) => set("username")(e.target.value)}
+          placeholder="@yourhandle"
+          maxLength={20}
+          autoComplete="off"
+        />
+      </Field>
+
       {/* Birthday */}
       <Field label="Birthday" hint="Used for birthday reminders & cards">
         <input

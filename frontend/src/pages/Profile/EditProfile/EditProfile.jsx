@@ -38,6 +38,7 @@ const EditProfile = () => {
 
   const [form, setForm] = useState({
     name: user?.name || "",
+    username: user?.username || "",
     bio: user?.bio || "",
     hobbies: user?.hobbies || [],
     likes: user?.likes || [],
