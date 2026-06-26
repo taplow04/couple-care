@@ -368,3 +368,21 @@ Every feature calls ONE entry point: **`engagement.service.recordActivity(couple
 
 ### Frontend surfaces
 New services (one per domain): `engagement`, `bucket`, `letters`, `coach`, `sleep`, `surprise`, `story`. New routes: `/bucket-list`, `/sleep`. New **AI Center tabs**: `Ask AI` (CoachChat) + `Letter` (LoveLetterGenerator) — existing tabs untouched. Dashboard adds SurpriseBox, StreakCard, LoveMeter (replaces the static HealthScoreCard), BucketListCard, SleepCard. Journey adds the Story Timeline section.
+
+---
+
+## Profile Ecosystem (people-centric layer)
+
+Turns the app from chat-centric to people-centric: a rich **Personal Profile**, an enhanced **Relationship Profile**, **Trust Center**, **Relationship Passport**, granular **privacy**, and Instagram-style **avatar navigation**. Built by reusing engagement/health/helpers — **no data duplication**.
+
+### Backend
+- **Schema (extended, non-breaking):** `User` gains `coverPhoto`, optional `username` (sparse-unique), and 8 new `privacy` keys (`bio/birthday/sleep/gallery/video/journeyCount/transparency/relationshipGallery` Visibility) on top of the original 6. `Couple` gains `coverPhoto` + `relationshipPhoto`.
+- **New collection `GalleryItem`** (`modules/gallery`): `ownerId, coupleId, scope (personal|relationship), type (image|video), url, publicId, caption, visibility`. Cloudinary stream upload (multer memory, `resource_type:auto`), `destroy(publicId)` on delete. Routes `/api/v1/gallery` (`POST`, `GET /`, `GET /relationship`, `GET /stats`, `PATCH/:id`, `DELETE/:id`).
+- **New aggregator `modules/profile`** (READ-ONLY, `/api/v1/profile`): `GET me|partner|journey|relationship|trust|passport`. Assembles everything from `getCachedHealth`, `getEngagementForUser`, `couple.helpers`, gallery + mood/memory/message counts. **`/partner` is privacy-aware** via `users/privacy.helper.canPartnerView` (`value !== "private"`). **CoupleCare Journey = COUNT only** (couples the user has been in) — never names/chats/photos of past relationships. Trust Center scores (communication/participation/consistency/transparency) are **deterministic**, CoupleCare-only — no LLM, no external/device tracking.
+- `users.uploadPhoto` takes `type:"avatar"|"cover"` (cover = wide transform). `updateProfile` accepts `username`/`coverPhoto`. `PATCH /couples/photos` sets the couple cover/relationship picture (either partner; emits `couple:profile-updated`).
+
+### Frontend
+- **`components/common/Avatar`** is the single avatar renderer + nav entry point: tap self → `/profile`, partner → `/partner` (resolves via `useAuth`). Swapped into WelcomeCard (self); ChatHeader/BottomNav already navigate.
+- **New services:** `gallery`, `profile`. New routes (lazy): `/privacy` (no couple needed), `/relationship`, `/passport`, `/trust-center`. `/profile` replaced with the full Personal Profile; `/partner` rewritten to the rich privacy-aware view.
+- **Components:** `gallery/{GalleryGrid,MediaViewer,PersonalGallery}` (MediaViewer remounts via `key={item._id}` — no reset effect), `profile/{ProfileHeader,ProfileStats,JourneyCard}`, `passport/PassportCard`. Gallery images are client-compressed (`utils/compressImage`); video accepted up to 25 MB.
+- Privacy page = 12 granular `PrivacySelect` controls (Only Me / Partner / Shared), persisted via `PATCH /users/privacy`.
