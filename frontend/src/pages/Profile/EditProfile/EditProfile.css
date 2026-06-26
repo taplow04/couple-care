@@ -31,37 +31,6 @@
 .edit-profile__hero::before { width: 220px; height: 220px; top: -90px; right: -60px; }
 .edit-profile__hero::after  { width: 180px; height: 180px; bottom: -70px; left: -50px; }
 
-/* Back button */
-.edit-profile__back {
-  align-self: flex-start;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.18s ease, transform 0.14s ease;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-
-.edit-profile__back:hover  { background: rgba(255, 255, 255, 0.32); }
-.edit-profile__back:active { transform: scale(0.92); }
-
-.edit-profile__hero-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #fff;
-  margin: 4px 0 0;
-  position: relative;
-  z-index: 1;
-}
-
 .edit-profile__hero-sub {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.78);

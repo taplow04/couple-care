@@ -20,9 +20,13 @@ const isImmersive = (pathname) =>
   pathname.startsWith("/chat") || pathname.startsWith("/call");
 
 // The Dashboard has its own TopHeader (with the bell), so the floating bell is
-// shown everywhere EXCEPT the dashboard and immersive screens.
+// shown everywhere EXCEPT the dashboard and immersive screens. The Personal
+// Profile belongs to the current user, so a notifications shortcut there is
+// redundant — hide it (notifications stay reachable from the dashboard/others).
 const showFloatingBell = (pathname) =>
-  !isImmersive(pathname) && pathname !== "/dashboard";
+  !isImmersive(pathname) &&
+  pathname !== "/dashboard" &&
+  pathname !== "/profile";
 
 const AppLayout = () => {
   // App-wide: keep the unread badges live and seeded.

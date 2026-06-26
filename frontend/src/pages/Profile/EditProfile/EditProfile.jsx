@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { updateProfile } from "../../../services/users.service";
 import ImageUploader from "../../../components/profile/ImageUploader/ImageUploader";
 import ProfileForm from "../../../components/profile/ProfileForm/ProfileForm";
+import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import "./EditProfile.css";
 
 const validate = (values) => {
@@ -17,13 +18,6 @@ const validate = (values) => {
   }
   return errors;
 };
-
-const BackIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M19 12H5M5 12L12 19M5 12L12 5"
-      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const CheckIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -84,16 +78,10 @@ const EditProfile = () => {
 
   return (
     <div className="edit-profile">
-      {/* ── Hero header ── */}
-      <div className="edit-profile__hero">
-        <button
-          className="edit-profile__back"
-          onClick={() => navigate("/profile")}
-          aria-label="Go back"
-        >
-          <BackIcon />
-        </button>
+      <BackHeader title="Edit Profile" fallback="/profile" />
 
+      {/* ── Avatar hero ── */}
+      <div className="edit-profile__hero">
         <ImageUploader
           currentUrl={form.profilePhoto}
           name={form.name}
@@ -101,7 +89,6 @@ const EditProfile = () => {
           onError={setUploadError}
         />
 
-        <h1 className="edit-profile__hero-title">Edit Profile</h1>
         <p className="edit-profile__hero-sub">
           {uploadError || "Update your info to personalize your experience"}
         </p>

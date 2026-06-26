@@ -29,9 +29,15 @@
   color: #fff;
 }
 
+/* Let the text column shrink instead of pushing the card past the viewport. */
+.tc__hero > div {
+  min-width: 0;
+}
+
 .tc__hero-emoji {
   font-size: 38px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .tc__hero-badge {
@@ -101,7 +107,9 @@
 
 .tc__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* minmax(0, 1fr) (not 1fr) so wide stat values can't blow the track out
+     past the container and cause horizontal overflow. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px 8px;
 }
 
@@ -110,12 +118,16 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  min-width: 0;
 }
 
 .tc__stat-num {
   font-size: 18px;
   font-weight: 800;
   color: var(--text);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .tc__stat-label {
@@ -151,6 +163,6 @@
 
 @media (max-width: 380px) {
   .tc__grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
