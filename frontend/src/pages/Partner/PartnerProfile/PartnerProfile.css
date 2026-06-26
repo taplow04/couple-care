@@ -100,12 +100,19 @@
   font-size: 0.85rem;
 }
 
+/* Content wrapper (after the shared ProfileHeader) */
+.pp__content {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Stats */
 .pp__stats {
   display: flex;
   background: var(--card, #fff);
   border-radius: var(--radius, 18px);
   padding: 16px 0;
+  margin-top: 14px;
   box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
 }
 .pp__stat {

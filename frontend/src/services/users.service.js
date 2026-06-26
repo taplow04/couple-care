@@ -5,10 +5,11 @@ export const updateProfile = async (data) => {
   return response.data;
 };
 
-export const uploadPhoto = async (imageData, onUploadProgress) => {
+// type: "avatar" (square face crop) | "cover" (wide banner, no face crop).
+export const uploadPhoto = async (imageData, onUploadProgress, type = "avatar") => {
   const response = await api.post(
     "/users/upload-photo",
-    { imageData },
+    { imageData, type },
     {
       onUploadProgress: (e) => {
         if (e.total) {

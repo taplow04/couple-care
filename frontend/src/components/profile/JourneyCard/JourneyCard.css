@@ -1,0 +1,68 @@
+.jcard {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+
+.jcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.jcard__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.jcard__trust {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--secondary-light);
+  color: var(--secondary);
+  white-space: nowrap;
+}
+
+.jcard__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+
+.jcard__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--primary-light);
+}
+
+.jcard__row:last-child {
+  border-bottom: none;
+}
+
+.jcard__label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.jcard__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.jcard__note {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 12px 0 0;
+  line-height: 1.5;
+}

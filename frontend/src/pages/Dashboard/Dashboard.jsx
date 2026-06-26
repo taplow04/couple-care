@@ -176,6 +176,7 @@ const Dashboard = () => {
             user={user}
             partner={dashData?.partner}
             onPartnerClick={() => navigate("/partner")}
+            onSelfClick={() => navigate("/profile")}
           />
         </div>
 

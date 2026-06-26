@@ -1,0 +1,156 @@
+.tc {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.tc__content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 16px calc(var(--bottom-nav-height) + 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tc__loading,
+.tc__error {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 16px;
+}
+
+.tc__hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+}
+
+.tc__hero-emoji {
+  font-size: 38px;
+  line-height: 1;
+}
+
+.tc__hero-badge {
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.tc__hero-sub {
+  font-size: 12px;
+  opacity: 0.9;
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+
+.tc__card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+
+.tc__card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.tc-bar {
+  margin-bottom: 14px;
+}
+
+.tc-bar:last-child {
+  margin-bottom: 0;
+}
+
+.tc-bar__head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tc-bar__label {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.tc-bar__value {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tc-bar__track {
+  height: 9px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  overflow: hidden;
+}
+
+.tc-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+.tc__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px 8px;
+}
+
+.tc__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tc__stat-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tc__stat-label {
+  font-size: 10.5px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.tc__muted {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
+.tc__insight {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--secondary-light);
+}
+
+.tc__insight-emoji {
+  font-size: 22px;
+}
+
+.tc__insight-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0;
+}
+
+@media (max-width: 380px) {
+  .tc__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -1,113 +1,163 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { getPersonalProfile, getJourney } from "../../services/profile.service";
+import { uploadPhoto, updateProfile } from "../../services/users.service";
+import { compressImage } from "../../utils/compressImage";
+import ProfileHeader from "../../components/profile/ProfileHeader/ProfileHeader";
+import ProfileStats from "../../components/profile/ProfileStats/ProfileStats";
+import JourneyCard from "../../components/profile/JourneyCard/JourneyCard";
+import PersonalGallery from "../../components/gallery/PersonalGallery/PersonalGallery";
 import "./Profile.css";
 
-const getInitials = (name = "") =>
-  name.split(" ").map((p) => p[0]).join("").toUpperCase().slice(0, 2);
-
-const PREFS = [
-  { key: "notificationsEnabled",  label: "Notifications" },
-  { key: "aiInsightsEnabled",     label: "AI Insights" },
-  { key: "moodRemindersEnabled",  label: "Mood Reminders" },
-  { key: "memoryRemindersEnabled",label: "Memory Reminders" },
-];
+const fileToDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
+  const [profile, setProfile] = useState(null);
+  const [journey, setJourney] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  const coverInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
+
+  useEffect(() => {
+    getPersonalProfile()
+      .then((res) => setProfile(res.data))
+      .catch(() => {});
+    getJourney()
+      .then((res) => setJourney(res.data))
+      .catch(() => {}); // no partner → journey is optional
+  }, []);
+
+  const handleUpload = async (file, type) => {
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const compressed = await compressImage(file);
+      const dataUrl = await fileToDataUrl(compressed);
+      const res = await uploadPhoto(dataUrl, undefined, type);
+      const url = res.data.url;
+      const field = type === "cover" ? "coverPhoto" : "profilePhoto";
+      await updateProfile({ [field]: url });
+      updateUser({ [field]: url });
+      setProfile((prev) =>
+        prev ? { ...prev, user: { ...prev.user, [field]: url } } : prev,
+      );
+    } catch (err) {
+      setError(err.response?.data?.message || "Photo upload failed. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (!user) return null;
+
+  // Prefer the freshest auth user for header identity; merge aggregator extras.
+  const headerUser = {
+    ...(profile?.user || {}),
+    name: user.name,
+    username: user.username ?? profile?.user?.username,
+    profilePhoto: user.profilePhoto ?? profile?.user?.profilePhoto,
+    coverPhoto: user.coverPhoto ?? profile?.user?.coverPhoto,
+    bio: user.bio ?? profile?.user?.bio,
+    birthday: user.birthday ?? profile?.user?.birthday,
+    joinedDate: profile?.user?.joinedDate || user.createdAt,
+  };
 
   return (
     <div className="prof-pg">
       <div className="prof-pg-content">
+        <ProfileHeader
+          user={headerUser}
+          relationship={profile?.relationship}
+          editable
+          uploading={uploading}
+          onEditCover={() => coverInputRef.current?.click()}
+          onEditAvatar={() => avatarInputRef.current?.click()}
+        />
 
-        {/* Hero */}
-        <div className="prof-pg-hero">
-          <div className="prof-pg-avatar">
-            {user.profilePhoto ? (
-              <img
-                src={user.profilePhoto}
-                alt={user.name}
-                className="prof-pg-avatar-img"
-              />
-            ) : (
-              <span className="prof-pg-avatar-init">{getInitials(user.name)}</span>
-            )}
-          </div>
-          <h1 className="prof-pg-name">{user.name}</h1>
-          <p className="prof-pg-email">{user.email}</p>
-          {user.emailVerified && (
-            <span className="prof-pg-verified">✓ Email Verified</span>
-          )}
-        </div>
+        {error && <p className="prof-pg-error">{error}</p>}
 
-        {/* Bio */}
-        {user.bio && (
-          <div className="prof-pg-card">
-            <p className="prof-pg-section-label">About</p>
-            <p className="prof-pg-bio">{user.bio}</p>
-          </div>
-        )}
+        <ProfileStats stats={profile?.stats} />
 
-        {/* Interests */}
-        {(user.hobbies?.length > 0 || user.likes?.length > 0) && (
-          <div className="prof-pg-card">
-            {user.hobbies?.length > 0 && (
-              <>
-                <p className="prof-pg-section-label">Hobbies</p>
-                <div className="prof-pg-tags">
-                  {user.hobbies.map((h) => (
-                    <span key={h} className="prof-pg-tag">{h}</span>
-                  ))}
-                </div>
-              </>
-            )}
-            {user.likes?.length > 0 && (
-              <div style={{ marginTop: user.hobbies?.length > 0 ? 14 : 0 }}>
-                <p className="prof-pg-section-label">Likes</p>
-                <div className="prof-pg-tags">
-                  {user.likes.map((l) => (
-                    <span key={l} className="prof-pg-tag prof-pg-tag--like">{l}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Preferences */}
+        {/* Personal gallery */}
         <div className="prof-pg-card">
-          <p className="prof-pg-section-label">Preferences</p>
-          {PREFS.map(({ key, label }) => (
-            <div key={key} className="prof-pg-pref">
-              <span className="prof-pg-pref-label">{label}</span>
-              <span
-                className={`prof-pg-pref-badge${user.settings?.[key] ? " prof-pg-pref-badge--on" : ""}`}
-              >
-                {user.settings?.[key] ? "On" : "Off"}
-              </span>
-            </div>
-          ))}
+          <PersonalGallery scope="personal" editable title="Gallery" />
         </div>
 
-        {/* Account actions */}
-        <div className="prof-pg-actions">
-          <button className="prof-pg-action-btn" onClick={() => navigate("/edit-profile")}>
-            ✏️ Edit Profile
+        {/* CoupleCare Journey */}
+        {journey && <JourneyCard journey={journey} />}
+
+        {/* Quick links */}
+        <div className="prof-pg-links">
+          <button className="prof-pg-link" onClick={() => navigate("/edit-profile")}>
+            <span>✏️ Edit Profile</span>
+            <span className="prof-pg-link__chev">›</span>
           </button>
-          <button className="prof-pg-action-btn" onClick={() => navigate("/settings")}>
-            ⚙️ Settings
+          {user.currentCoupleId && (
+            <>
+              <button className="prof-pg-link" onClick={() => navigate("/relationship")}>
+                <span>💞 Relationship Profile</span>
+                <span className="prof-pg-link__chev">›</span>
+              </button>
+              <button className="prof-pg-link" onClick={() => navigate("/passport")}>
+                <span>❤️ Relationship Passport</span>
+                <span className="prof-pg-link__chev">›</span>
+              </button>
+              <button className="prof-pg-link" onClick={() => navigate("/trust-center")}>
+                <span>🛡 Trust Center</span>
+                <span className="prof-pg-link__chev">›</span>
+              </button>
+            </>
+          )}
+          <button className="prof-pg-link" onClick={() => navigate("/privacy")}>
+            <span>🔒 Privacy & Visibility</span>
+            <span className="prof-pg-link__chev">›</span>
+          </button>
+          <button className="prof-pg-link" onClick={() => navigate("/settings")}>
+            <span>⚙️ Settings</span>
+            <span className="prof-pg-link__chev">›</span>
           </button>
         </div>
 
-        {/* Sign Out */}
         <button className="prof-pg-logout" onClick={logout}>
           Sign Out
         </button>
 
         <p className="prof-pg-version">CoupleCare · Your love, tracked</p>
       </div>
+
+      <input
+        ref={coverInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          handleUpload(e.target.files?.[0], "cover");
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          handleUpload(e.target.files?.[0], "avatar");
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 };

@@ -1,0 +1,16 @@
+.rpass {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.rpass__content {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 20px 16px calc(var(--bottom-nav-height) + 28px);
+}
+
+.rpass__msg {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 0;
+}

@@ -50,7 +50,7 @@ const Avatar = ({ photo, name, size, className = "", onClick }) => {
   );
 };
 
-const WelcomeCard = ({ user, partner, onPartnerClick }) => {
+const WelcomeCard = ({ user, partner, onPartnerClick, onSelfClick }) => {
   return (
     <div className="wc-card">
       <div className="wc-blob wc-blob--1" aria-hidden="true" />
@@ -79,7 +79,8 @@ const WelcomeCard = ({ user, partner, onPartnerClick }) => {
               photo={user?.profilePhoto}
               name={user?.name}
               size={52}
-              className="wc-avatar--you"
+              className={`wc-avatar--you ${onSelfClick ? "wc-avatar--clickable" : ""}`}
+              onClick={onSelfClick}
             />
             {partner && (
               <Avatar

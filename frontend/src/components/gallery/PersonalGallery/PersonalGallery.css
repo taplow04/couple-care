@@ -1,0 +1,40 @@
+.pgal {
+  width: 100%;
+}
+
+.pgal__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.pgal__error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+.pgal__skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.pgal__skeleton-tile {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    100deg,
+    var(--primary-light) 30%,
+    rgba(255, 255, 255, 0.06) 50%,
+    var(--primary-light) 70%
+  );
+  background-size: 200% 100%;
+  animation: pgal-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes pgal-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}

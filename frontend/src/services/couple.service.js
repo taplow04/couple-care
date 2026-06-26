@@ -37,3 +37,9 @@ export const unmatchPartner = async () => {
   const res = await api.post("/couples/unmatch");
   return res.data;
 };
+
+// Update the couple's shared cover photo / relationship picture (either partner).
+export const setCouplePhotos = async (patch) => {
+  const res = await api.patch("/couples/photos", patch);
+  return res.data;
+};

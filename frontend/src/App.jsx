@@ -36,6 +36,10 @@ const VideoCallPage = lazy(() => import("./pages/Call/VideoCallPage/VideoCallPag
 const PartnerProfile = lazy(() => import("./pages/Partner/PartnerProfile/PartnerProfile"));
 const BucketListPage = lazy(() => import("./pages/BucketList/BucketListPage/BucketListPage"));
 const SleepPage = lazy(() => import("./pages/Sleep/SleepPage/SleepPage"));
+const Privacy = lazy(() => import("./pages/Privacy/Privacy"));
+const TrustCenter = lazy(() => import("./pages/TrustCenter/TrustCenter"));
+const RelationshipProfile = lazy(() => import("./pages/RelationshipProfile/RelationshipProfile"));
+const RelationshipPassport = lazy(() => import("./pages/RelationshipPassport/RelationshipPassport"));
 
 function App() {
   return (
@@ -77,6 +81,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/privacy" element={<Privacy />} />
 
             {/* Couple-gated features — require a fully connected partner. */}
             <Route element={<RequireCouple />}>
@@ -94,6 +99,9 @@ function App() {
               <Route path="/partner" element={<PartnerProfile />} />
               <Route path="/bucket-list" element={<BucketListPage />} />
               <Route path="/sleep" element={<SleepPage />} />
+              <Route path="/relationship" element={<RelationshipProfile />} />
+              <Route path="/passport" element={<RelationshipPassport />} />
+              <Route path="/trust-center" element={<TrustCenter />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
