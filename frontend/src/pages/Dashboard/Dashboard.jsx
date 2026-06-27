@@ -8,6 +8,7 @@ import { getHealthScore, getWeeklySummary } from "../../services/ai.service";
 import { getBucketStats } from "../../services/bucket.service";
 import { getMySleep } from "../../services/sleep.service";
 import { useCoupleEvents } from "../../hooks/useCoupleEvents";
+import { useDailyMoment } from "../../hooks/useDailyMoment";
 
 import TopHeader from "../../components/navigation/TopHeader/TopHeader";
 import WelcomeCard from "../../components/dashboard/WelcomeCard/WelcomeCard";
@@ -23,6 +24,7 @@ import BucketListCard from "../../components/dashboard/BucketListCard/BucketList
 import SleepCard from "../../components/dashboard/SleepCard/SleepCard";
 import SurpriseBox from "../../components/surprise/SurpriseBox/SurpriseBox";
 import MomentsBar from "../../components/moments/MomentsBar/MomentsBar";
+import DailyMomentCard from "../../components/dashboard/DailyMomentCard/DailyMomentCard";
 
 import "./Dashboard.css";
 
@@ -66,6 +68,13 @@ const NoPartnerState = () => {
       </div>
     </div>
   );
+};
+
+// Renders only after the dashboard payload resolves, so the hook seeds from
+// `initial` (no extra fetch) and then stays live over the shared socket.
+const DailyMomentSection = ({ initial }) => {
+  const { today, loading } = useDailyMoment(initial);
+  return <DailyMomentCard today={today} loading={loading} />;
 };
 
 const Dashboard = () => {
@@ -184,6 +193,11 @@ const Dashboard = () => {
         {/* CoupleCare Moments — Instagram-style story circles (self + partner) */}
         <div className="db-fade-in" style={{ animationDelay: "20ms" }}>
           <MomentsBar />
+        </div>
+
+        {/* ❤️ Daily Couple Moment — today's recap (or share-together nudge) */}
+        <div className="db-fade-in" style={{ animationDelay: "25ms" }}>
+          <DailyMomentSection initial={dashData?.dailyMoment} />
         </div>
 
         {dashData?.partner?.birthday && (

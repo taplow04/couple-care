@@ -122,6 +122,20 @@ const ACHIEVEMENTS = [
     check: (s) => s.counts.moment >= 25,
   },
   {
+    key: "first_daily_moment",
+    title: "Our First Day",
+    emoji: "❤️",
+    description: "Both shared a Moment on the same day.",
+    check: (s) => s.counts.daily_moment >= 1,
+  },
+  {
+    key: "daily_devotion",
+    title: "Daily Devotion",
+    emoji: "🗓️",
+    description: "Created 30 Daily Couple Moments together.",
+    check: (s) => s.counts.daily_moment >= 30,
+  },
+  {
     key: "level_5",
     title: "Rising Together",
     emoji: "⭐",

@@ -43,6 +43,7 @@ const notificationSchema = new mongoose.Schema(
         "moment_viewed",
         "moment_reaction",
         "couple_moment_ready",
+        "daily_moment_ready",
         "system",
       ],
       default: "system",

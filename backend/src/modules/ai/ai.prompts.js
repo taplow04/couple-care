@@ -177,6 +177,41 @@ Rules:
 - No markdown, no headings, no preamble. Output ONLY the surprise content.`;
 };
 
+// Daily Couple Moment recap — a single short, warm reflection on the day BOTH
+// partners showed up for each other. Deliberately NOT the bulleted CONCISE_FORMAT
+// (this is a 1-2 sentence card caption, not a report).
+const buildDailyMomentSummaryPrompt = ({
+  partnerOne,
+  partnerTwo,
+  moments,
+  photos,
+  videos,
+  messages,
+  topMood,
+  streak,
+  daysTogether,
+}) => {
+  return `
+You are CoupleCare's warm narrator, writing a short caption for "Our Day" — a
+daily recap card celebrating that BOTH partners shared moments today.
+
+Today's facts:
+- Partners: ${partnerOne} and ${partnerTwo}
+- Moments shared: ${moments} (${photos} photos, ${videos} videos)
+- Messages exchanged: ${messages}
+- Shared mood today: ${topMood || "unspecified"}
+- Current streak: ${streak} day(s)
+- Days together: ${daysTogether}
+
+Write ONE warm reflection on their day together.
+
+Rules:
+- MAXIMUM 60 words. Aim for 25-40. Never write paragraphs or lists.
+- Second person, addressed to the couple ("Both of you...", "You two...").
+- Encouraging and specific to today's facts; never generic filler.
+- No markdown, no headings, no quotes, no emojis. Output ONLY the sentence(s).`;
+};
+
 const buildSleepAnalysisPrompt = (sleepText) => {
   return `
 You are a gentle wellness coach analyzing a couple's recent sleep logs.
@@ -199,4 +234,5 @@ module.exports = {
   buildCoachReplyPrompt,
   buildSurprisePrompt,
   buildSleepAnalysisPrompt,
+  buildDailyMomentSummaryPrompt,
 };

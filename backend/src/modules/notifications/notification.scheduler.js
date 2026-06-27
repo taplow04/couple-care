@@ -9,6 +9,7 @@ const ActivityLog = require("../engagement/activityLog.model");
 
 const { createNotification } = require("./notification.service");
 const { expireMoments } = require("../moments/moment.service");
+const { finalizeYesterday } = require("../dailyMoment/dailyMoment.service");
 
 // UTC YYYY-MM-DD — must match engagement.service.dayKey.
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -140,6 +141,24 @@ const startNotificationJobs = () => {
       }
     }
   });
+
+  // Daily Couple Moment finalize + reconcile (00:20 UTC). Freezes yesterday's
+  // recaps and back-fills any that the live trigger missed (server restart /
+  // race), so the relationship timeline never has a gap (Feature 1 / 16).
+  cron.schedule(
+    "20 0 * * *",
+    async () => {
+      try {
+        const { finalized, created } = await finalizeYesterday();
+        console.log(
+          `Daily Couple Moment finalize: froze ${finalized}, reconciled ${created}`,
+        );
+      } catch (e) {
+        console.error("Daily Couple Moment finalize job failed:", e.message);
+      }
+    },
+    { timezone: "UTC" },
+  );
 
   // Moments expiry sweep (every 10 minutes). Save-aware: kept / highlighted /
   // journey moments survive; `save_journey` moments auto-create a Memory; the

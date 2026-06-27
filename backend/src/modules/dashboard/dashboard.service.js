@@ -91,6 +91,16 @@ const getDashboardData = async (userId) => {
   // Single couple-level Love Meter value (same everywhere).
   const loveMeter = computeLoveMeter(health?.score ?? null, engagement?.currentStreak ?? 0);
 
+  // ❤️ Today's Daily Couple Moment (recap if both posted, else encouragement
+  // state). Included here so the dashboard card renders from one fetch. Never let
+  // it break the dashboard.
+  let dailyMoment = null;
+  try {
+    dailyMoment = await require("../dailyMoment/dailyMoment.service").getToday(userId);
+  } catch (e) {
+    console.error("[dashboard] daily-moment load failed:", e.message);
+  }
+
   return {
     partner,
 
@@ -107,6 +117,8 @@ const getDashboardData = async (userId) => {
     engagement,
 
     loveMeter,
+
+    dailyMoment,
 
     moodAnalytics,
 

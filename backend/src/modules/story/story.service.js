@@ -11,6 +11,7 @@ const Memory = require("../memories/memory.model");
 const BucketItem = require("../bucket/bucket.model");
 const LoveLetter = require("../letters/letter.model");
 const AchievementModel = require("../engagement/achievement.model");
+const DailyCoupleMoment = require("../dailyMoment/dailyMoment.model");
 const { ACHIEVEMENT_MAP } = require("../engagement/achievements.catalog");
 const { getRelationshipStart, getDaysTogether } = require("../couples/couple.helpers");
 const { recordActivity } = require("../engagement/engagement.service");
@@ -66,13 +67,15 @@ const getChapters = async (userId) => {
   const couple = await getCouple(userId);
   const coupleId = couple._id;
 
-  const [memories, bucket, letters, achievements, custom] = await Promise.all([
-    Memory.find({ coupleId }).select("title description memoryType memoryDate"),
-    BucketItem.find({ coupleId, completed: true }).select("title completedAt category"),
-    LoveLetter.find({ coupleId }).select("type createdAt"),
-    AchievementModel.find({ coupleId }).select("key unlockedAt"),
-    StoryChapter.find({ coupleId }),
-  ]);
+  const [memories, bucket, letters, achievements, dailyMoments, custom] =
+    await Promise.all([
+      Memory.find({ coupleId }).select("title description memoryType memoryDate"),
+      BucketItem.find({ coupleId, completed: true }).select("title completedAt category"),
+      LoveLetter.find({ coupleId }).select("type createdAt"),
+      AchievementModel.find({ coupleId }).select("key unlockedAt"),
+      DailyCoupleMoment.find({ coupleId }).select("day date counts ai coverUrl"),
+      StoryChapter.find({ coupleId }),
+    ]);
 
   const chapters = [];
 
@@ -163,7 +166,25 @@ const getChapters = async (userId) => {
     });
   }
 
-  // 7. Custom chapters.
+  // 7. Daily Couple Moments — days you both showed up for each other (read-only
+  // assembly, no duplication of the DailyCoupleMoment docs).
+  for (const d of dailyMoments) {
+    chapters.push({
+      id: `daily_${d.day}`,
+      kind: "daily_moment",
+      title: "A Day Together",
+      description:
+        d.ai?.summary ||
+        `You both shared ${d.counts?.moments || 0} moments on this day.`,
+      emoji: "❤️",
+      cover: d.coverUrl || "",
+      date: new Date(d.date).toISOString(),
+      custom: false,
+      link: `/our-day?day=${d.day}`,
+    });
+  }
+
+  // 8. Custom chapters.
   for (const c of custom) {
     chapters.push({
       id: String(c._id),

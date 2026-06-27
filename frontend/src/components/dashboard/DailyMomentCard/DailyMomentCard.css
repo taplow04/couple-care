@@ -1,0 +1,282 @@
+/* ❤️ Daily Couple Moment — dashboard recap card.
+   Warm romantic gradient + glassmorphism, theme-aware, Apple-like spacing. */
+
+.dmc {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  color: #fff;
+  text-decoration: none;
+  isolation: isolate;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  min-height: 132px;
+  animation: dmc-rise 0.5s ease both;
+}
+.dmc:active {
+  transform: scale(0.985);
+}
+@media (hover: hover) {
+  .dmc:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(124, 92, 255, 0.32);
+  }
+}
+
+@keyframes dmc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Soft animated glow behind the content (GPU-cheap). */
+.dmc-glow {
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 70%;
+  height: 160%;
+  background: radial-gradient(
+    circle at 70% 30%,
+    rgba(255, 255, 255, 0.35),
+    transparent 60%
+  );
+  z-index: -1;
+  animation: dmc-float 7s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes dmc-float {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-12px, 10px) scale(1.08);
+  }
+}
+
+/* Cover photo wash — subtle, behind the gradient veil. */
+.dmc-cover {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+  z-index: -2;
+  mix-blend-mode: overlay;
+}
+
+/* ── Recap state ───────────────────────────────────────────────── */
+.dmc-recap__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.dmc-recap__badge {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.2px;
+}
+.dmc-recap__date {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.92;
+  text-align: right;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 4px 9px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.dmc-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.dmc-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+.dmc-stat__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.dmc-stat__value {
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+.dmc-stat__label {
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.dmc-summary {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-style: italic;
+  opacity: 0.97;
+}
+.dmc-summary__sig {
+  font-style: normal;
+  font-weight: 700;
+  opacity: 0.85;
+  font-size: 0.78rem;
+}
+.dmc-summary.is-pending {
+  font-style: normal;
+}
+.dmc-summary__loading {
+  display: inline-block;
+  position: relative;
+  opacity: 0.9;
+}
+.dmc-summary__loading::after {
+  content: "▋";
+  margin-left: 2px;
+  animation: dmc-blink 1s steps(2) infinite;
+}
+@keyframes dmc-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.dmc-recap__cta,
+.dmc-empty__cta {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.95;
+}
+
+/* ── Empty / encouragement state ───────────────────────────────── */
+.dmc--empty {
+  background: linear-gradient(135deg, #ff7aa2 0%, #9d7bff 100%);
+}
+.dmc-empty__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.dmc-empty__heart {
+  font-size: 1.9rem;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18));
+  animation: dmc-beat 1.6s ease-in-out infinite;
+}
+@keyframes dmc-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.18);
+  }
+  30% {
+    transform: scale(1);
+  }
+}
+.dmc-empty__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.dmc-empty__sub {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  opacity: 0.92;
+  line-height: 1.4;
+}
+
+.dmc-empty__progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.dmc-dot {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  opacity: 0.7;
+  transition: var(--transition);
+}
+.dmc-dot.is-on {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--primary-dark);
+  opacity: 1;
+  border-color: transparent;
+}
+.dmc-dot__link {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+/* ── Skeleton ──────────────────────────────────────────────────── */
+.dmc--skeleton {
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.dmc-shimmer {
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--primary-light) 25%,
+    rgba(124, 92, 255, 0.06) 37%,
+    var(--primary-light) 63%
+  );
+  background-size: 400% 100%;
+  animation: dmc-sheen 1.4s ease infinite;
+  margin-bottom: 12px;
+}
+.dmc-shimmer--title {
+  width: 45%;
+  height: 18px;
+}
+.dmc-shimmer--row {
+  width: 100%;
+  height: 34px;
+}
+.dmc-shimmer--text {
+  width: 80%;
+  height: 14px;
+  margin-bottom: 0;
+}
+@keyframes dmc-sheen {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dmc,
+  .dmc-glow,
+  .dmc-empty__heart,
+  .dmc-shimmer,
+  .dmc-summary__loading::after {
+    animation: none;
+  }
+}

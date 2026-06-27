@@ -33,6 +33,7 @@ const surpriseRoutes = require("../modules/surprise/surprise.routes");
 const galleryRoutes = require("../modules/gallery/gallery.routes");
 const profileRoutes = require("../modules/profile/profile.routes");
 const momentRoutes = require("../modules/moments/moment.routes");
+const dailyMomentRoutes = require("../modules/dailyMoment/dailyMoment.routes");
 
 router.use("/auth", authRoutes);
 
@@ -66,6 +67,7 @@ router.use("/surprise", surpriseRoutes);
 router.use("/gallery", galleryRoutes);
 router.use("/profile", profileRoutes);
 router.use("/moments", momentRoutes);
+router.use("/daily-moment", dailyMomentRoutes);
 
 router.get("/", (req, res) => {
   res.json({

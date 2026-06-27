@@ -220,6 +220,13 @@ const createMoment = async (userId, { type, uploaded, caption, privacy, duration
 
     // Did this complete a "Couple Moment" window? Offer to merge (Feature 12).
     checkCoupleMomentWindow(couple._id, userId, partnerId).catch(() => {});
+
+    // ❤️ Daily Couple Moment: if BOTH partners have now posted today, auto-create
+    // the lasting daily recap. Fire-and-forget — never blocks/breaks the upload.
+    // Required lazily so the moment↔dailyMoment service pair has no circular load.
+    require("../dailyMoment/dailyMoment.service")
+      .ensureForDay(couple._id, userId)
+      .catch(() => {});
   }
 
   // Echo to the author's other devices so their own ring updates live.

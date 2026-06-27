@@ -20,6 +20,7 @@ const ACTIVITY_TYPES = {
   SURPRISE_OPEN: "surprise_open",
   STORY_CHAPTER: "story_chapter",
   MOMENT: "moment", // CoupleCare Moments (story share)
+  DAILY_MOMENT: "daily_moment", // ❤️ Daily Couple Moment (both posted that day)
   CHALLENGE: "challenge", // future-ready (Couple Challenges)
 };
 
@@ -37,6 +38,7 @@ const XP_VALUES = {
   surprise_open: 5,
   story_chapter: 15,
   moment: 12,
+  daily_moment: 10, // display/parity only — XP is day-based, never double-counted
   challenge: 25,
 };
 

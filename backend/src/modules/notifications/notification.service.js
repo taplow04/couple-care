@@ -22,6 +22,7 @@ const URL_FOR_TYPE = {
   moment_viewed: "/moments",
   moment_reaction: "/moments",
   couple_moment_ready: "/moments",
+  daily_moment_ready: "/our-day",
 };
 
 const createNotification = async (data) => {
