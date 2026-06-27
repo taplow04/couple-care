@@ -23,9 +23,27 @@ A full-stack app for couples to stay close: a premium Instagram-DM-style messeng
 - **Relationship journey** — days-together, milestones, and stats based on your real start date.
 - **AI insights** — concise, bulleted relationship health score, weekly summaries, and mood analysis (Groq / Llama 3.3).
 - **Smart reminders** — automated mood, birthday, and anniversary notifications (real-time + scheduled).
+- **Web push notifications** — opt-in browser/PWA push for new messages, mood alerts, missed calls, reminders & AI (VAPID web-push; iOS works for installed PWAs).
 - **Light / Dark / System theme** — instant, persisted theme switching (CSS variables + `data-theme`), synced to user settings and localStorage.
 - **Privacy controls** — granular per-data-type visibility settings.
 - **Native-feeling PWA** — installable with shortcuts & offline shell; no text-selection / tap-highlight / pull-to-refresh / double-tap-zoom; safe-area aware; universal back navigation.
+
+### 📸 CoupleCare Moments (private stories)
+
+Instagram-style ephemeral "Moments" shared **only** between the two partners — no feed, followers, or explore:
+
+- **Live capture only** — photo, 20s video, or voice note via camera/mic (no gallery picker), with client-side compression.
+- **Full-screen viewer** — tap to advance, hold to pause, swipe-down to close, swipe-up to reply (sends a chat message), reactions, and view receipts.
+- **Couple Moments** — when both partners post within a short window, the app offers to merge them into a shared couple Moment.
+- **Persistence your way** — Moments expire by default, or you can **keep** them, add them to a named **Highlight**, or **save to Journey** (auto-creates a Memory). Save-aware expiry cron — kept/highlighted/journey Moments survive.
+
+### 👤 Profile Ecosystem (people-centric layer)
+
+- **Rich personal & relationship profiles** — cover photos, optional username, bio, hobbies, galleries.
+- **Personal & relationship galleries** — Cloudinary-backed image/video collections with per-item visibility.
+- **Trust Center** — deterministic, CoupleCare-only scores (communication, participation, consistency, transparency) — no LLM, no device tracking.
+- **Relationship Passport & CoupleCare Journey** — a shareable passport card plus a privacy-safe *count* of past relationships (never names/chats/photos).
+- **Avatar navigation** — tap any avatar to jump to that person's profile (Instagram-style).
 
 ### 🔥 V2.0 — Relationship Engagement System
 
@@ -49,8 +67,9 @@ A daily-companion layer where every feature feeds one shared engagement loop (st
 | **Frontend** | React 19 + Vite, React Router, Axios, Socket.io-client, WebRTC |
 | **Backend** | Node.js, Express 5, Socket.io |
 | **Database** | MongoDB (Mongoose 9) — MongoDB Atlas |
-| **Media storage** | Cloudinary (avatars + chat media) |
-| **Email** | Brevo (transactional — OTP, password reset) |
+| **Media storage** | Cloudinary (avatars, chat media, gallery, Moments) |
+| **Email** | Multi-provider HTTP (Mailjet / SendGrid / Brevo) + SMTP — env-routable |
+| **Push** | Web Push (VAPID) — opt-in browser/PWA notifications |
 | **AI** | Groq SDK (`llama-3.3-70b-versatile`) |
 | **Auth** | JWT (bcrypt password hashing) |
 | **Hosting** | Frontend → Vercel · Backend → Render |
@@ -75,9 +94,14 @@ couple-care/
 │       │   ├── couples/      # pairing, partner profile, unmatch
 │       │   ├── chat/         # messages, media upload, socket signaling, calls
 │       │   ├── moods/  memories/  histories/  dashboard/
-│       │   ├── ai/           # Groq-powered insights
-│       │   ├── notifications/ # real-time + scheduled
-│       │   ├── security/     # email (Brevo), tokens, password reset
+│       │   ├── ai/           # Groq-powered insights + shared AI context
+│       │   ├── engagement/   # streak/XP/achievements backbone
+│       │   ├── bucket/  letters/  coach/  story/  sleep/  surprise/  # V2.0 features
+│       │   ├── moments/      # private Instagram-style stories
+│       │   ├── gallery/  profile/  # Profile Ecosystem (media + read-only aggregator)
+│       │   ├── notifications/ # real-time + scheduled (cron)
+│       │   ├── push/         # web push (VAPID) fan-out
+│       │   ├── security/     # email (multi-provider), tokens, password reset
 │       │   └── calls/        # WebRTC call history
 │       └── utils/            # realtime registry, jwt, helpers
 │
@@ -125,17 +149,30 @@ FRONTEND_URL=http://localhost:5173     # CORS origin
 APP_URL=http://localhost:5173          # FRONTEND origin used in email links
 
 GROQ_API_KEY=...
-BREVO_API_KEY=...
-EMAIL_FROM=noreply@yourdomain.com      # must be a Brevo-VERIFIED sender
+
+# Email — multi-provider, env-routable (see note below)
+EMAIL_FROM=noreply@yourdomain.com      # must be a VERIFIED sender for whichever provider
+EMAIL_PROVIDER=auto                    # auto | mailjet | sendgrid | brevo | smtp | smtp_first
+MAILJET_API_KEY=...                    # recommended on Render (free, HTTP API)
+MAILJET_SECRET_KEY=...
+SENDGRID_API_KEY=...                   # optional alternative HTTP provider
+BREVO_API_KEY=...                      # optional HTTP provider / fallback
 
 CLOUDINARY_CLOUD_NAME=...              # exact cloud name from Cloudinary dashboard
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
+
+# Web push (optional — gracefully disabled if unset)
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+VAPID_SUBJECT=mailto:you@yourdomain.com
 ```
 
 > ⚠️ **All three `CLOUDINARY_*` values must come from the same Cloudinary account**, and `CLOUDINARY_CLOUD_NAME` must be your **actual** cloud name (not the project name) — otherwise uploads fail with `Invalid cloud_name`.
 >
-> ⚠️ **`APP_URL` must be the frontend origin** (it builds password-reset links), and **`EMAIL_FROM` must be a Brevo-verified sender** or OTP/reset emails won't send.
+> ⚠️ **`APP_URL` must be the frontend origin** (it builds password-reset links), and **`EMAIL_FROM` must be a verified sender** or OTP/reset emails won't send.
+>
+> 📧 **Email is multi-provider and env-routable.** Provider order is driven by `EMAIL_PROVIDER` (default `auto` = Mailjet → SendGrid → Brevo → SMTP, first configured wins). **Render blocks outbound SMTP ports**, so in production use an HTTP-API provider (Mailjet/SendGrid/Brevo), not raw SMTP.
 
 The server validates required env vars on boot (`MONGO_URI` / `JWT_SECRET` are fatal; the rest warn).
 
@@ -199,8 +236,8 @@ JWT is stored in `localStorage` and attached as `Authorization: Bearer <token>`.
 | **Vercel** | Frontend | Auto-deploys on push to `master`. Set `VITE_API_URL` (+ optional `VITE_TURN_*`). |
 | **Render** | Backend | Auto-deploys on push to `master`. Set all backend env vars above. WebSocket-enabled. |
 | **MongoDB Atlas** | Database | Connection string → `MONGO_URI`. |
-| **Cloudinary** | Media | Avatars + chat media. |
-| **Brevo** | Email | OTP + password reset; sender must be verified. |
+| **Cloudinary** | Media | Avatars, chat media, gallery, Moments. |
+| **Mailjet / SendGrid / Brevo** | Email | OTP + password reset via HTTP API (SMTP is blocked on Render); sender must be verified. |
 
 Both apps deploy from the same repo by pushing to `master`.
 

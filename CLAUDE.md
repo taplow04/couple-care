@@ -32,11 +32,24 @@ JWT_SECRET=
 FRONTEND_URL=http://localhost:5173   # CORS origin
 APP_URL=http://localhost:5173        # FRONTEND origin used to build email links
 GROQ_API_KEY=
-BREVO_API_KEY=
-EMAIL_FROM=                          # must be a Brevo-verified sender
+
+# Email — multi-provider, env-routable (see "Email transport" gotcha below)
+EMAIL_FROM=                          # must be a VERIFIED sender for the chosen provider
+EMAIL_PROVIDER=auto                  # auto | mailjet | sendgrid | brevo | smtp | smtp_first
+MAILJET_API_KEY=                     # recommended on Render (HTTP API)
+MAILJET_SECRET_KEY=
+SENDGRID_API_KEY=                    # optional HTTP provider
+BREVO_API_KEY=                       # optional HTTP provider / fallback
+# SMTP_HOST= SMTP_USER= SMTP_PASS=   # SMTP path — does NOT work on Render (ports blocked)
+
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+
+# Web push (optional — gracefully disabled with a warning if unset)
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=                       # e.g. mailto:you@domain.com
 ```
 
 ---
@@ -51,7 +64,7 @@ CLOUDINARY_API_SECRET=
 - `*.controller.js` — HTTP handler (calls service, sends JSON)
 - `*.routes.js` — Express router (auth middleware, validators, rate limiting)
 
-**Modules**: `auth`, `users`, `couples`, `chat`, `moods`, `memories`, `histories`, `dashboard`, `ai`, `notifications`, `security`, `calls`
+**Modules**: `auth`, `users`, `couples`, `chat`, `moods`, `memories`, `histories`, `dashboard`, `ai`, `notifications`, `security`, `calls`, `push` (web push), `engagement` + V2 features (`bucket`, `letters`, `coach`, `story`, `sleep`, `surprise`), Profile Ecosystem (`gallery`, `profile`), and `moments` (private stories)
 
 ### Key backend behaviours
 
@@ -310,7 +323,8 @@ Mobile-first CSS: base at 390px, breakpoint at `768px` for tablet/desktop.
 - **Cloudinary config is centralized** in `config/cloudinary.js` (single `cloudinary.config()`, exports `cloudinary.isConfigured()`). Avatar upload (`users.controller`) and chat media (`chat.media.controller`) both import it. Don't re-`config()` per-module. Both controllers short-circuit with a clear **500 "not configured"** when creds are missing, and on an actual Cloudinary throw return a **502 with Cloudinary's real message** (e.g. `Invalid cloud_name`) so the failing field is obvious. They also log `[cloudinary] … failed: <msg>`.
 - **All three `CLOUDINARY_*` must belong to the same account**, and `CLOUDINARY_CLOUD_NAME` must be the **actual Cloudinary cloud name** (from the dashboard) — NOT the project name. Setting it to `couple-care` caused every upload to 502 with `Invalid cloud_name` in production. This is an ops/env issue, not code.
 - **Frontend media upload must NOT set `Content-Type` manually** (`chat.service.uploadChatMedia`). With a `FormData` body the browser sets `multipart/form-data` **with the boundary**; hardcoding the header drops the boundary and the server can't parse the file. Let axios/browser set it. (`uploadPhoto` uses base64 JSON, so it's unaffected.)
-- **`APP_URL` must be the FRONTEND origin** (Vercel) — it builds email links (`/reset-password?token=`, `/verify-email?token=`). `EMAIL_FROM` must be a Brevo-verified sender or OTP/reset emails silently fail. `forgotPassword` swallows Brevo errors and always returns generic success (no email enumeration); check server logs for `[email]` failures.
+- **`APP_URL` must be the FRONTEND origin** (Vercel) — it builds email links (`/reset-password?token=`, `/verify-email?token=`). `EMAIL_FROM` must be a sender verified with the active provider or OTP/reset emails silently fail. `forgotPassword` swallows email errors and always returns generic success (no email enumeration); check server logs for `[email]` failures.
+- **Email transport is multi-provider + env-routable** (`security/email.transport.js`). `sendEmail` tries providers in order and resolves on the first that delivers; `EMAIL_PROVIDER` picks the order (`auto` = Mailjet → SendGrid → Brevo → SMTP, first *configured* wins; or pin one: `mailjet`/`sendgrid`/`brevo`/`smtp`/`smtp_first`). **Render blocks outbound SMTP ports** — use an HTTP-API provider (Mailjet/SendGrid/Brevo) in production, never raw SMTP. `email.service.js` builds the OTP/reset messages and calls this transport. Startup logs a masked `emailConfigSummary` (provider order + which keys are set). Each provider is "skipped" when its keys are unset, so leaving extra `*_API_KEY`s empty is safe.
 - **First-name display**: use `frontend/src/utils/getFirstName.js` for all partner/user name *display* (chat header, dashboard, call screens, journey, mood insights, partner profile). Full name is still stored and edited (`EditProfile`/`ProfileForm`). Notification/AI prompt text already uses first names server-side.
 - **Branding**: `index.html` (title/meta/OG), `public/manifest.webmanifest`, heart `public/favicon.svg`, and PNG icons (`icon-192/512`, `icon-maskable-512`, `apple-touch-icon`) generated by `frontend/scripts/generate-icons.cjs` (pure-Node, no deps — rerun to regenerate).
 - **Env validation at boot** (`server.js`): missing `MONGO_URI`/`JWT_SECRET` exits; missing email/Cloudinary/Groq vars warn.
