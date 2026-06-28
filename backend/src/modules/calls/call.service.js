@@ -62,6 +62,18 @@ const finalizeCall = async (callId, status) => {
 
   await call.save();
 
+  // CCIE — a completed call feeds the couple's health (calls/video inputs).
+  // Best-effort + lazy-required so history/intelligence can never break signaling.
+  if (status === "completed") {
+    try {
+      require("../../intelligence/events/bus").publish("CALL_COMPLETED", {
+        coupleId: call.coupleId,
+      });
+    } catch {
+      /* intelligence optional */
+    }
+  }
+
   return call;
 };
 

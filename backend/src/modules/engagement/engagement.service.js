@@ -253,6 +253,18 @@ const recordActivity = async (coupleId, userId, type, meta = {}) => {
     });
     emitToCouple(couple, "engagement:update", summary);
 
+    // CCIE — publish a couple-activity event so the intelligence engines
+    // recompute incrementally (debounced). Lazy-required + best-effort: the brain
+    // must never break the action that triggered it.
+    try {
+      require("../../intelligence/events/bus").publish("COUPLE_ACTIVITY", {
+        coupleId,
+        type,
+      });
+    } catch {
+      /* intelligence optional */
+    }
+
     if (milestone) {
       await notifyBoth(couple, {
         title: `🔥 ${milestone}-day streak!`,

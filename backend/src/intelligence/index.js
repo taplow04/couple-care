@@ -41,8 +41,33 @@ const getHealth = async (coupleId, now = Date.now()) => {
   return result;
 };
 
+// Trust & Growth reuse the health gather (it already builds their feature sets),
+// then run their own engines + history trend + snapshot.
+const getTrust = async (coupleId, now = Date.now()) => {
+  const feats = await features.gatherHealthFeatures(coupleId, now);
+  const history = await learning.getHistory(coupleId, "trust", 14);
+  feats.trustFeatures.historyDays = history.length;
+  const result = trustEngine.score(feats.trustFeatures, getConfig(), history[0]?.breakdown || null);
+  result.trend = learning.trend(result.score, history.map((h) => h.score).filter((n) => typeof n === "number"));
+  learning.recordSnapshot("couple", coupleId, "trust", dayKey(now), result);
+  return result;
+};
+
+const getGrowth = async (coupleId, now = Date.now()) => {
+  const feats = await features.gatherHealthFeatures(coupleId, now);
+  const history = await learning.getHistory(coupleId, "growth", 14);
+  feats.growthFeatures.historyDays = history.length;
+  const result = growthEngine.score(feats.growthFeatures, getConfig(), history[0]?.breakdown || null);
+  result.trend = learning.trend(result.score, history.map((h) => h.score).filter((n) => typeof n === "number"));
+  result.velocity = result.trend.velocity;
+  learning.recordSnapshot("couple", coupleId, "growth", dayKey(now), result);
+  return result;
+};
+
 module.exports = {
   getHealth,
+  getTrust,
+  getGrowth,
   // pure engines (for tests / future facades)
   engines: {
     health: healthEngine,

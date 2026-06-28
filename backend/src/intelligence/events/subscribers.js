@@ -56,6 +56,9 @@ const register = () => {
   for (const event of Object.keys(EVENT_ENGINES)) {
     bus.on(event, (payload) => scheduleRecompute(payload?.coupleId));
   }
+  // Universal couple-activity event (published from engagement.recordActivity,
+  // the choke-point every couple feature funnels through) + completed calls.
+  bus.on("COUPLE_ACTIVITY", (payload) => scheduleRecompute(payload?.coupleId));
   console.log("[ccie] event subscribers registered");
 };
 

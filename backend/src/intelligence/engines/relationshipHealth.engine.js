@@ -26,6 +26,9 @@ const {
 const confidenceEngine = require("../meta/confidence.engine");
 const contextEngine = require("../meta/context.engine");
 const explainEngine = require("../meta/explainability.engine");
+const antiGaming = require("../meta/antiGaming.engine");
+const trustEngine = require("./trust.engine");
+const growthEngine = require("./growth.engine");
 
 // ── component sub-scores (each 0–100) — identical to the original service ──
 
@@ -150,23 +153,73 @@ const score = (features, cfg, prevBreakdown = null) => {
   const t = cfg.thresholds;
   const w = cfg.weights.relationshipHealth;
   const now = features.now ?? Date.now();
-  const { moods = [], memories = [], messages = [], moodsA = [], moodsB = [], partnerIds = [], daysTogether = 0 } = features;
+  const { memories = [], moodsA = [], moodsB = [], partnerIds = [], daysTogether = 0 } = features;
 
+  // ── Anti-gaming: sanitise before scoring (collapse spam bursts, cap per-day,
+  // drop low-content). No-op on clean/varied data, so data-less + genuine
+  // couples are unchanged; only manipulation is dampened. ──
+  const { messages } = antiGaming.sanitizeMessages(features.messages || [], cfg);
+  const moods = antiGaming.sanitizeMoods(features.moods || [], cfg);
+  const moodsAS = antiGaming.sanitizeMoods(moodsA, cfg);
+  const moodsBS = antiGaming.sanitizeMoods(moodsB, cfg);
+
+  // ── classic 7 (always present — neutral baseline when empty) ──
   const breakdown = {
     moodHealth: Math.round(moodHealthScore(moods, now, t)),
     communication: Math.round(communicationScore(messages, now, t)),
     memory: Math.round(memoryScore(memories, now, t)),
     longevity: Math.round(longevityScore(daysTogether, t)),
-    compatibility: Math.round(compatibilityScore(moodsA, moodsB, now, t)),
+    compatibility: Math.round(compatibilityScore(moodsAS, moodsBS, now, t)),
     engagement: Math.round(engagementScore(moods, memories, messages, partnerIds, now, t)),
     aiAnalysis: Math.round(aiTrendScore(moods, memories, messages, now)),
   };
 
-  // Weighted sum, normalised by the sum of the weights of components in play
-  // (Phase A: the 7 classic, whose weights sum to 1.0 → identical to original).
+  // ── new CCIE inputs — ADDITIVE: only counted when the data exists, so a couple
+  // with no calls/sleep/etc. is scored on what it has (graceful degrade); rich
+  // couples blend the new signals in. Classic weights are untouched. ──
+  const add = (key, val) => {
+    if (val != null && !Number.isNaN(val)) breakdown[key] = Math.round(clamp(val));
+  };
+  add("responsiveness", features.responsiveness);
+  if (features.callCount > 0) add("calls", saturate(features.callCount, t.saturation.calls));
+  if (features.videoCount > 0) add("video", saturate(features.videoCount, t.saturation.videoCalls));
+  if (features.voiceCount > 0) add("voice", saturate(features.voiceCount, t.saturation.voiceNotes));
+  if (features.storyCount > 0) add("stories", saturate(features.storyCount, t.saturation.stories));
+  add("sleep", features.sleepSyncPct);
+  if (features.bucketCompleted > 0) add("bucket", saturate(features.bucketCompleted, t.saturation.bucketCompleted));
+  if (features.aiCoachCount > 0) add("aiCoach", saturate(features.aiCoachCount, t.saturation.aiSessions));
+  if (features.achievementCount > 0) add("achievements", saturate(features.achievementCount, t.saturation.achievements));
+  add("conflictRecovery", features.conflictRecoveryPct);
+  if (features.trustFeatures && (features.trustFeatures.myMsgs + features.trustFeatures.partnerMsgs) > 0) {
+    add("trust", trustEngine.score(features.trustFeatures, cfg).score);
+  }
+  if (features.growthFeatures) {
+    const g = features.growthFeatures;
+    if ((g.achievements || 0) + (g.bucketCompleted || 0) + (g.memories || 0) + (g.stories || 0) > 0) {
+      add("growth", growthEngine.score(g, cfg).score);
+    }
+  }
+
+  // ── Context: detect scenario tags + apply component modifiers BEFORE weighting
+  // (this is how context "modifies all algorithms"). Established/no-match ⇒ 1.0. ──
+  const positivity = positivityRatio(moods);
+  const ctx = contextEngine.detect({
+    daysTogether,
+    memoryCount: memories.length,
+    callCount: features.callCount || 0,
+    videoCount: features.videoCount || 0,
+    positivity: positivity ?? null,
+    activityVsBaseline: features.activityVsBaseline ?? null,
+    memoryCount7: memories.filter((m) => new Date(m.memoryDate || m.createdAt).getTime() >= daysAgo(now, 7)).length,
+  });
+  const modded = contextEngine.applyModifiers(breakdown, ctx.modifiers, (v) => clamp(v));
+  const finalBreakdown = {};
+  for (const k of Object.keys(modded)) finalBreakdown[k] = Math.round(modded[k]);
+
+  // Weighted sum, normalised by the sum of the weights of components in play.
   let weighted = 0;
   let activeWeight = 0;
-  for (const [k, sub] of Object.entries(breakdown)) {
+  for (const [k, sub] of Object.entries(finalBreakdown)) {
     const cw = w[k] || 0;
     if (cw <= 0) continue;
     weighted += sub * cw;
@@ -189,26 +242,15 @@ const score = (features, cfg, prevBreakdown = null) => {
     cfg,
   );
 
-  const positivity = positivityRatio(moods);
-  const context = contextEngine.detect({
-    daysTogether,
-    memoryCount: memories.length,
-    callCount: features.callCount || 0,
-    videoCount: features.videoCount || 0,
-    positivity: positivity ?? null,
-    activityVsBaseline: features.activityVsBaseline ?? null,
-    memoryCount7: memories.filter((m) => new Date(m.memoryDate || m.createdAt).getTime() >= daysAgo(now, 7)).length,
-  });
-
-  const explain = explainEngine.build(breakdown, w, prevBreakdown);
+  const explain = explainEngine.build(finalBreakdown, w, prevBreakdown);
 
   return {
     score: finalScore,
     level,
-    breakdown,
+    breakdown: finalBreakdown,
     confidence: confidence.value,
     confidenceLevel: confidence.level,
-    context: { tags: context.tags, labels: context.labels },
+    context: { tags: ctx.tags, labels: ctx.labels },
     factors: {
       topPositives: explain.topPositives,
       areasForImprovement: explain.areasForImprovement,

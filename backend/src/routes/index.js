@@ -36,6 +36,7 @@ const momentRoutes = require("../modules/moments/moment.routes");
 const dailyMomentRoutes = require("../modules/dailyMoment/dailyMoment.routes");
 const growthRoutes = require("../modules/growth/growth.routes");
 const lifecycleRoutes = require("../modules/lifecycle/lifecycle.routes");
+const intelligenceRoutes = require("../modules/intelligence/intelligence.routes");
 
 router.use("/auth", authRoutes);
 
@@ -72,6 +73,7 @@ router.use("/moments", momentRoutes);
 router.use("/daily-moment", dailyMomentRoutes);
 router.use("/growth", growthRoutes);
 router.use("/lifecycle", lifecycleRoutes);
+router.use("/intelligence", intelligenceRoutes);
 
 router.get("/", (req, res) => {
   res.json({

@@ -21,20 +21,23 @@ module.exports = {
     compatibility: 0.1,
     engagement: 0.1,
     aiAnalysis: 0.1, // deterministic last-7-vs-prior-7 trend (NOT an LLM call)
-    // ── new CCIE inputs (0 in Phase A → no score change; set in Phase B) ──
-    responsiveness: 0,
-    calls: 0,
-    video: 0,
-    voice: 0,
-    stories: 0,
-    sleep: 0,
-    bucket: 0,
-    aiCoach: 0,
-    journey: 0,
-    achievements: 0,
-    conflictRecovery: 0,
-    trust: 0,
-    growth: 0,
+    // ── new CCIE inputs (ADDITIVE — classic weights above are untouched). A
+    // component only counts when the couple actually has that data, so a
+    // data-less couple is scored exactly as before; richer couples blend these
+    // in. Tune freely; the engine normalises by the active weight sum. ──
+    responsiveness: 0.05,
+    calls: 0.04,
+    video: 0.03,
+    voice: 0.02,
+    stories: 0.04,
+    sleep: 0.03,
+    bucket: 0.03,
+    aiCoach: 0.02,
+    journey: 0, // folded into longevity for now
+    achievements: 0.03,
+    conflictRecovery: 0.03,
+    trust: 0.06,
+    growth: 0.06,
   },
 
   trust: {
