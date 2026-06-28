@@ -85,9 +85,12 @@ function App() {
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/privacy" element={<Privacy />} />
 
+            {/* Stage-adaptive home — reachable in every lifecycle stage
+                (preparing / growing / healing). The component switches on stage. */}
+            <Route path="/dashboard" element={<Dashboard />} />
+
             {/* Couple-gated features — require a fully connected partner. */}
             <Route element={<RequireCouple />}>
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/moods" element={<Moods />} />
               <Route path="/memories" element={<Memories />} />
               <Route path="/chat" element={<Chat />} />

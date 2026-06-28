@@ -1,5 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useStage } from "../../../hooks/useStage";
+import { STAGE } from "../../../utils/stage";
 import { getFirstName } from "../../../utils/getFirstName";
 import "./BottomNav.css";
 
@@ -44,63 +46,60 @@ const AICenterIcon = () => (
   </svg>
 );
 
+// Tab sets per lifecycle stage. Phases add the preparing/healing destinations;
+// every "to" here points to a route that exists for that stage.
+const NAV_BY_STAGE = {
+  [STAGE.GROWING]: [
+    { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/moods", label: "Mood", Icon: MoodIcon },
+    { to: "/ai-center", label: "AI Center", Icon: AICenterIcon },
+    { to: "/journey", label: "Journey", Icon: JourneyIcon },
+    { to: "/profile", label: "Profile", Icon: "avatar" },
+  ],
+  // Solo stages start minimal in Phase 0 (only routes that exist); Phases 1 & 2
+  // add Growth / Journal / Coach (preparing) and Healing / Reflect / Recovery
+  // Coach (healing) destinations here as those routes ship.
+  [STAGE.PREPARING]: [
+    { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/profile", label: "Profile", Icon: "avatar" },
+  ],
+  [STAGE.HEALING]: [
+    { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/profile", label: "Profile", Icon: "avatar" },
+  ],
+};
+
 const BottomNav = () => {
   const { user } = useAuth();
+  const { stage } = useStage();
   const photo = user?.profilePhoto;
   const initial = user?.name ? user.name[0].toUpperCase() : "♥";
 
+  const items = NAV_BY_STAGE[stage] || NAV_BY_STAGE[STAGE.GROWING];
+
   return (
     <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
-      <NavLink
-        to="/dashboard"
-        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
-        aria-label="Home"
-      >
-        <span className="bottom-nav-icon"><HomeIcon /></span>
-        <span className="bottom-nav-label">Home</span>
-      </NavLink>
-
-      <NavLink
-        to="/moods"
-        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
-        aria-label="Mood"
-      >
-        <span className="bottom-nav-icon"><MoodIcon /></span>
-        <span className="bottom-nav-label">Mood</span>
-      </NavLink>
-
-      <NavLink
-        to="/ai-center"
-        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
-        aria-label="AI Center"
-      >
-        <span className="bottom-nav-icon"><AICenterIcon /></span>
-        <span className="bottom-nav-label">AI Center</span>
-      </NavLink>
-
-      <NavLink
-        to="/journey"
-        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
-        aria-label="Journey"
-      >
-        <span className="bottom-nav-icon"><JourneyIcon /></span>
-        <span className="bottom-nav-label">Journey</span>
-      </NavLink>
-
-      <NavLink
-        to="/profile"
-        className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
-        aria-label="Profile"
-      >
-        <span className="bottom-nav-icon bottom-nav-avatar">
-          {photo ? (
-            <img src={photo} alt={getFirstName(user?.name, "You")} />
+      {items.map(({ to, label, Icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          className={({ isActive }) => `bottom-nav-item${isActive ? " bottom-nav-item--active" : ""}`}
+          aria-label={label}
+        >
+          {Icon === "avatar" ? (
+            <span className="bottom-nav-icon bottom-nav-avatar">
+              {photo ? (
+                <img src={photo} alt={getFirstName(user?.name, "You")} />
+              ) : (
+                <span className="bottom-nav-avatar__initial">{initial}</span>
+              )}
+            </span>
           ) : (
-            <span className="bottom-nav-avatar__initial">{initial}</span>
+            <span className="bottom-nav-icon"><Icon /></span>
           )}
-        </span>
-        <span className="bottom-nav-label">Profile</span>
-      </NavLink>
+          <span className="bottom-nav-label">{label}</span>
+        </NavLink>
+      ))}
     </nav>
   );
 };

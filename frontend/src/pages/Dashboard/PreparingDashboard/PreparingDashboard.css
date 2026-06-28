@@ -1,0 +1,133 @@
+.prep-dash {
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.prep-dash__content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.prep-dash__header {
+  padding: 8px 4px 0;
+}
+
+.prep-dash__badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--success);
+  background: rgba(50, 195, 108, 0.12);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.prep-dash__greeting {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.prep-dash__sub {
+  font-size: 0.96rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.prep-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 22px 20px;
+}
+
+.prep-card--connect {
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary-light), var(--secondary-light));
+  border: 1px solid rgba(255, 92, 138, 0.16);
+}
+
+.prep-card__icon {
+  font-size: 2.4rem;
+  margin-bottom: 6px;
+}
+
+.prep-card__title {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.prep-card__text {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
+.prep-card__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.prep-btn {
+  flex: 1 1 140px;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.prep-btn--primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(255, 92, 138, 0.32);
+}
+
+.prep-btn--primary:active {
+  transform: scale(0.98);
+}
+
+.prep-btn--ghost {
+  background: var(--card);
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+}
+
+.prep-soon__list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.prep-soon__list li {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+@media (min-width: 768px) {
+  .prep-dash__greeting {
+    font-size: 2rem;
+  }
+}
