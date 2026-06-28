@@ -46,6 +46,23 @@ const AICenterIcon = () => (
   </svg>
 );
 
+const GrowthIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M12 21V11" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    <path d="M12 13C12 13 12 8 8 6C5.5 4.75 4 5 4 5C4 5 3.9 7 5 9C6.4 11.75 12 13 12 13Z"
+      fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+    <path d="M12 11C12 11 12 7 15.5 5.5C18 4.4 20 5 20 5C20 5 19.7 7.5 18 9.5C16.2 11.6 12 11 12 11Z"
+      fill="currentColor" opacity="0.12" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+  </svg>
+);
+
+const JournalIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <rect x="5" y="3.5" width="14" height="17" rx="2.2" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M8.5 8H15.5M8.5 11.5H15.5M8.5 15H13" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
+
 // Tab sets per lifecycle stage. Phases add the preparing/healing destinations;
 // every "to" here points to a route that exists for that stage.
 const NAV_BY_STAGE = {
@@ -56,15 +73,18 @@ const NAV_BY_STAGE = {
     { to: "/journey", label: "Journey", Icon: JourneyIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
-  // Solo stages start minimal in Phase 0 (only routes that exist); Phases 1 & 2
-  // add Growth / Journal / Coach (preparing) and Healing / Reflect / Recovery
-  // Coach (healing) destinations here as those routes ship.
   [STAGE.PREPARING]: [
     { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/growth", label: "Growth", Icon: GrowthIcon },
+    { to: "/ai-coach", label: "Coach", Icon: AICenterIcon },
+    { to: "/journal", label: "Journal", Icon: JournalIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
+  // Healing destinations (/healing, /recovery-coach, /reflect) ship in Phase 2.
   [STAGE.HEALING]: [
     { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/journal", label: "Journal", Icon: JournalIcon },
+    { to: "/ai-coach", label: "Coach", Icon: AICenterIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
 };

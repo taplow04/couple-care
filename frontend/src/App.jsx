@@ -43,6 +43,11 @@ const TrustCenter = lazy(() => import("./pages/TrustCenter/TrustCenter"));
 const RelationshipProfile = lazy(() => import("./pages/RelationshipProfile/RelationshipProfile"));
 const RelationshipPassport = lazy(() => import("./pages/RelationshipPassport/RelationshipPassport"));
 
+// Stage 1 (Preparing) + shared self-growth surfaces — solo, no couple needed.
+const GrowthHub = lazy(() => import("./pages/Growth/GrowthHub/GrowthHub"));
+const JournalPage = lazy(() => import("./pages/Journal/JournalPage/JournalPage"));
+const PrepCoachPage = lazy(() => import("./pages/Growth/PrepCoachPage/PrepCoachPage"));
+
 function App() {
   return (
     <BrowserRouter>
@@ -88,6 +93,12 @@ function App() {
             {/* Stage-adaptive home — reachable in every lifecycle stage
                 (preparing / growing / healing). The component switches on stage. */}
             <Route path="/dashboard" element={<Dashboard />} />
+
+            {/* Self-growth surfaces — solo (Stage 1 Preparing & Stage 3 Healing).
+                Personal, so reachable without a partner. */}
+            <Route path="/growth" element={<GrowthHub />} />
+            <Route path="/journal" element={<JournalPage />} />
+            <Route path="/ai-coach" element={<PrepCoachPage />} />
 
             {/* Couple-gated features — require a fully connected partner. */}
             <Route element={<RequireCouple />}>

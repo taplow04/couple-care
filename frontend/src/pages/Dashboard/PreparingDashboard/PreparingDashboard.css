@@ -126,6 +126,100 @@
   padding: 10px 12px;
 }
 
+/* ── AI tip ── */
+.prep-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: linear-gradient(135deg, var(--secondary-light), var(--primary-light));
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.prep-tip__icon {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+.prep-tip__label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--secondary);
+  margin-bottom: 3px;
+}
+.prep-tip__text {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text);
+  margin: 0;
+}
+
+/* ── Mood line ── */
+.prep-mood__line {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.prep-mood__emoji {
+  font-size: 1.3rem;
+}
+.prep-mood__empty {
+  font-style: italic;
+}
+
+/* ── Quote ── */
+.prep-quote {
+  margin: 0;
+  background: var(--card);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.5;
+  box-shadow: var(--shadow-sm);
+}
+.prep-quote cite {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* ── Quick actions ── */
+.prep-quick {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.prep-quick__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.prep-quick__item span {
+  font-size: 1.4rem;
+}
+.prep-quick__item:active {
+  transform: scale(0.96);
+}
+
 @media (min-width: 768px) {
   .prep-dash__greeting {
     font-size: 2rem;

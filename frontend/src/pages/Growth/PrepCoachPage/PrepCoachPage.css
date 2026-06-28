@@ -1,0 +1,19 @@
+.prep-coach-page {
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.prep-coach-page__body {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px 12px 0;
+}
+
+.prep-coach-page__disclaimer {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+  text-align: center;
+  margin: 14px 6px 0;
+}

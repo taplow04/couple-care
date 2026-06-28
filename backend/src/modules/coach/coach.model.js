@@ -16,10 +16,12 @@ const messageSchema = new mongoose.Schema(
 
 const coachConversationSchema = new mongoose.Schema(
   {
+    // Null for solo coaching threads (Stage 1 Preparation Coach / Stage 3
+    // Recovery Coach). Set for Stage 2 couple coaching.
     coupleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Couple",
-      required: true,
+      default: null,
       index: true,
     },
 

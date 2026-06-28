@@ -34,6 +34,7 @@ const galleryRoutes = require("../modules/gallery/gallery.routes");
 const profileRoutes = require("../modules/profile/profile.routes");
 const momentRoutes = require("../modules/moments/moment.routes");
 const dailyMomentRoutes = require("../modules/dailyMoment/dailyMoment.routes");
+const growthRoutes = require("../modules/growth/growth.routes");
 
 router.use("/auth", authRoutes);
 
@@ -68,6 +69,7 @@ router.use("/gallery", galleryRoutes);
 router.use("/profile", profileRoutes);
 router.use("/moments", momentRoutes);
 router.use("/daily-moment", dailyMomentRoutes);
+router.use("/growth", growthRoutes);
 
 router.get("/", (req, res) => {
   res.json({

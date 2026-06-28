@@ -7,7 +7,7 @@ import {
 } from "../../../services/coach.service";
 import "./CoachChat.css";
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
   "We had an argument 😔",
   "Suggest a date idea 💡",
   "How can we communicate better?",
@@ -15,7 +15,12 @@ const SUGGESTIONS = [
   "My partner feels stressed",
 ];
 
-const CoachChat = () => {
+const CoachChat = ({
+  title = "🤖 AI Coach",
+  subtitle = "Talk through anything — judgment-free",
+  suggestions = DEFAULT_SUGGESTIONS,
+  emptyText = "Ask your relationship coach anything. It knows your journey and is here to help.",
+}) => {
   const [conversations, setConversations] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -116,8 +121,8 @@ const CoachChat = () => {
     <section className="coach">
       <div className="coach__head">
         <div>
-          <h2 className="coach__title">🤖 AI Coach</h2>
-          <p className="coach__sub">Talk through anything — judgment-free</p>
+          <h2 className="coach__title">{title}</h2>
+          <p className="coach__sub">{subtitle}</p>
         </div>
         <button className="coach__new" onClick={startNew}>＋ New</button>
       </div>
@@ -149,11 +154,9 @@ const CoachChat = () => {
         {messages.length === 0 && !sending && (
           <div className="coach__empty">
             <span className="coach__empty-emoji">💬</span>
-            <p className="coach__empty-text">
-              Ask your relationship coach anything. It knows your journey and is here to help.
-            </p>
+            <p className="coach__empty-text">{emptyText}</p>
             <div className="coach__suggestions">
-              {SUGGESTIONS.map((s) => (
+              {suggestions.map((s) => (
                 <button key={s} className="coach__suggestion" onClick={() => send(s)}>
                   {s}
                 </button>

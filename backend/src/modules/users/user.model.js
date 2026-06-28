@@ -76,6 +76,50 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    // ── Self-growth (Stage 1 "Preparing" + Stage 3 "Healing") ──
+    // Self-knowledge cards, cached from short in-app quizzes (growth.quizzes).
+    loveLanguage: {
+      type: String,
+      enum: [
+        "words_of_affirmation",
+        "quality_time",
+        "acts_of_service",
+        "physical_touch",
+        "receiving_gifts",
+        null,
+      ],
+      default: null,
+    },
+    attachmentStyle: {
+      type: String,
+      enum: ["secure", "anxious", "avoidant", "fearful_avoidant", null],
+      default: null,
+    },
+    // Relationship Readiness score (0–100), cached from the readiness quiz.
+    readinessScore: {
+      type: Number,
+      default: null,
+    },
+
+    // USER-scoped XP + streak for solo growth. The couple Engagement system is
+    // coupleId-keyed and can't hold solo progress, so personal growth tracks
+    // here (see growth.engagement.js). Reuses the same leveling math.
+    personalXp: {
+      type: Number,
+      default: 0,
+    },
+    growthStreak: {
+      current: { type: Number, default: 0 },
+      longest: { type: Number, default: 0 },
+      lastActiveDay: { type: String, default: null }, // UTC YYYY-MM-DD
+    },
+    // Unlocked personal-achievement keys (growth.achievements.catalog). Stored
+    // here (not the couple-keyed Achievement collection) since growth is solo.
+    growthAchievements: {
+      type: [String],
+      default: [],
+    },
+
     currentCoupleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Couple",
@@ -223,6 +267,46 @@ const userSchema = new mongoose.Schema(
         enum: ["private", "partner_only", "shared"],
         default: "partner_only",
       },
+
+      // ── Relationship Lifecycle (Stage 1 & 3) controls — all opt-in ──
+      // Permanent Relationship Summary of an ended relationship.
+      summaryVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Healing journal entries.
+      healingVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Recovery / healing progress figures.
+      recoveryVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // AI reflections (prep tips / recovery reflections).
+      aiReflectionVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Love language card.
+      loveLanguageVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // Attachment style card.
+      attachmentVisibility: {
+        type: String,
+        enum: ["private", "partner_only", "shared"],
+        default: "partner_only",
+      },
+      // NOTE: the private Growth Report is HARD-private (never exposed to any
+      // partner, current or future) — enforced in code, not via a setting.
     },
   },
   {

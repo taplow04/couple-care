@@ -23,6 +23,15 @@ const URL_FOR_TYPE = {
   moment_reaction: "/moments",
   couple_moment_ready: "/moments",
   daily_moment_ready: "/our-day",
+  // Relationship Lifecycle (Stage 1 Preparing + Stage 3 Healing)
+  growth_reminder: "/growth",
+  journal_reminder: "/journal",
+  challenge_ready: "/growth",
+  readiness_progress: "/growth",
+  relationship_ended: "/summary",
+  summary_ready: "/summary",
+  healing_checkin: "/dashboard",
+  reconnect_available: "/dashboard",
 };
 
 const createNotification = async (data) => {

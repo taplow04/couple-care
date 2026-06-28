@@ -1,10 +1,21 @@
 const CoachConversation = require("./coach.model");
 const User = require("../users/user.model");
 const { buildRelationshipContext, formatContext } = require("../ai/ai.context");
-const { buildCoachReplyPrompt } = require("../ai/ai.prompts");
+const {
+  buildPersonalContext,
+  formatPersonalContext,
+} = require("../ai/ai.context.personal");
+const {
+  buildCoachReplyPrompt,
+  buildPrepCoachPrompt,
+  buildRecoveryCoachPrompt,
+} = require("../ai/ai.prompts");
 const { generateChatResponse } = require("../ai/ai.engine");
 const { recordActivity } = require("../engagement/engagement.service");
 const { ACTIVITY_TYPES } = require("../engagement/engagement.constants");
+const { recordGrowthActivity } = require("../growth/growth.engagement");
+const { GROWTH_ACTIVITY } = require("../growth/growth.constants");
+const { resolveStage } = require("../users/stage.helper");
 
 const createError = (message, statusCode = 400) => {
   const error = new Error(message);
@@ -15,10 +26,42 @@ const createError = (message, statusCode = 400) => {
 // How many prior turns to feed the model (keeps token use bounded).
 const HISTORY_WINDOW = 12;
 
-const getCoupleId = async (userId) => {
+/**
+ * Resolve the coach persona for a user based on their lifecycle stage. The coach
+ * is stage-aware:
+ *   growing   → couple Relationship Coach (couple context) — unchanged behaviour
+ *   preparing → Relationship Preparation Coach (personal context)
+ *   healing   → Recovery Coach (personal context)
+ * Returns { coupleId, buildSystemPrompt(), recordEngagement() }.
+ */
+const resolveCoachPersona = async (userId) => {
   const user = await User.findById(userId).select("currentCoupleId");
-  if (!user?.currentCoupleId) throw createError("No active relationship", 400);
-  return user.currentCoupleId;
+  const { stage } = await resolveStage(user);
+
+  if (stage === "growing" && user?.currentCoupleId) {
+    return {
+      coupleId: user.currentCoupleId,
+      stage,
+      buildSystemPrompt: async () => {
+        const ctx = await buildRelationshipContext(userId);
+        return buildCoachReplyPrompt(formatContext(ctx));
+      },
+      recordEngagement: () =>
+        recordActivity(user.currentCoupleId, userId, ACTIVITY_TYPES.COACH, {}),
+    };
+  }
+
+  // Solo stages share the personal context; only the system prompt differs.
+  const buildSolo = stage === "healing" ? buildRecoveryCoachPrompt : buildPrepCoachPrompt;
+  return {
+    coupleId: null,
+    stage,
+    buildSystemPrompt: async () => {
+      const ctx = await buildPersonalContext(userId);
+      return buildSolo(formatPersonalContext(ctx));
+    },
+    recordEngagement: () => recordGrowthActivity(userId, GROWTH_ACTIVITY.COACH, {}),
+  };
 };
 
 const listConversations = async (userId) => {
@@ -39,8 +82,8 @@ const listConversations = async (userId) => {
 };
 
 const createConversation = async (userId) => {
-  const coupleId = await getCoupleId(userId);
-  return CoachConversation.create({ coupleId, userId, messages: [] });
+  const persona = await resolveCoachPersona(userId);
+  return CoachConversation.create({ coupleId: persona.coupleId, userId, messages: [] });
 };
 
 const getConversation = async (userId, id) => {
@@ -69,19 +112,22 @@ const titleFromText = (text) => {
 const sendMessage = async (userId, conversationId, text) => {
   if (!text?.trim()) throw createError("Message cannot be empty", 400);
 
-  const coupleId = await getCoupleId(userId);
+  const persona = await resolveCoachPersona(userId);
 
   let convo;
   if (conversationId) {
     convo = await CoachConversation.findOne({ _id: conversationId, userId });
     if (!convo) throw createError("Conversation not found", 404);
   } else {
-    convo = await CoachConversation.create({ coupleId, userId, messages: [] });
+    convo = await CoachConversation.create({
+      coupleId: persona.coupleId,
+      userId,
+      messages: [],
+    });
   }
 
-  // Build the system prompt from the live relationship context.
-  const ctx = await buildRelationshipContext(userId);
-  const systemPrompt = buildCoachReplyPrompt(formatContext(ctx));
+  // Build the stage-appropriate system prompt (couple / preparation / recovery).
+  const systemPrompt = await persona.buildSystemPrompt();
 
   const history = convo.messages
     .slice(-HISTORY_WINDOW)
@@ -101,10 +147,9 @@ const sendMessage = async (userId, conversationId, text) => {
   if (convo.title === "New conversation") convo.title = titleFromText(text);
   await convo.save();
 
-  // Talking with the coach counts toward engagement (unlocks "Growth Seekers").
-  await recordActivity(coupleId, userId, ACTIVITY_TYPES.COACH, {
-    conversationId: convo._id,
-  });
+  // Talking with the coach counts toward engagement (couple XP when growing,
+  // personal XP when preparing / healing).
+  await persona.recordEngagement();
 
   return {
     conversationId: convo._id,
