@@ -55,6 +55,124 @@
   border: 1px solid rgba(124, 92, 255, 0.16);
 }
 
+/* ── Tip ── */
+.heal-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: linear-gradient(135deg, var(--secondary-light), var(--primary-light));
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.heal-tip__icon { font-size: 1.4rem; }
+.heal-tip__text {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text);
+  margin: 0;
+}
+
+.heal-section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 4px 0 -4px 2px;
+}
+
+/* ── Mood line ── */
+.heal-mood__line {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.heal-mood__emoji { font-size: 1.3rem; }
+.heal-mood__empty { font-style: italic; }
+
+/* ── Link cards ── */
+.heal-link-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--card);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.heal-link-card:active { transform: scale(0.99); }
+.heal-link-card__icon { font-size: 1.5rem; }
+.heal-link-card__body { flex: 1; }
+.heal-link-card__title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.heal-link-card__sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.heal-link-card__chev {
+  font-size: 1.6rem;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* ── Summary card ── */
+.heal-summary-card {
+  width: 100%;
+  text-align: left;
+  background: linear-gradient(135deg, var(--secondary-light), var(--primary-light));
+  border: 1px solid rgba(124, 92, 255, 0.16);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.heal-summary-card:active { transform: scale(0.99); }
+.heal-summary-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.heal-summary-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.heal-summary-card__stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.heal-summary-card__stats strong {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.heal-summary-card__stats span {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.heal-summary-card__pending {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 .heal-card__title {
   font-size: 1.12rem;
   font-weight: 700;

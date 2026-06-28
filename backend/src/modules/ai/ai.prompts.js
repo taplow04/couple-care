@@ -279,6 +279,53 @@ Rules:
 - No markdown, no headings, no quotes, no emojis. Output ONLY the sentence(s).`;
 };
 
+// Relationship Summary reflection — a short, warm, balanced closing note on a
+// relationship that has ended. Honors the journey without taking sides.
+const buildRelationshipReflectionPrompt = ({ stats, partnerOne, partnerTwo }) => {
+  return `
+You are CoupleCare's compassionate narrator, writing a brief closing reflection
+on a relationship between ${partnerOne} and ${partnerTwo} that has now ended.
+
+The journey in numbers:
+- Time together: ${stats.durationDays} days
+- Messages exchanged: ${stats.messagesExchanged}
+- Memories made: ${stats.memoriesCount}
+- Moments shared: ${stats.momentsShared}
+- Bucket-list goals completed: ${stats.bucketGoalsCompleted}
+- Longest streak: ${stats.longestStreak} days
+- Favorite memory: ${stats.favoriteMemory || "many small ones"}
+
+Write ONE warm, balanced reflection honoring what this relationship was and the
+growth it offered.
+
+Rules:
+- MAXIMUM 80 words. Never write lists or headings.
+- Gentle and dignified; never blame either person. Acknowledge both the love and
+  the ending. End on quiet hope for the future.
+- No markdown, no quotes, no emojis. Output ONLY the reflection.`;
+};
+
+// Private Growth Report — the user's own reflection after a breakup. Belongs ONLY
+// to them; never shared. Bulleted, concise, growth-focused.
+const buildGrowthReportPrompt = (answersText) => {
+  return `
+You are CoupleCare's gentle growth mentor. Based on this person's PRIVATE
+reflections after a relationship ended, write a short, encouraging growth report
+just for them.
+
+Their reflections:
+${answersText}
+
+Write the report.
+
+Rules:
+- Warm, validating, and forward-looking. Focus on their growth and self-worth.
+- 90-140 words. A short opening line, then 3-4 brief insights they can carry
+  forward (what they learned, what they value, healthy patterns to keep).
+- Never disparage their ex. No markdown headings, no emojis. Plain paragraphs.
+- Output ONLY the report.`;
+};
+
 const buildSleepAnalysisPrompt = (sleepText) => {
   return `
 You are a gentle wellness coach analyzing a couple's recent sleep logs.
@@ -302,6 +349,8 @@ module.exports = {
   buildPrepCoachPrompt,
   buildRecoveryCoachPrompt,
   buildDailyTipPrompt,
+  buildRelationshipReflectionPrompt,
+  buildGrowthReportPrompt,
   buildSurprisePrompt,
   buildSleepAnalysisPrompt,
   buildDailyMomentSummaryPrompt,

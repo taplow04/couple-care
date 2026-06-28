@@ -70,6 +70,28 @@ const coupleSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // ── Relationship Summary (permanent, written once at unmatch) ──
+    // Archive-in-place: when a relationship ends we compute a denormalised
+    // stats snapshot + a short AI reflection and keep them forever (Stage 3
+    // "Growing After Goodbye"). No binary — only counts, a cover URL, and text.
+    endedAt: {
+      type: Date,
+      default: null,
+    },
+    summary: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    aiReflection: {
+      text: { type: String, default: "" },
+      status: { type: String, enum: ["pending", "ready", "failed"], default: "pending" },
+      generatedAt: { type: Date, default: null },
+    },
+    summaryFinalized: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

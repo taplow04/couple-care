@@ -63,6 +63,23 @@ const JournalIcon = () => (
   </svg>
 );
 
+const HealIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path d="M12 20S4 14 4 8.8A4.3 4.3 0 0 1 12 6.5 4.3 4.3 0 0 1 20 8.8C20 14 12 20 12 20Z"
+      fill="currentColor" opacity="0.13" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    <path d="M8.5 11.5H11L12.2 9L13.6 13.5L14.8 11.5H16" stroke="currentColor" strokeWidth="1.7"
+      strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ReflectIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="9" r="5" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="12" cy="9" r="1.6" fill="currentColor" />
+    <path d="M7 18C7 18 9 16 12 16C15 16 17 18 17 18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
+
 // Tab sets per lifecycle stage. Phases add the preparing/healing destinations;
 // every "to" here points to a route that exists for that stage.
 const NAV_BY_STAGE = {
@@ -80,11 +97,11 @@ const NAV_BY_STAGE = {
     { to: "/journal", label: "Journal", Icon: JournalIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
-  // Healing destinations (/healing, /recovery-coach, /reflect) ship in Phase 2.
   [STAGE.HEALING]: [
     { to: "/dashboard", label: "Home", Icon: HomeIcon },
-    { to: "/journal", label: "Journal", Icon: JournalIcon },
+    { to: "/growth", label: "Heal", Icon: HealIcon },
     { to: "/ai-coach", label: "Coach", Icon: AICenterIcon },
+    { to: "/journal", label: "Reflect", Icon: ReflectIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
 };

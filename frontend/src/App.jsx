@@ -48,6 +48,10 @@ const GrowthHub = lazy(() => import("./pages/Growth/GrowthHub/GrowthHub"));
 const JournalPage = lazy(() => import("./pages/Journal/JournalPage/JournalPage"));
 const PrepCoachPage = lazy(() => import("./pages/Growth/PrepCoachPage/PrepCoachPage"));
 
+// Stage 3 (Healing) surfaces — solo, no couple needed.
+const RelationshipSummaryPage = lazy(() => import("./pages/Summary/RelationshipSummaryPage/RelationshipSummaryPage"));
+const GrowthReportPage = lazy(() => import("./pages/GrowthReport/GrowthReportPage/GrowthReportPage"));
+
 function App() {
   return (
     <BrowserRouter>
@@ -99,6 +103,9 @@ function App() {
             <Route path="/growth" element={<GrowthHub />} />
             <Route path="/journal" element={<JournalPage />} />
             <Route path="/ai-coach" element={<PrepCoachPage />} />
+            {/* Stage 3 (Healing) — solo, reachable without a partner. */}
+            <Route path="/summary" element={<RelationshipSummaryPage />} />
+            <Route path="/growth-report" element={<GrowthReportPage />} />
 
             {/* Couple-gated features — require a fully connected partner. */}
             <Route element={<RequireCouple />}>

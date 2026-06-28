@@ -364,18 +364,45 @@ const unmatchPartner = async (userId) => {
   const partnerId = resolvePartnerId(couple, userId);
 
   couple.relationshipStatus = "broken_up";
+  couple.endedAt = new Date();
   await couple.save();
 
   const ids = [couple.partnerOneId, couple.partnerTwoId].filter(Boolean);
   await User.updateMany({ _id: { $in: ids } }, { currentCoupleId: null });
 
-  // Let the partner's app react immediately (gate back to onboarding).
+  // Let the partner's app react immediately (transition into Healing mode).
   if (partnerId) {
     try {
       emitToUser(partnerId, "couple:unmatched", { coupleId: couple._id });
     } catch {
       /* offline */
     }
+  }
+
+  // Compute the permanent Relationship Summary + AI reflection (fire-and-forget;
+  // must NEVER throw back into the unmatch path) and notify both partners.
+  try {
+    require("../lifecycle/lifecycle.summary.service")
+      .computeRelationshipSummary(couple._id)
+      .catch(() => {});
+  } catch {
+    /* lifecycle optional */
+  }
+
+  try {
+    const { createNotification } = require("../notifications/notification.service");
+    for (const id of ids) {
+      createNotification({
+        userId: id,
+        title: "A chapter has closed 🌤",
+        message:
+          "Your relationship summary is ready. Take your time — your healing journey starts here.",
+        type: "relationship_ended",
+        metadata: { coupleId: couple._id },
+      }).catch(() => {});
+    }
+  } catch {
+    /* notifications optional */
   }
 
   return { success: true };
