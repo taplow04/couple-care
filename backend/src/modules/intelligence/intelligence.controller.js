@@ -37,6 +37,12 @@ const emotion = asyncHandler(async (req, res) => {
   ok(res, await intelligence.getEmotion(req.user._id));
 });
 
+const ALLOWED_PERIODS = ["daily", "weekly", "monthly", "yearly"];
+const memory = asyncHandler(async (req, res) => {
+  const period = ALLOWED_PERIODS.includes(req.params.period) ? req.params.period : "weekly";
+  ok(res, await intelligence.getMemory(await requireCouple(req.user._id), period));
+});
+
 // Expose the active configuration (weights/thresholds) so the scoring is fully
 // transparent + traceable — "every score reproducible and traceable".
 const config = asyncHandler(async (req, res) => {
@@ -44,4 +50,4 @@ const config = asyncHandler(async (req, res) => {
   ok(res, { weights: cfg.weights, thresholds: cfg.thresholds });
 });
 
-module.exports = { health, trust, growth, emotion, config };
+module.exports = { health, trust, growth, emotion, memory, config };

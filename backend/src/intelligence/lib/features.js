@@ -231,4 +231,25 @@ const gatherEmotionFeatures = async (userId, now = Date.now()) => {
   };
 };
 
-module.exports = { gatherHealthFeatures, gatherEmotionFeatures };
+const PERIOD_DAYS = { daily: 1, weekly: 7, monthly: 30, yearly: 365 };
+
+// Couple memory sources for the Memory engine (timeline assembly).
+const gatherMemoryFeatures = async (coupleId, period = "weekly", now = Date.now()) => {
+  const days = PERIOD_DAYS[period] || 7;
+  const since = new Date(now - days * DAY_MS);
+
+  const [memories, moments, dailyMoments, achievements] = await Promise.all([
+    Memory.find({ coupleId, $or: [{ memoryDate: { $gte: since } }, { createdAt: { $gte: since } }] })
+      .select("title memoryType memoryDate createdAt photos")
+      .catch(() => []),
+    Moment.find({ coupleId, createdAt: { $gte: since } }).select("type createdAt caption").catch(() => []),
+    DailyCoupleMoment
+      ? DailyCoupleMoment.find({ coupleId, createdAt: { $gte: since } }).select("day createdAt").catch(() => [])
+      : [],
+    Achievement.find({ coupleId, unlockedAt: { $gte: since } }).select("key unlockedAt").catch(() => []),
+  ]);
+
+  return { memories, moments, dailyMoments, achievements, period };
+};
+
+module.exports = { gatherHealthFeatures, gatherEmotionFeatures, gatherMemoryFeatures };

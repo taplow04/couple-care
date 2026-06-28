@@ -11,6 +11,7 @@ router.get("/health", c.health);
 router.get("/trust", c.trust);
 router.get("/growth", c.growth);
 router.get("/emotion", c.emotion);
+router.get("/memory/:period", c.memory);
 router.get("/config", c.config);
 
 module.exports = router;

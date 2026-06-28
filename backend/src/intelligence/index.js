@@ -83,11 +83,19 @@ const getEmotion = async (userId, now = Date.now()) => {
   return result;
 };
 
+// Relationship recap/timeline for a period (daily|weekly|monthly|yearly).
+// Deterministic assembly of existing sources; no LLM in the structure.
+const getMemory = async (coupleId, period = "weekly", now = Date.now()) => {
+  const feats = await features.gatherMemoryFeatures(coupleId, period, now);
+  return memoryEngine.assemble(feats, period);
+};
+
 module.exports = {
   getHealth,
   getTrust,
   getGrowth,
   getEmotion,
+  getMemory,
   // pure engines (for tests / future facades)
   engines: {
     health: healthEngine,

@@ -167,6 +167,37 @@ const startNotificationJobs = () => {
     }
   });
 
+  // CCIE nightly recompute (02:00 UTC): refresh every active couple's
+  // Relationship Health so the cache + the IntelSnapshot time-series (which the
+  // learning + memory engines read for trends) stay fresh even on quiet days.
+  // Incremental event recompute covers active couples during the day; this is the
+  // safety net for couples with no events.
+  cron.schedule(
+    "0 2 * * *",
+    async () => {
+      try {
+        const couples = await Couple.find({
+          relationshipStatus: "active",
+          partnerTwoId: { $ne: null },
+        }).select("_id");
+        const { computeCoupleHealth } = require("../couples/health.service");
+        let done = 0;
+        for (const c of couples) {
+          try {
+            await computeCoupleHealth(c._id);
+            done += 1;
+          } catch {
+            /* one couple's failure must not stop the sweep */
+          }
+        }
+        console.log(`[ccie] nightly recompute: refreshed ${done}/${couples.length} couples`);
+      } catch (e) {
+        console.error("[ccie] nightly recompute job failed:", e.message);
+      }
+    },
+    { timezone: "UTC" },
+  );
+
   // Daily Couple Moment finalize + reconcile (00:20 UTC). Freezes yesterday's
   // recaps and back-fills any that the live trigger missed (server restart /
   // race), so the relationship timeline never has a gap (Feature 1 / 16).

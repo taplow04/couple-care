@@ -482,3 +482,33 @@ The entire existing couple app. The only change is that the dashboard/nav now co
 
 ### Crons / notifications
 Daily growth nudge (6pm) for solo users with a live `growthStreak` who haven't acted today. New notification types: `growth_reminder`, `journal_reminder`, `challenge_ready`, `readiness_progress`, `relationship_ended`, `summary_ready`, `healing_checkin`, `reconnect_available` (+ `URL_FOR_TYPE`).
+
+---
+
+## 🧠 CoupleCare Intelligence Engine (CCIE) — `backend/src/intelligence/`
+
+All scoring lives in ONE configurable, deterministic, explainable, event-driven layer. Algorithm logic lives ONLY here — domain modules call the facade, never re-implement scoring. **Every score is reproducible + traceable; no random values; the couple Relationship Health stays identical for both partners.**
+
+### Layout
+- **`config/`** — `weights.js` (per-engine component weights — **no engine hardcodes a weight**; today's 7 health weights are the defaults, new inputs are ADDITIVE), `thresholds.js` (level cutoffs, saturation denominators, anti-gaming caps, confidence anchors), `rules.js` (suggestion map + sentiment lexicon + emoji valence), `scenarios.js` (context scenarios + modifiers), `index.getConfig()` (frozen; test override via `getConfig({weights})`).
+- **`lib/`** — `normalize.js` (pure, **`now`-injectable** math — reproducible in tests), `sentiment.js` (deterministic lexicon scorer), `derive.js` (responsiveness/sleep-sync/conflict-recovery/activity-vs-baseline), `features.js` (**the ONLY DB layer** — `gatherHealth/Emotion/MemoryFeatures`; every extra query is guarded + null-degrading).
+- **`engines/`** — each = a pure `score(features, cfg)` (DB-free → unit-testable) → `{ score, level, confidence, breakdown, factors, reasons, trend }`: `relationshipHealth` (couple, identical both partners — classic 7 ported VERBATIM + additive calls/video/voice/stories/sleep/bucket/aiCoach/achievements/responsiveness/conflictRecovery/trust/growth, each counted only when data exists = graceful degrade), `emotion` (per-user multi-signal: mood+chat sentiment+tempo+journal+sleep; weekly/monthly; **never claims certainty**), `trust` (couple — ports the Trust Center sub-scores + supportiveness + overall), `growth` (couple — lifetime accomplishments + velocity), `memory` (deterministic daily/weekly/monthly/yearly timeline assembly).
+- **`meta/`** — `context` (scenario detection + component MODIFIERS applied before weighting), `confidence` (0–100 from data sufficiency — additive, never changes the score), `explainability` (top +/- contributors + suggestions vs last snapshot), `antiGaming` (`sanitizeMessages/Moods` — burst/dup collapse, per-day caps, low-content gating — no-op on clean data so genuine couples are unchanged), `learning` (self-history trend via `IntelSnapshot` — compares a couple/user to its OWN past, never cross-couple).
+- **`events/`** — `bus.js` (in-process EventEmitter + `publish()`, best-effort), `events.js` (constants), `subscribers.js` (debounced per-couple incremental recompute, registered at server boot).
+- **`intelSnapshot.model.js`** — the time-series (`{subjectId,scope,engine,day,score,confidence,breakdown,factors,context}`, unique `{subjectId,engine,day}`).
+- **`index.js`** — the facade: `getHealth/getTrust/getGrowth/getEmotion/getMemory`. Orchestrates gather → score → self-history trend → snapshot.
+
+### Integration (contracts preserved)
+- `couples/health.service` is now a **thin adapter**: delegates to `intelligence.getHealth`, owns the Couple cache (`healthScore/Level/Breakdown` + additive `healthConfidence/Context/Factors`), broadcasts. Output is `{score,level,breakdown}` + additive CCIE fields. The 5 call-sites are untouched.
+- `profile.service.getTrustCenter` delegates scoring to `trust.engine` (built from data it already loads — **zero extra queries**, identical sub-scores; supportiveness+overall added).
+- **Event system LIVE**: `engagement.recordActivity` (the universal couple choke-point) + completed calls `publish()` → debounced health recompute, so a chat/call/goal/mood now updates the Love Meter live. Publishing is best-effort and never breaks the triggering action.
+- **Read-only API** `/api/v1/intelligence/health|trust|growth|emotion|memory/:period|config` (API only, **no UI**). `/config` exposes the live weights/thresholds for full transparency.
+- **Nightly cron (02:00 UTC)** recomputes every active couple's health (cache + daily `IntelSnapshot`) so learning/memory trends stay fresh on quiet days.
+
+### Tests
+`npm test` → `node --test` (built-in, **zero new deps**), 32 specs in `intelligence/__tests__/` (pure functions, fixed-clock fixtures, no DB): determinism, **partner-order invariance** (swap A/B ⇒ identical health/trust), golden values, confidence monotonicity, anti-gaming (spam ≤ genuine variety), context detection, learning trend, graceful degrade, the brief's edge cases (inactive/new/long-distance/busy/spam). Adding a test: pass a fixed `now` and call the engine's pure `score()`.
+
+### Gotchas
+- **Determinism is sacred**: no LLM in any SCORE path (LLM only narrates memory text); couple engines use couple-symmetric inputs + sorted partner order. Same couple state + same day ⇒ same output. Don't introduce `Date.now()` inside an engine — take `now` from `features`.
+- **Weights are config-only**: tune `config/weights.js`; never hardcode in an engine. New health inputs are additive (normalised by the active-weight sum) so a data-less couple scores exactly as the original 7-component formula (regression-free), while richer couples blend new signals in (scores shift by design).
+- **`features.js` is the only DB layer** — keep engines pure. Guard every new query so a missing collection degrades a component to null, never crashes scoring.
