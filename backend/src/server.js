@@ -49,9 +49,15 @@ const {
   startNotificationJobs,
 } = require("./modules/notifications/notification.scheduler");
 
+// CCIE — register the intelligence event subscribers (debounced incremental
+// recompute). Dormant until domain services publish events (Phase B onward).
+const ccieSubscribers = require("./intelligence/events/subscribers");
+
 connectDB();
 
 startNotificationJobs();
+
+ccieSubscribers.register();
 
 const server = http.createServer(app);
 

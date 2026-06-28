@@ -70,6 +70,20 @@ const coupleSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // CCIE additive metadata (non-breaking; current UI ignores these). Confidence
+    // in the health score, detected context tags, and top contributing factors.
+    healthConfidence: {
+      type: Number,
+      default: null,
+    },
+    healthContext: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    healthFactors: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
 
     // ── Relationship Summary (permanent, written once at unmatch) ──
     // Archive-in-place: when a relationship ends we compute a denormalised
