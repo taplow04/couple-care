@@ -445,3 +445,40 @@ Builds **on top of** Moments (does not redesign it). When BOTH partners share at
 - **`pages/OurDay/OurDayPage` (route `/our-day`, lazy)** — timeline of past recaps, full day recap (`?day=YYYY-MM-DD`: moments grid + AI), and the monthly/yearly **Replay** bottom-sheets. Theme-aware, glassmorphism, `prefers-reduced-motion` safe.
 - **Lint** — obeys the React-compiler rules: child fetchers use `key={day}`/`key={scope}` remounts + the `.then(active-flag)` pattern (no synchronous `setState` in effects).
 - **Memory Book (Feature 11)** is intentionally a *future* extension that composes the SAME sources — `story.service` chapters (which now include daily moments) + `DailyCoupleMoment` docs — into an exportable book; the data foundation is in place, the export/render is not yet built.
+
+---
+
+## 🌱❤️🌤 Relationship Lifecycle Platform (3 adaptive stages)
+
+The whole app adapts to ONE derived value, the user's **lifecycle stage**, so partner-less users are never stranded at an onboarding wall. **No isolated features, no duplicated collections** — it reuses the engagement/health/AI/Cloudinary/socket spine.
+
+### The Stage Engine (the spine)
+- **`modules/users/stage.helper.js` → `resolveStage(user)`** is the single source of truth: `growing` (active `currentCoupleId`), `healing` (no current couple but ≥1 `relationshipStatus:"broken_up"` couple — most-recent wins), `preparing` (never matched). Past relationships are found by querying the existing `Couple` collection (**archive-in-place — no archive collection**).
+- `auth.controller.getCurrentUser` ships `stage` + `stageMeta` on `/auth/me`, so the frontend reads `user.stage` with **zero extra fetch**. Client mirror: `utils/stage.js` + `hooks/useStage.js`.
+- **Routing**: `/dashboard` is OUT of `RequireCouple` and adapts per stage (`pages/Dashboard/Dashboard.jsx` is a thin switch → `GrowingDashboard` [= the original Stage-2 dashboard, unchanged] / `PreparingDashboard` / `HealingDashboard`). `RequireCouple` now sends solo users to their **stage home** (`/dashboard`), never the onboarding wall. `BottomNav` is config-driven + **stage-aware** (growing tabs unchanged).
+
+### Stage 1 — 🌱 Preparing For Love (`modules/growth/`, solo)
+- **User-scoped** XP/streak/achievements live on the **User doc** (`personalXp`, `growthStreak`, `growthAchievements`) — the couple `Engagement` is `coupleId`-keyed and can't hold solo progress. `growth.engagement.recordGrowthActivity(userId, type, meta)` is the single entry point (never throws); **XP is once-per-type-per-day, caller-gated via `meta.awardXp`** (the engine no longer self-dedupes — callers know if it's the first occurrence). Reuses `engagement.constants.levelForXP`.
+- `GrowthJournal` (journal/reflection/gratitude) + `GrowthChallenge` (deterministic daily pick, unique `{userId,day}`) collections. `growth.service` owns journal CRUD, daily challenge, the 3 self-knowledge quizzes (readiness / love-language / attachment → cached on User), solo mood summary, and deterministic daily content (quote/prompts in `growth.constants`).
+- Routes `/api/v1/growth` (`GET /`, `/tip`, `/mood-summary`, journal CRUD, `/challenge/today|complete`, `/quizzes`, `/readiness`, `/love-language`, `/attachment`).
+- AI: `ai.context.personal.buildPersonalContext` (the couple context builder throws without a couple) + `buildPrepCoachPrompt`/`buildDailyTipPrompt`; `growth.ai.getDailyTip` (best-effort, word-capped, deterministic fallback).
+- Frontend: `services/growth.service`, `components/growth/*` (shared `growth.css`), full `PreparingDashboard`, pages `/growth` (GrowthHub), `/journal`, `/ai-coach` (PrepCoachPage). Live via `useCoupleEvents("growth:update")`.
+
+### Stage 2 — ❤️ Growing Together (unchanged)
+The entire existing couple app. The only change is that the dashboard/nav now come via the stage switch; `GrowingDashboard` is the original `Dashboard.jsx` body verbatim.
+
+### Stage 3 — 🌤 Growing After Goodbye (`modules/lifecycle/`, solo)
+- **Relationship Summary is archived in place on the `Couple` doc** (`endedAt`, `summary` [denormalised stats blob], `aiReflection{text,status,generatedAt}`, `summaryFinalized`). `lifecycle.summary.service.computeRelationshipSummary(coupleId)` is **deterministic aggregation** over existing collections (messages/memories/moments/gallery/bucket/story/achievements/longest-streak/XP/mood-trend/most-active-month/favourite-memory/duration) + a **background ≤80-word AI reflection** (`lifecycle.ai`, deterministic fallback). Fired **fire-and-forget from `couple.service.unmatchPartner`** — **must never throw into the unmatch path**.
+- **Private Growth Report** (`GrowthReport` model in `lifecycle.model`) — belongs ONLY to the user, **never shared with any partner** (enforced in code, not a setting). Questionnaire → AI report.
+- **CoupleCare Journey = COUNT only** (`lifecycle.service.getJourney`) — never past-partner identities/chats/media.
+- Routes `/api/v1/lifecycle` (`GET /summary`, `/journey`, `/growth-report[/questions]`, `POST /growth-report`).
+- Frontend: `services/lifecycle.service`, full `HealingDashboard` (gentle tip, healing progress, mood recovery, reflection, challenge, **recovery coach**, summary teaser, growth report, reconnect), pages `/summary` (RelationshipSummaryPage), `/growth-report` (GrowthReportPage). Healing nav: Home · Heal · Coach · Reflect · Profile. `AppLayout`'s `couple:unmatched` handler reloads the user → stage flips to healing **live**.
+
+### Stage-aware coach (one module, three personas)
+`coach.service` is now **stage-aware** (`resolveCoachPersona`): growing → couple Relationship Coach (unchanged), preparing → Preparation Coach, healing → Recovery Coach. `CoachConversation.coupleId` is now **optional** (null for solo threads). The same `CoachChat` component is reused everywhere — only copy/suggestions differ (`PrepCoachPage` swaps them and is stage-aware itself).
+
+### Privacy
+`User.privacy` gains opt-in lifecycle keys (`summaryVisibility`, `healingVisibility`, `recoveryVisibility`, `aiReflectionVisibility`, `loveLanguageVisibility`, `attachmentVisibility`; `journeyCountVisibility` reused). Whitelisted in `users.controller` `PRIVACY_KEYS`; surfaced in the Privacy page **Lifecycle** section. The Growth Report is **hard-private** regardless of settings.
+
+### Crons / notifications
+Daily growth nudge (6pm) for solo users with a live `growthStreak` who haven't acted today. New notification types: `growth_reminder`, `journal_reminder`, `challenge_ready`, `readiness_progress`, `relationship_ended`, `summary_ready`, `healing_checkin`, `reconnect_available` (+ `URL_FOR_TYPE`).

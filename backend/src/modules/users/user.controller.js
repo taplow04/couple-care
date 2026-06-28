@@ -146,6 +146,13 @@ const PRIVACY_KEYS = [
   "journeyCountVisibility",
   "transparencyVisibility",
   "relationshipGalleryVisibility",
+  // Relationship Lifecycle (Stage 1 Preparing + Stage 3 Healing).
+  "summaryVisibility",
+  "healingVisibility",
+  "recoveryVisibility",
+  "aiReflectionVisibility",
+  "loveLanguageVisibility",
+  "attachmentVisibility",
 ];
 const PRIVACY_VALUES = ["private", "partner_only", "shared"];
 

@@ -33,6 +33,18 @@ const SECTIONS = [
       { key: "journeyCountVisibility", icon: "🧭", label: "Relationship History Count", description: "Your CoupleCare journey count" },
     ],
   },
+  {
+    title: "Lifecycle",
+    note: "Your Growth Report is always private — it's never shared with any partner.",
+    items: [
+      { key: "summaryVisibility", icon: "📜", label: "Relationship Summary", description: "Your past-relationship summary" },
+      { key: "loveLanguageVisibility", icon: "💞", label: "Love Language", description: "Your love language card" },
+      { key: "attachmentVisibility", icon: "🧷", label: "Attachment Style", description: "Your attachment style card" },
+      { key: "healingVisibility", icon: "🌤", label: "Healing Journal", description: "Your healing reflections" },
+      { key: "recoveryVisibility", icon: "🌱", label: "Recovery Progress", description: "Your healing progress figures" },
+      { key: "aiReflectionVisibility", icon: "🤖", label: "AI Reflections", description: "Prep tips & recovery reflections" },
+    ],
+  },
 ];
 
 const Privacy = () => {
@@ -75,6 +87,7 @@ const Privacy = () => {
           SECTIONS.map((section) => (
             <div key={section.title} className="priv-pg__section">
               <h2 className="priv-pg__section-title">{section.title}</h2>
+              {section.note && <p className="priv-pg__section-note">{section.note}</p>}
               <div className="priv-pg__list">
                 {section.items.map((item) => (
                   <PrivacySelect

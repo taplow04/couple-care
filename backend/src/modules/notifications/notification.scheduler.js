@@ -142,6 +142,31 @@ const startNotificationJobs = () => {
     }
   });
 
+  // Daily growth nudge (6pm): gently encourage solo users (Stage 1 Preparing &
+  // Stage 3 Healing) with a live growth streak who haven't shown up today, so it
+  // doesn't break. Encouraging, not punishing.
+  cron.schedule("0 18 * * *", async () => {
+    console.log("Running Growth Reminder Job");
+
+    const day = todayKey();
+    const users = await User.find({
+      currentCoupleId: null,
+      "growthStreak.current": { $gte: 1 },
+      "growthStreak.lastActiveDay": { $ne: day },
+    }).select("_id growthStreak");
+
+    for (const user of users) {
+      await createNotification({
+        userId: user._id,
+        title: `🌱 Keep your ${user.growthStreak.current}-day growth streak`,
+        message:
+          "A quick reflection, journal entry, or challenge keeps it going. You're growing every day. 💛",
+        type: "growth_reminder",
+        metadata: { streak: user.growthStreak.current },
+      });
+    }
+  });
+
   // Daily Couple Moment finalize + reconcile (00:20 UTC). Freezes yesterday's
   // recaps and back-fills any that the live trigger missed (server restart /
   // race), so the relationship timeline never has a gap (Feature 1 / 16).
