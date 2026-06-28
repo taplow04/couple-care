@@ -184,4 +184,51 @@ const gatherHealthFeatures = async (coupleId, now = Date.now()) => {
   };
 };
 
-module.exports = { gatherHealthFeatures };
+const GrowthJournal = optionalModel("../../modules/growth/growth.model");
+
+// Per-USER emotional features (Emotion engine).
+const gatherEmotionFeatures = async (userId, now = Date.now()) => {
+  const user = await User.findById(userId).select("currentCoupleId");
+  const coupleId = user?.currentCoupleId || null;
+  const since = new Date(now - 30 * DAY_MS);
+
+  const [moods, sentMessages, journalRows, sleepRows] = await Promise.all([
+    Mood.find({ userId, createdAt: { $gte: since } }).select("moodType intensity createdAt"),
+    coupleId
+      ? Message.find({ coupleId, senderId: userId, createdAt: { $gte: since } }).select("text createdAt").catch(() => [])
+      : [],
+    GrowthJournal
+      ? GrowthJournal.GrowthJournal.find({ userId, createdAt: { $gte: since } }).select("content").catch(() => [])
+      : [],
+    SleepLog.find({ userId }).sort({ day: -1 }).limit(14).select("quality hours").catch(() => []),
+  ]);
+
+  // Message tempo: longer, considered messages read as more invested.
+  let tempoScore = null;
+  if (sentMessages.length) {
+    const avgLen = sentMessages.reduce((a, m) => a + ((m.text || "").length), 0) / sentMessages.length;
+    tempoScore = Math.min((avgLen / 100) * 100, 100);
+  }
+
+  // Sleep wellbeing: avg quality (1–5) blended with hours adequacy (~8h ideal).
+  let sleepWellbeing = null;
+  if (sleepRows.length) {
+    const avgQ = sleepRows.reduce((a, s) => a + (s.quality || 3), 0) / sleepRows.length;
+    const avgH = sleepRows.reduce((a, s) => a + (s.hours || 0), 0) / sleepRows.length;
+    const qScore = (avgQ / 5) * 100;
+    const hScore = Math.max(0, 100 - Math.abs(avgH - 8) * 12.5);
+    sleepWellbeing = 0.6 * qScore + 0.4 * hScore;
+  }
+
+  return {
+    now,
+    moods,
+    sentMessages,
+    journal: (journalRows || []).map((j) => ({ content: j.content })),
+    tempoScore,
+    sleepWellbeing,
+    storyReactionScore: null, // future-ready
+  };
+};
+
+module.exports = { gatherHealthFeatures, gatherEmotionFeatures };

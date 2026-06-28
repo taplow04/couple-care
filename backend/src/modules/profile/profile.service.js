@@ -377,20 +377,33 @@ const getTrustCenter = async (userId) => {
       : Promise.resolve(0),
   ]);
   const totalMsgs = myMsgs + partnerMsgs;
-  const volumeScore = clamp((totalMsgs / 200) * 60); // 200 msgs ≈ 60 pts
-  const balance =
-    totalMsgs === 0 ? 0 : 1 - Math.abs(myMsgs - partnerMsgs) / totalMsgs; // 0..1
-  const communicationScore = clamp(volumeScore + balance * 40);
-
-  // Participation: how mutual today + lifetime engagement breadth.
   const streak = core.engagement?.currentStreak ?? 0;
-  const participationScore = clamp(
-    Math.min(streak, 14) * 4 + (core.engagement?.bothActiveToday ? 20 : 0) + 24,
-  );
-
-  // Consistency: streak longevity vs days together.
   const longest = core.engagement?.longestStreak ?? 0;
-  const consistencyScore = clamp(Math.min(longest, 30) * 3 + (streak > 0 ? 10 : 0));
+
+  // CCIE — Trust scoring now lives in the intelligence layer (trust.engine, which
+  // ports these exact formulas). Built from data already loaded here (no extra
+  // queries), so the numbers are identical and the engine is the single authority.
+  const intel = require("../../intelligence");
+  const _p = user.privacy ? (user.privacy.toObject ? user.privacy.toObject() : user.privacy) : {};
+  const _keys = Object.keys(_p);
+  const _transPct = _keys.length
+    ? (_keys.filter((k) => _p[k] !== "private").length / _keys.length) * 100
+    : 0;
+  const trustResult = intel.engines.trust.score(
+    {
+      myMsgs,
+      partnerMsgs,
+      streak,
+      longest,
+      bothActiveToday: core.engagement?.bothActiveToday ?? false,
+      transparencyPct: _transPct,
+      supportRatio: null,
+    },
+    intel.getConfig(),
+  );
+  const communicationScore = trustResult.breakdown.communication;
+  const participationScore = trustResult.breakdown.participation;
+  const consistencyScore = trustResult.breakdown.consistency;
 
   // Transparency level: share of partner-visible privacy settings.
   const p = user.privacy || {};
@@ -410,6 +423,9 @@ const getTrustCenter = async (userId) => {
       communication: communicationScore,
       participation: participationScore,
       consistency: consistencyScore,
+      // CCIE additive — overall Trust + supportiveness (current UI ignores extras).
+      supportiveness: trustResult.breakdown.supportiveness,
+      trust: trustResult.score,
       relationshipHealth: core.health?.score ?? null,
     },
     activitySummary: {

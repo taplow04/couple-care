@@ -64,10 +64,30 @@ const getGrowth = async (coupleId, now = Date.now()) => {
   return result;
 };
 
+// Emotional trend for a USER (each partner has their own). Weekly/monthly
+// summaries come from the user's own emotion snapshots (self-history).
+const getEmotion = async (userId, now = Date.now()) => {
+  const feats = await features.gatherEmotionFeatures(userId, now);
+  const history = await learning.getHistory(userId, "emotion", 30);
+  feats.historyDays = history.length;
+
+  const result = emotionEngine.score(feats, getConfig());
+  const scores = history.map((h) => h.score).filter((n) => typeof n === "number");
+  result.trendDetail = learning.trend(result.score, scores);
+
+  const avg = (arr) => (arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null);
+  result.weeklySummary = { average: avg(scores.slice(0, 7)), direction: result.trendDetail.direction };
+  result.monthlySummary = { average: avg(scores.slice(0, 30)), direction: result.trendDetail.direction };
+
+  learning.recordSnapshot("user", userId, "emotion", dayKey(now), result);
+  return result;
+};
+
 module.exports = {
   getHealth,
   getTrust,
   getGrowth,
+  getEmotion,
   // pure engines (for tests / future facades)
   engines: {
     health: healthEngine,

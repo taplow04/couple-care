@@ -32,6 +32,11 @@ const growth = asyncHandler(async (req, res) => {
   ok(res, await intelligence.getGrowth(await requireCouple(req.user._id)));
 });
 
+// Emotion is per-USER (no couple required — works in every lifecycle stage).
+const emotion = asyncHandler(async (req, res) => {
+  ok(res, await intelligence.getEmotion(req.user._id));
+});
+
 // Expose the active configuration (weights/thresholds) so the scoring is fully
 // transparent + traceable — "every score reproducible and traceable".
 const config = asyncHandler(async (req, res) => {
@@ -39,4 +44,4 @@ const config = asyncHandler(async (req, res) => {
   ok(res, { weights: cfg.weights, thresholds: cfg.thresholds });
 });
 
-module.exports = { health, trust, growth, config };
+module.exports = { health, trust, growth, emotion, config };
