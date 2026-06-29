@@ -12,6 +12,16 @@
   gap: 12px;
 }
 
+/* Section divider label (between the AI estimate and the manual logs) */
+.moods-pg-section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 6px 0 -2px;
+}
+
 /* Header */
 .moods-pg-header {
   display: flex;

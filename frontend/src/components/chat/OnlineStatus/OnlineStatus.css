@@ -45,3 +45,16 @@
   color: var(--primary);
   font-style: italic;
 }
+
+/* AI mood line — emoji replaces the dot; text uses the primary tint so the
+   estimated feeling reads warmly without overstating it as a hard status. */
+.online-status__mood-emoji {
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.online-status--mood .online-status__text,
+.online-status--online .online-status__mood-emoji + .online-status__text {
+  color: var(--text-secondary);
+  font-weight: 500;
+}

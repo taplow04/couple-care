@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import OnlineStatus from "../OnlineStatus/OnlineStatus";
 import { useCall } from "../../../context/CallContext";
 import { usePartnerPresence } from "../../../hooks/usePartnerPresence";
+import { usePartnerAiMood } from "../../../hooks/useAiMood";
 import { getFirstName } from "../../../utils/getFirstName";
 import "./ChatHeader.css";
 
@@ -9,6 +10,7 @@ const ChatHeader = ({ partner, partnerTyping }) => {
   const navigate = useNavigate();
   const { canCall, startCall, callState } = useCall();
   const presence = usePartnerPresence(partner?._id);
+  const { mood: partnerMood } = usePartnerAiMood(partner?._id);
   const initial = partner?.name ? partner.name[0].toUpperCase() : "♥";
 
   // Disable while a call is already in progress to avoid double-initiating.
@@ -52,6 +54,7 @@ const ChatHeader = ({ partner, partnerTyping }) => {
             lastSeen={presence.lastSeen}
             inCall={presence.inCall}
             typing={partnerTyping}
+            mood={partnerMood}
           />
         </div>
       </button>

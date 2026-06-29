@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import "./MoodCompatibility.css";
 
-const CIRC = 2 * Math.PI * 44;
+// Geometry lives in a single square 120×120 viewBox so the SVG can scale
+// responsively without ever distorting (the old 130px-attr / 110-viewBox mix
+// could squash on narrow widths). r=50, strokeWidth 10 ⇒ fits within 120.
+const R = 50;
+const CIRC = 2 * Math.PI * R;
 
 const getLevel = (score) => {
   if (score >= 85) return { label: "Thriving Together", emoji: "💕", color: "#32c36c" };
@@ -50,18 +54,25 @@ const MoodCompatibility = ({ compatibility, myName, partnerName }) => {
         ) : (
           <>
             <div className="mcompat__ring-wrap">
-              <svg width="130" height="130" viewBox="0 0 110 110">
+              <svg
+                className="mcompat__ring-svg"
+                viewBox="0 0 120 120"
+                preserveAspectRatio="xMidYMid meet"
+                role="img"
+                aria-label={`Mood compatibility ${score}%`}
+              >
                 <circle
-                  cx="55" cy="55" r="44" fill="none" strokeWidth="9"
-                  stroke={`${level.color}22`}
+                  cx="60" cy="60" r={R} fill="none" strokeWidth="10"
+                  stroke={level.color}
+                  strokeOpacity="0.15"
                 />
                 <circle
-                  cx="55" cy="55" r="44" fill="none" strokeWidth="9"
+                  cx="60" cy="60" r={R} fill="none" strokeWidth="10"
                   stroke={level.color}
                   strokeLinecap="round"
                   strokeDasharray={CIRC}
                   strokeDashoffset={offset}
-                  transform="rotate(-90 55 55)"
+                  transform="rotate(-90 60 60)"
                   className="mcompat__arc"
                 />
               </svg>

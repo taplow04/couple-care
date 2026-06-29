@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { getMyMoods, logMood } from "../../services/moods.service";
+import { useMyAiMood, usePartnerAiMood } from "../../hooks/useAiMood";
+import AiMoodCard from "../../components/mood/AiMoodCard/AiMoodCard";
 import "./Moods.css";
 
 const MOODS = [
@@ -31,6 +33,10 @@ const Moods = () => {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError]   = useState("");
 
+  // AI Current Mood (estimated, live) — distinct from the manual logs below.
+  const { mood: aiMood, loading: aiLoading } = useMyAiMood();
+  const { mood: partnerAiMood } = usePartnerAiMood();
+
   const fetchMoods = useCallback(async () => {
     try {
       const res = await getMyMoods();
@@ -42,7 +48,16 @@ const Moods = () => {
     }
   }, []);
 
-  useEffect(() => { fetchMoods(); }, [fetchMoods]);
+  // Initial load uses the active-flag pattern (no synchronous setState in the
+  // effect body). `fetchMoods` is reused for the post-log refresh.
+  useEffect(() => {
+    let active = true;
+    getMyMoods()
+      .then((res) => { if (active) setMoods(res.data || []); })
+      .catch(() => { if (active) setMoods([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const handleLog = async (e) => {
     e.preventDefault();
@@ -86,6 +101,14 @@ const Moods = () => {
             <button className="moods-pg-btn-cancel" onClick={cancelLog}>Cancel</button>
           )}
         </div>
+
+        {/* AI Current Mood — the estimated emotional state (live). */}
+        <AiMoodCard mood={aiMood} loading={aiLoading} partnerMood={partnerAiMood} />
+
+        {/* Section label separating the AI estimate from manual logs. */}
+        {!logOpen && (
+          <p className="moods-pg-section-label">Your logged moods</p>
+        )}
 
         {/* Log Form */}
         {logOpen && (

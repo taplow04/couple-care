@@ -1,0 +1,213 @@
+.aimood {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.05));
+}
+
+/* Soft valence-tinted wash in the corner. */
+.aimood::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: var(--aimood-color);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.aimood--skeleton {
+  min-height: 220px;
+  background: linear-gradient(
+    100deg,
+    var(--surface-2, #eee) 30%,
+    var(--card) 50%,
+    var(--surface-2, #eee) 70%
+  );
+  background-size: 200% 100%;
+  animation: aimood-sk 1.3s ease-in-out infinite;
+}
+@keyframes aimood-sk {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aimood--skeleton {
+    animation: none;
+  }
+}
+
+.aimood__tag {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--aimood-color);
+  background: color-mix(in srgb, var(--aimood-color) 14%, transparent);
+  padding: 4px 10px;
+  border-radius: 99px;
+}
+
+.aimood__hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.aimood__emoji {
+  font-size: 46px;
+  line-height: 1;
+  flex-shrink: 0;
+  animation: aimood-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes aimood-pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aimood__emoji {
+    animation: none;
+  }
+}
+
+.aimood__hero-text {
+  min-width: 0;
+}
+
+.aimood__headline {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.aimood__sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+
+/* Confidence */
+.aimood__conf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.aimood__conf-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.aimood__conf-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--aimood-color);
+}
+.aimood__conf-track {
+  height: 7px;
+  background: var(--surface-2, var(--background));
+  border-radius: 99px;
+  overflow: hidden;
+}
+.aimood__conf-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--aimood-color);
+  transition: width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Chips */
+.aimood__chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aimood__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-2, var(--background));
+  padding: 5px 10px;
+  border-radius: 99px;
+}
+.aimood__chip-icon {
+  font-weight: 800;
+  color: var(--aimood-color);
+}
+.aimood__spark {
+  width: 70px;
+  height: 26px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Reasons */
+.aimood__reasons-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.aimood__reasons-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.aimood__reason {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+.aimood__reason-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--aimood-color);
+  flex-shrink: 0;
+}
+
+/* Partner mood */
+.aimood__partner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2, var(--background));
+}
+.aimood__partner-emoji {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.aimood__partner-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
