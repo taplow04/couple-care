@@ -14,25 +14,53 @@
 .moments-bar__self {
   position: relative;
   flex: 0 0 auto;
+  /* Match the MomentCircle width so the badge's right-anchor lines up with the
+     avatar ring (not the whole row). */
+  width: 76px;
 }
 
+/* Instagram-style "add another Moment" badge — overlaid on the avatar ring's
+   bottom-right corner. Anchored from the TOP (ring is 68px tall and sits at the
+   top of the circle) so it stays on the corner regardless of the label height
+   below. Tapping it is independent of tapping the ring (which opens the viewer):
+   the badge sits above the ring button with its own z-index + pointer target. */
 .moments-bar__add {
   position: absolute;
-  right: 4px;
-  bottom: 24px;
-  width: 24px;
-  height: 24px;
+  top: 44px;
+  right: 1px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--gradient-romantic);
   color: #fff;
-  border: 2px solid var(--card);
-  font-size: 1.05rem;
+  /* White cut-out ring so the badge reads as a separate element and never looks
+     like it's covering the photo. */
+  border: 2.5px solid var(--card);
+  font-size: 1.15rem;
   font-weight: 700;
   line-height: 1;
   display: grid;
   place-items: center;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
+  box-shadow: 0 3px 10px rgba(255, 92, 138, 0.45);
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.moments-bar__add:hover {
+  transform: scale(1.12);
+  box-shadow: 0 5px 16px rgba(255, 92, 138, 0.55);
+}
+
+.moments-bar__add:active {
+  transform: scale(0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moments-bar__add {
+    transition: none;
+  }
 }
 
 .moments-bar__skeleton {
