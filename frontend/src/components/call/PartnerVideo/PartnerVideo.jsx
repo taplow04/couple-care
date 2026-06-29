@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import "./PartnerVideo.css";
 
 /**
@@ -39,4 +39,6 @@ const PartnerVideo = ({ stream, partner, className = "" }) => {
   );
 };
 
-export default PartnerVideo;
+// Memoised: re-renders only when the stream/partner actually change, so PiP
+// dragging or other parent state never re-attaches the video element.
+export default memo(PartnerVideo);

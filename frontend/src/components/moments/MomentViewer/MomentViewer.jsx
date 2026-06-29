@@ -242,6 +242,17 @@ const MomentViewer = ({
     }
   };
 
+  // Delete ALL of my live Moments at once (reuses the per-moment endpoint).
+  const handleDeleteAll = async () => {
+    const ids = moments.map((m) => String(m._id));
+    try {
+      await Promise.all(ids.map((id) => deleteMoment(id).catch(() => {})));
+    } finally {
+      onChanged?.();
+      onClose?.();
+    }
+  };
+
   const handleKeep = async () => {
     if (!current) return;
     try {
@@ -477,8 +488,17 @@ const MomentViewer = ({
             className="moment-viewer__menu--danger"
             onClick={handleDelete}
           >
-            🗑 Delete
+            🗑 Delete this Moment
           </button>
+          {moments.length > 1 && (
+            <button
+              type="button"
+              className="moment-viewer__menu--danger"
+              onClick={handleDeleteAll}
+            >
+              🗑 Delete all my Moments
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {

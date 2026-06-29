@@ -9,7 +9,11 @@
 .partner-video__el {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* `contain` (not cover) preserves the remote camera's TRUE aspect ratio and
+     never crops or stretches it: a portrait phone feed shows portrait on desktop,
+     a landscape webcam shows landscape on a phone — both letterboxed on the dark
+     backdrop. Adapts automatically on resize / orientation change. */
+  object-fit: contain;
   display: block;
 }
 

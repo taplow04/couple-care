@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import "./LocalVideo.css";
 
 /**
@@ -34,4 +34,5 @@ const LocalVideo = ({ stream, isCameraOff, className = "" }) => {
   );
 };
 
-export default LocalVideo;
+// Memoised so PiP drag re-renders (in the parent) don't churn the self-view.
+export default memo(LocalVideo);
