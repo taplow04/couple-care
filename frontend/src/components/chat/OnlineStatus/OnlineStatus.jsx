@@ -27,20 +27,16 @@ const formatLastSeen = (lastSeen) => {
 };
 
 /**
- * Partner status line. Priority: typing > in-call > AI mood (when available) >
- * online > last seen. The dot still reflects presence (online/offline) while the
- * text can surface the partner's estimated current mood ("😊 Feeling Happy"),
- * which updates live with no manual refresh. Backwards compatible: with only the
- * legacy `connected` prop it behaves like before.
- *
- * @param {object} mood  optional partner AI-mood DTO { emoji, display, ... }
+ * Partner ACTIVITY-status line. Priority: typing > in-call > online > last seen.
+ * The AI current mood is now shown on its OWN line in ChatHeader (below this), so
+ * this component is purely presence. Backwards compatible: with only the legacy
+ * `connected` prop it behaves like before.
  */
-const OnlineStatus = ({ online, lastSeen, inCall, typing, connected, mood }) => {
+const OnlineStatus = ({ online, lastSeen, inCall, typing, connected }) => {
   const isOnline = online ?? connected ?? false;
 
   let modifier;
   let text;
-  let emoji = null;
 
   if (typing) {
     modifier = "online-status--typing";
@@ -48,14 +44,9 @@ const OnlineStatus = ({ online, lastSeen, inCall, typing, connected, mood }) => 
   } else if (inCall) {
     modifier = "online-status--incall";
     text = "In call";
-  } else if (mood?.display) {
-    // Show the estimated mood, keeping the presence colour via the dot.
-    modifier = isOnline ? "online-status--online" : "online-status--mood";
-    text = mood.display; // e.g. "Feeling Happy"
-    emoji = mood.emoji;
   } else if (isOnline) {
     modifier = "online-status--online";
-    text = "Online";
+    text = "Active now";
   } else {
     modifier = "online-status--offline";
     text = formatLastSeen(lastSeen);
@@ -63,11 +54,7 @@ const OnlineStatus = ({ online, lastSeen, inCall, typing, connected, mood }) => 
 
   return (
     <div className={`online-status ${modifier}`}>
-      {emoji ? (
-        <span className="online-status__mood-emoji" aria-hidden="true">{emoji}</span>
-      ) : (
-        <span className="online-status__dot" />
-      )}
+      <span className="online-status__dot" />
       <span className="online-status__text">{text}</span>
     </div>
   );
