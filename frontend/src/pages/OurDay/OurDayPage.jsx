@@ -228,9 +228,14 @@ const OurDayPage = () => {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const day = params.get("day");
+  // Deep-link support: /our-day?replay=month|year opens the replay immediately
+  // (used by the dashboard Quick Access shortcuts). Seeded once from the URL.
+  const replayParam = params.get("replay");
 
   const [items, setItems] = useState(null);
-  const [replay, setReplay] = useState(null); // "month" | "year" | null
+  const [replay, setReplay] = useState(
+    replayParam === "month" || replayParam === "year" ? replayParam : null,
+  ); // "month" | "year" | null
 
   const loadTimeline = useCallback(() => {
     let active = true;

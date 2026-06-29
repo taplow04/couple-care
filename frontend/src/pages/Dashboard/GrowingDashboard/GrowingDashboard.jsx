@@ -77,6 +77,14 @@ const DailyMomentSection = ({ initial }) => {
   return <DailyMomentCard today={today} loading={loading} />;
 };
 
+// Subtle section divider — gives the dashboard hierarchy/grouping.
+const Section = ({ label, delay = 0 }) => (
+  <div className="db-section db-fade-in" style={{ animationDelay: `${delay}ms` }}>
+    <span className="db-section__label">{label}</span>
+    <span className="db-section__line" />
+  </div>
+);
+
 const GrowingDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -190,6 +198,8 @@ const GrowingDashboard = () => {
           />
         </div>
 
+        <Section label="Today" delay={15} />
+
         {/* CoupleCare Moments — Instagram-style story circles (self + partner) */}
         <div className="db-fade-in" style={{ animationDelay: "20ms" }}>
           <MomentsBar />
@@ -213,6 +223,8 @@ const GrowingDashboard = () => {
         <div className="db-fade-in" style={{ animationDelay: "50ms" }}>
           <StreakCard engagement={engagement} loading={loading} />
         </div>
+
+        <Section label="Your Connection" delay={70} />
 
         <div className="dashboard-grid-2">
           <div className="db-fade-in" style={{ animationDelay: "80ms" }}>
@@ -240,6 +252,8 @@ const GrowingDashboard = () => {
             loading={aiSummaryLoading}
           />
         </div>
+
+        <Section label="Explore Together" delay={210} />
 
         <div className="db-fade-in" style={{ animationDelay: "220ms" }}>
           <QuickActionsCard />

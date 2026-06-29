@@ -88,11 +88,15 @@ const markRead = async (userId, notificationId) => {
 
   await notification.save();
 
+  // Sync read-state across the user's other devices/tabs in real time so every
+  // badge updates immediately (no manual refresh).
+  emitToUser(userId, "notification:read", { id: String(notification._id) });
+
   return notification;
 };
 
 const markAllRead = async (userId) => {
-  await Notification.updateMany(
+  const result = await Notification.updateMany(
     {
       userId,
       isRead: false,
@@ -101,6 +105,11 @@ const markAllRead = async (userId) => {
       isRead: true,
     },
   );
+
+  // Tell all of this user's devices the badge is now zero (cross-device sync).
+  emitToUser(userId, "notification:read-all", {
+    cleared: result?.modifiedCount ?? 0,
+  });
 
   return true;
 };

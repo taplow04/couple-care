@@ -78,6 +78,41 @@
   }
 }
 
+/* Section grouping — gives the dashboard a clear hierarchy instead of one long
+   flat list of cards. Subtle, uppercase, low-emphasis. */
+.db-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 2px 0;
+}
+.db-section__label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.db-section__line {
+  flex: 1;
+  height: 1px;
+  background: var(--glass-border, rgba(0, 0, 0, 0.06));
+}
+
+/* Respect reduced-motion: no entrance/shimmer/heartbeat motion. */
+@media (prefers-reduced-motion: reduce) {
+  .db-fade-in,
+  .db-skeleton,
+  .db-no-partner-emoji {
+    animation: none;
+  }
+  .db-fade-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* No partner state */
 .db-no-partner {
   display: flex;

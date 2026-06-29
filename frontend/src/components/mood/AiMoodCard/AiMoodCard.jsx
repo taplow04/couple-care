@@ -1,3 +1,4 @@
+import { memo } from "react";
 import "./AiMoodCard.css";
 
 /**
@@ -120,4 +121,5 @@ const AiMoodCard = ({ mood, loading, partnerMood }) => {
   );
 };
 
-export default AiMoodCard;
+// Pure presentational — memoise so it only re-renders when the mood DTO changes.
+export default memo(AiMoodCard);

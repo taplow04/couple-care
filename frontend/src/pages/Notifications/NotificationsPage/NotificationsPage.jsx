@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNotificationsCtx } from "../../../context/NotificationsContext";
 import {
   getNotifications,
@@ -63,25 +63,39 @@ const NotificationsPage = () => {
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [markingAll, setMarkingAll] = useState(false);
+  // How many were unread when the page opened — used only for the page header
+  // copy ("N unread"). The badge itself is cleared the moment the page opens.
+  const [openedUnread, setOpenedUnread] = useState(0);
 
-  // Fetch on mount
+  // Fetch on mount, then auto-mark-all-read: opening the Notifications screen IS
+  // viewing them, so the badge clears immediately (and syncs across devices via
+  // the server's notification:read-all socket event). This was the badge bug —
+  // previously the count lingered until the explicit "Mark all read" tap.
   useEffect(() => {
+    let active = true;
     getNotifications(1, 50)
-      .then((res) => setNotifications(res.data || []))
-      .catch(() => setNotifications([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Keep badge in sync with local state
-  const unreadCount = useMemo(
-    () => notifications.filter((n) => !n.isRead).length,
-    [notifications]
-  );
-
-  useEffect(() => {
-    setUnreadCount(unreadCount);
-  }, [unreadCount, setUnreadCount]);
+      .then((res) => {
+        if (!active) return;
+        const list = res.data || [];
+        const unread = list.filter((n) => !n.isRead).length;
+        setNotifications(list);
+        setOpenedUnread(unread);
+        // Clear the badge right away; persist on the server best-effort.
+        if (unread > 0) {
+          setUnreadCount(0);
+          markAllNotificationsRead().catch(() => {});
+        }
+      })
+      .catch(() => {
+        if (active) setNotifications([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [setUnreadCount]);
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -109,13 +123,6 @@ const NotificationsPage = () => {
     });
   };
 
-  const handleMarkAllRead = async () => {
-    setMarkingAll(true);
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    await markAllNotificationsRead().catch(() => {});
-    setMarkingAll(false);
-  };
-
   // ─── Render ────────────────────────────────────────────────────────────────
 
   const groups = groupByDate(notifications);
@@ -127,20 +134,9 @@ const NotificationsPage = () => {
         subtitle={
           loading
             ? undefined
-            : unreadCount > 0
-              ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
+            : openedUnread > 0
+              ? `${openedUnread} new notification${openedUnread > 1 ? "s" : ""}`
               : "All caught up"
-        }
-        right={
-          !loading && unreadCount > 0 ? (
-            <button
-              className="notif-pg__mark-all-btn"
-              onClick={handleMarkAllRead}
-              disabled={markingAll}
-            >
-              {markingAll ? "Marking…" : "Mark all read"}
-            </button>
-          ) : null
         }
       />
       <div className="notif-pg__content">

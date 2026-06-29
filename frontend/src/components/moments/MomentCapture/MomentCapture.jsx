@@ -19,8 +19,22 @@ const PRIVACY = [
   { key: "save_journey", label: "⭐ Save to Journey" },
 ];
 
+// Portrait-first constraints. We HINT a 9:16 portrait frame + a decent
+// resolution; browsers that can't honour it (most laptop webcams are landscape)
+// still work — the preview is cropped to a centered portrait frame in CSS, so
+// nothing ever looks stretched on phone, tablet, laptop, or desktop.
 const constraintsFor = (m, facing) =>
-  m === "voice" ? { audio: true } : { video: { facingMode: facing }, audio: m === "video" };
+  m === "voice"
+    ? { audio: true }
+    : {
+        video: {
+          facingMode: facing,
+          width: { ideal: 1080 },
+          height: { ideal: 1920 },
+          aspectRatio: { ideal: 9 / 16 },
+        },
+        audio: m === "video",
+      };
 
 const mapMediaError = (e) => {
   if (e?.name === "NotAllowedError")
@@ -288,13 +302,15 @@ const MomentCapture = ({ onClose, onUploaded }) => {
         {error && <div className="moment-capture__error">{error}</div>}
 
         {showCamera && mode !== "voice" && (
-          <video
-            ref={videoRef}
-            className={`moment-capture__preview${facingMode === "user" ? " moment-capture__preview--mirror" : ""}`}
-            playsInline
-            muted
-            autoPlay
-          />
+          <div className="moment-capture__frame">
+            <video
+              ref={videoRef}
+              className={`moment-capture__preview${facingMode === "user" ? " moment-capture__preview--mirror" : ""}`}
+              playsInline
+              muted
+              autoPlay
+            />
+          </div>
         )}
 
         {showCamera && mode === "voice" && (
@@ -315,8 +331,16 @@ const MomentCapture = ({ onClose, onUploaded }) => {
         {/* Captured preview */}
         {captured && (
           <div className="moment-capture__captured">
-            {captured.type === "photo" && <img src={captured.url} alt="preview" />}
-            {captured.type === "video" && <video src={captured.url} controls playsInline />}
+            {captured.type === "photo" && (
+              <div className="moment-capture__frame">
+                <img src={captured.url} alt="preview" />
+              </div>
+            )}
+            {captured.type === "video" && (
+              <div className="moment-capture__frame">
+                <video src={captured.url} controls playsInline />
+              </div>
+            )}
             {captured.type === "voice" && (
               <div className="moment-capture__voice">
                 <div className="moment-capture__mic">🎙</div>
