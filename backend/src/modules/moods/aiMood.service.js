@@ -32,6 +32,8 @@ const getAiMood = async (userId) => {
 };
 
 // A trimmed payload safe to show on a partner-facing surface (no timeline array).
+// `reasons` ARE included: they're derived from mutual/shared activity (calls,
+// stories, chat, memories) and power the chat header's "Why?" transparency sheet.
 const partnerView = (mood) => ({
   moodType: mood.moodType,
   emoji: mood.emoji,
@@ -42,6 +44,7 @@ const partnerView = (mood) => ({
   confidence: mood.confidence,
   trend: mood.trend,
   direction: mood.direction,
+  reasons: mood.reasons || [],
   isEstimate: true,
   updatedAt: mood.updatedAt,
 });
