@@ -57,8 +57,21 @@ const momentSchema = new mongoose.Schema(
 
     caption: { type: String, default: "", maxlength: 500 },
 
-    // Mood the author associated (optionally accepted from the AI suggestion).
+    // ── Story Mood (an INDEPENDENT concept from Manual Mood & AI Current Mood) ──
+    // The mood the author associated with THIS Moment specifically. It is NEVER
+    // written into the Mood collection and carries NO intensity — a Story mood is
+    // a per-moment label with its own provenance + timestamp, so it can never
+    // inherit (or pollute) a manually-logged mood's intensity. See mood.model
+    // (manual) and intelligence/emotion (AI current) for the other two concepts.
     mood: { type: String, default: null },
+    // How the Story mood was set: "user" (picked at capture) or "ai_suggested"
+    // (the author accepted the post-upload AI suggestion). null when unset.
+    moodSource: { type: String, enum: ["user", "ai_suggested", null], default: null },
+    // Confidence (0–100) ONLY meaningful for ai_suggested moods; user-picked = 100.
+    moodConfidence: { type: Number, min: 0, max: 100, default: null },
+    // When the Story mood was attached (its own history point, independent of the
+    // Moment's createdAt and of any manual mood timestamp).
+    moodAt: { type: Date, default: null },
 
     privacy: { type: String, enum: MOMENT_PRIVACY, default: "partner_only" },
 

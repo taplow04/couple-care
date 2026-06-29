@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { uploadMoment } from "../../../services/moments.service";
-import { logMood } from "../../../services/moods.service";
+import { uploadMoment, setMomentMood } from "../../../services/moments.service";
 import { compressImage } from "../../../utils/compressImage";
 import "./MomentCapture.css";
 
@@ -234,7 +233,7 @@ const MomentCapture = ({ onClose, onUploaded }) => {
       const moods = res.data?.aiSuggestion?.moods || [];
       const text = res.data?.aiSuggestion?.text || "";
       if (moods.length || text) {
-        setAiResult({ moods, text, momentCaption: caption });
+        setAiResult({ moods, text, momentId: res.data?._id });
         setCaptured(null);
       } else {
         onClose?.();
@@ -249,11 +248,16 @@ const MomentCapture = ({ onClose, onUploaded }) => {
     }
   };
 
+  // Accepting an AI suggestion tags THIS Moment's Story mood (its own concept) —
+  // it does NOT create a manual mood log, so it never invents an intensity or
+  // collides with the user's manually-logged moods.
   const acceptMood = async (moodType) => {
     try {
-      await logMood({ moodType, intensity: 6, note: aiResult?.momentCaption || "" });
+      if (aiResult?.momentId) {
+        await setMomentMood(aiResult.momentId, moodType, "ai_suggested");
+      }
     } catch {
-      /* ignore — mood is optional */
+      /* ignore — the Story mood is optional */
     }
     onClose?.();
   };

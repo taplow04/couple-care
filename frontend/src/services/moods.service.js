@@ -24,3 +24,14 @@ export const getMoodAnalytics = async () => {
   const response = await api.get("/moods/analytics");
   return response.data;
 };
+
+// ── AI Current Mood (the estimated emotional state — separate from manual mood) ──
+export const getAiMood = async () => {
+  const response = await api.get("/moods/ai-mood");
+  return response.data;
+};
+
+export const getPartnerAiMood = async () => {
+  const response = await api.get("/moods/ai-mood/partner");
+  return response.data;
+};

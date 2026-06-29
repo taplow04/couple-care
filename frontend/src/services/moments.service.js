@@ -36,6 +36,13 @@ export const uploadMoment = async (
 export const viewMoment = async (id) => (await api.patch(`/moments/${id}/view`)).data;
 export const reactToMoment = async (id, emoji) =>
   (await api.post(`/moments/${id}/react`, { emoji })).data;
+/**
+ * Attach a Story Mood to a moment (its own concept — NOT a manual mood log, so it
+ * never carries/inherits an intensity). `source` is "ai_suggested" when the user
+ * tapped the post-upload AI suggestion, else "user".
+ */
+export const setMomentMood = async (id, mood, source = "user") =>
+  (await api.patch(`/moments/${id}/mood`, { mood, source })).data;
 export const keepMoment = async (id) => (await api.patch(`/moments/${id}/keep`)).data;
 export const saveMomentToJourney = async (id) =>
   (await api.patch(`/moments/${id}/save-journey`)).data;

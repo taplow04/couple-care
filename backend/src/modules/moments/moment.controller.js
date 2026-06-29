@@ -133,6 +133,14 @@ const circles = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data });
 });
 
+const setMood = asyncHandler(async (req, res) => {
+  const data = await momentService.setMoodForMoment(req.user._id, req.params.id, {
+    mood: req.body.mood,
+    source: req.body.source,
+  });
+  res.status(200).json({ success: true, data });
+});
+
 const view = asyncHandler(async (req, res) => {
   const data = await momentService.markViewed(req.user._id, req.params.id);
   res.status(200).json({ success: true, data });
@@ -215,6 +223,7 @@ const profileMoments = asyncHandler(async (req, res) => {
 module.exports = {
   upload,
   circles,
+  setMood,
   view,
   react,
   keep,

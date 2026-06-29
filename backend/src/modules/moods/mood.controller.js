@@ -8,6 +8,8 @@ const {
   getMoodAnalytics,
 } = require("./mood.service");
 
+const aiMoodService = require("./aiMood.service");
+
 const create = asyncHandler(async (req, res) => {
   const mood = await createMood(req.user._id, req.body);
 
@@ -53,10 +55,23 @@ const analytics = asyncHandler(async (req, res) => {
   });
 });
 
+// ── AI Current Mood (the estimated emotional state — third mood concept) ──
+const aiMood = asyncHandler(async (req, res) => {
+  const data = await aiMoodService.getAiMood(req.user._id);
+  res.status(200).json({ success: true, data });
+});
+
+const partnerAiMood = asyncHandler(async (req, res) => {
+  const data = await aiMoodService.getPartnerAiMood(req.user._id);
+  res.status(200).json({ success: true, data });
+});
+
 module.exports = {
   create,
   getMine,
   remove,
   getPartner,
   analytics,
+  aiMood,
+  partnerAiMood,
 };

@@ -37,6 +37,14 @@ const score = (features, cfg) => {
   if (features.tempoScore != null) components.messageTempo = clamp(features.tempoScore);
   if (features.sleepWellbeing != null) components.sleep = clamp(features.sleepWellbeing);
   if (features.storyReactionScore != null) components.storyReactions = clamp(features.storyReactionScore);
+  // New emotion signals (each present only when the user has that data, so a
+  // sparse user is scored exactly as before — graceful degrade).
+  if (features.emojiPositivity != null) components.emojiPositivity = clamp(features.emojiPositivity);
+  if (features.replySpeed != null) components.replySpeed = clamp(features.replySpeed);
+  if (features.storyCaptions != null) components.storyCaptions = clamp(features.storyCaptions);
+  if (features.callConnection != null) components.callConnection = clamp(features.callConnection);
+  if (features.voiceWarmth != null) components.voiceWarmth = clamp(features.voiceWarmth);
+  if (features.sharedActivity != null) components.sharedActivity = clamp(features.sharedActivity);
 
   let weighted = 0;
   let active = 0;

@@ -55,6 +55,14 @@ module.exports = {
     journal: 0.1,
     storyReactions: 0.08,
     sleep: 0.07,
+    // ── new emotion signals (ADDITIVE — a component only counts when the user
+    // actually has that data, so a sparse user is scored exactly as before). ──
+    emojiPositivity: 0.08, // valence of emojis in sent messages
+    replySpeed: 0.06, // responsiveness (faster replies ⇒ more engaged)
+    storyCaptions: 0.05, // sentiment of the user's Moment captions
+    callConnection: 0.05, // call frequency + duration with the partner
+    voiceWarmth: 0.03, // voice-note activity (intimate communication)
+    sharedActivity: 0.05, // recent memories / bucket / daily-moment participation
   },
 
   growth: {

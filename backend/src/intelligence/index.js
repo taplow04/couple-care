@@ -12,6 +12,7 @@ const { getConfig } = require("./config");
 const { dayKey } = require("./lib/normalize");
 const features = require("./lib/features");
 const learning = require("./meta/learning.engine");
+const { deriveCurrentMood } = require("./lib/currentMood");
 
 const healthEngine = require("./engines/relationshipHealth.engine");
 const emotionEngine = require("./engines/emotion.engine");
@@ -83,6 +84,50 @@ const getEmotion = async (userId, now = Date.now()) => {
   return result;
 };
 
+/**
+ * AI Current Mood for a USER — the friendly, honest estimate the chat header and
+ * Mood page render. Reuses the emotion engine + self-history, then derives a mood
+ * label/emoji/confidence/stability/reasons. Deterministic; always an estimate.
+ * Returns null-safe shape even with zero data (low confidence).
+ */
+const getCurrentMood = async (userId, now = Date.now()) => {
+  const feats = await features.gatherEmotionFeatures(userId, now);
+  const history = await learning.getHistory(userId, "emotion", 30);
+  feats.historyDays = history.length;
+
+  const result = emotionEngine.score(feats, getConfig());
+  const historyScores = history.map((h) => h.score).filter((n) => typeof n === "number");
+  const trendDetail = learning.trend(result.score, historyScores);
+
+  const mood = deriveCurrentMood({
+    score: result.score,
+    confidence: result.confidence,
+    trend: result.trend,
+    direction: trendDetail.direction,
+    signalsMeta: feats.signalsMeta || {},
+    historyScores,
+    signals: result.signals || [],
+  });
+
+  // Persist today's emotion snapshot so trend/stability stay fresh (best-effort).
+  learning.recordSnapshot("user", userId, "emotion", dayKey(now), result);
+
+  // Mood-change timeline: recent daily snapshots → {day, score, mood label}.
+  const timeline = history
+    .slice(0, 14)
+    .map((h) => ({ day: h.day, score: h.score, confidence: h.confidence }))
+    .reverse();
+
+  return {
+    ...mood,
+    weeklyAverage: historyScores.slice(0, 7).length
+      ? Math.round(historyScores.slice(0, 7).reduce((a, b) => a + b, 0) / Math.min(7, historyScores.length))
+      : result.score,
+    updatedAt: new Date(now).toISOString(),
+    timeline,
+  };
+};
+
 // Relationship recap/timeline for a period (daily|weekly|monthly|yearly).
 // Deterministic assembly of existing sources; no LLM in the structure.
 const getMemory = async (coupleId, period = "weekly", now = Date.now()) => {
@@ -95,6 +140,7 @@ module.exports = {
   getTrust,
   getGrowth,
   getEmotion,
+  getCurrentMood,
   getMemory,
   // pure engines (for tests / future facades)
   engines: {

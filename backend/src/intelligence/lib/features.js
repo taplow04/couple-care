@@ -185,32 +185,81 @@ const gatherHealthFeatures = async (coupleId, now = Date.now()) => {
 };
 
 const GrowthJournal = optionalModel("../../modules/growth/growth.model");
+const { EMOJI_VALENCE } = require("../config/rules");
 
-// Per-USER emotional features (Emotion engine).
+// Emoji-only positivity (0..100) over a list of {text}. null when no emoji used.
+// Distinct from sentiment.positivityOf (words+emoji) so emoji usage is its OWN
+// emotional signal (people lean on emoji to convey tone they don't type out).
+const emojiPositivity = (items, field = "text") => {
+  let pos = 0;
+  let neg = 0;
+  let total = 0;
+  for (const it of items) {
+    for (const ch of Array.from(it[field] || "")) {
+      const v = EMOJI_VALENCE[ch];
+      if (v > 0) {
+        pos += 1;
+        total += 1;
+      } else if (v < 0) {
+        neg += 1;
+        total += 1;
+      }
+    }
+  }
+  if (pos + neg === 0) return { score: null, count: 0 };
+  return { score: (pos / (pos + neg)) * 100, count: total };
+};
+
+// Per-USER emotional features (Emotion engine). Every extra query is guarded so a
+// missing collection/field degrades that signal to null (component skipped) and
+// never breaks scoring. `signalsMeta` carries recency/magnitude facts the
+// current-mood derivation turns into human-readable reasons.
 const gatherEmotionFeatures = async (userId, now = Date.now()) => {
   const user = await User.findById(userId).select("currentCoupleId");
   const coupleId = user?.currentCoupleId || null;
   const since = new Date(now - 30 * DAY_MS);
+  const today = dayKey(now);
 
-  const [moods, sentMessages, journalRows, sleepRows] = await Promise.all([
+  const [
+    moods,
+    sentMessages,
+    coupleMessages,
+    journalRows,
+    sleepRows,
+    myMoments,
+    calls,
+    voiceCount,
+    recentMemories,
+    dailyMomentsRecent,
+  ] = await Promise.all([
     Mood.find({ userId, createdAt: { $gte: since } }).select("moodType intensity createdAt"),
     coupleId
-      ? Message.find({ coupleId, senderId: userId, createdAt: { $gte: since } }).select("text createdAt").catch(() => [])
+      ? Message.find({ coupleId, senderId: userId, createdAt: { $gte: since } }).select("text createdAt type").catch(() => [])
+      : [],
+    coupleId
+      ? Message.find({ coupleId, createdAt: { $gte: since } }).select("senderId createdAt").catch(() => [])
       : [],
     GrowthJournal
-      ? GrowthJournal.GrowthJournal.find({ userId, createdAt: { $gte: since } }).select("content").catch(() => [])
+      ? GrowthJournal.GrowthJournal.find({ userId, createdAt: { $gte: since } }).select("content createdAt").catch(() => [])
       : [],
-    SleepLog.find({ userId }).sort({ day: -1 }).limit(14).select("quality hours").catch(() => []),
+    SleepLog.find({ userId }).sort({ day: -1 }).limit(14).select("quality hours day").catch(() => []),
+    coupleId
+      ? Moment.find({ coupleId, authorId: userId, createdAt: { $gte: since } }).select("caption reactions createdAt").catch(() => [])
+      : [],
+    Call.find({ $or: [{ callerId: userId }, { receiverId: userId }], status: "completed", createdAt: { $gte: since } }).select("duration callType createdAt").catch(() => []),
+    safeCount(Message, { coupleId, senderId: userId, type: "audio", createdAt: { $gte: since } }),
+    coupleId ? safeCount(Memory, { coupleId, createdAt: { $gte: since } }) : 0,
+    coupleId ? safeCount(DailyCoupleMoment, { coupleId, createdAt: { $gte: since } }) : 0,
   ]);
 
-  // Message tempo: longer, considered messages read as more invested.
+  // ── Message tempo: longer, considered messages read as more invested. ──
   let tempoScore = null;
   if (sentMessages.length) {
     const avgLen = sentMessages.reduce((a, m) => a + ((m.text || "").length), 0) / sentMessages.length;
     tempoScore = Math.min((avgLen / 100) * 100, 100);
   }
 
-  // Sleep wellbeing: avg quality (1–5) blended with hours adequacy (~8h ideal).
+  // ── Sleep wellbeing: avg quality (1–5) blended with hours adequacy (~8h). ──
   let sleepWellbeing = null;
   if (sleepRows.length) {
     const avgQ = sleepRows.reduce((a, s) => a + (s.quality || 3), 0) / sleepRows.length;
@@ -220,6 +269,70 @@ const gatherEmotionFeatures = async (userId, now = Date.now()) => {
     sleepWellbeing = 0.6 * qScore + 0.4 * hScore;
   }
 
+  // ── Emoji positivity (own signal). ──
+  const emoji = emojiPositivity(sentMessages);
+
+  // ── Reply speed: this user's responsiveness within the couple thread. ──
+  const replySpeed = derive.responsiveness(coupleMessages, now);
+
+  // ── Story captions sentiment + reactions received on my Moments. ──
+  const { positivityOf } = require("./sentiment");
+  const captionSent = positivityOf(myMoments.map((m) => ({ text: m.caption || "" })));
+  const storyCaptionScore = captionSent.ratio != null ? captionSent.ratio * 100 : null;
+
+  let storyReactionScore = null;
+  const reactionsReceived = myMoments.reduce((a, m) => a + (m.reactions?.length || 0), 0);
+  if (myMoments.length) {
+    // Any reaction from a partner is affirming; saturate at ~6 reactions/30d.
+    storyReactionScore = Math.min(reactionsReceived / 6, 1) * 100;
+  }
+
+  // ── Call connection: frequency + total minutes with the partner. ──
+  let callConnectionScore = null;
+  if (calls.length) {
+    const totalMin = calls.reduce((a, c) => a + (c.duration || 0), 0) / 60;
+    const freqScore = Math.min(calls.length / 8, 1) * 100; // ~8 calls/30d ⇒ full
+    const durScore = Math.min(totalMin / 60, 1) * 100; // ~60 min/30d ⇒ full
+    callConnectionScore = 0.5 * freqScore + 0.5 * durScore;
+  }
+
+  // ── Voice warmth: voice-note activity. ──
+  const voiceWarmthScore = voiceCount > 0 ? Math.min(voiceCount / 5, 1) * 100 : null;
+
+  // ── Shared activity: recent memories + daily-couple-moments + my Moments. ──
+  const sharedCount = recentMemories + dailyMomentsRecent + myMoments.length;
+  const sharedActivityScore = sharedCount > 0 ? Math.min(sharedCount / 8, 1) * 100 : null;
+
+  // ── signalsMeta — recency facts for the human "why" of the current mood. ──
+  const within = (d, days) => d && new Date(d).getTime() >= now - days * DAY_MS;
+  const lastMood = moods.length
+    ? [...moods].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+    : null;
+  // Sleep trend: most-recent night vs the average of the prior nights.
+  let sleepImproved = false;
+  if (sleepRows.length >= 3) {
+    const latest = sleepRows[0]?.quality || 0;
+    const priorAvg =
+      sleepRows.slice(1).reduce((a, s) => a + (s.quality || 0), 0) / (sleepRows.length - 1);
+    sleepImproved = latest > priorAvg + 0.4;
+  }
+  const signalsMeta = {
+    storyToday: myMoments.some((m) => dayKey(m.createdAt) === today),
+    storyCount: myMoments.length,
+    reactionsReceived,
+    recentCall: calls.some((c) => within(c.createdAt, 3)),
+    callCount: calls.length,
+    voiceRecent: voiceCount > 0,
+    journaledRecently: (journalRows || []).some((j) => within(j.createdAt, 3)),
+    lastMoodType: lastMood?.moodType || null,
+    lastMoodAt: lastMood?.createdAt || null,
+    lastMoodRecent: within(lastMood?.createdAt, 2),
+    positiveChat: emoji.score != null ? emoji.score >= 60 : false,
+    chatActive: sentMessages.length >= 5,
+    sleepImproved,
+    recentMemories,
+  };
+
   return {
     now,
     moods,
@@ -227,7 +340,15 @@ const gatherEmotionFeatures = async (userId, now = Date.now()) => {
     journal: (journalRows || []).map((j) => ({ content: j.content })),
     tempoScore,
     sleepWellbeing,
-    storyReactionScore: null, // future-ready
+    storyReactionScore,
+    // new emotion signals (each null ⇒ component skipped)
+    emojiPositivity: emoji.score,
+    replySpeed,
+    storyCaptions: storyCaptionScore,
+    callConnection: callConnectionScore,
+    voiceWarmth: voiceWarmthScore,
+    sharedActivity: sharedActivityScore,
+    signalsMeta,
   };
 };
 

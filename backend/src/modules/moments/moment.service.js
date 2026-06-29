@@ -53,7 +53,12 @@ const toDTO = (m, viewerId) => {
     mediaUrl: m.mediaUrl,
     thumbnailUrl: m.thumbnailUrl || "",
     caption: m.caption || "",
+    // Story Mood — a per-moment concept (own source/confidence/timestamp). It is
+    // distinct from the manual Mood collection and the AI current mood.
     mood: m.mood || null,
+    moodSource: m.moodSource || null,
+    moodConfidence: m.moodConfidence ?? null,
+    moodAt: m.moodAt || null,
     privacy: m.privacy,
     width: m.width,
     height: m.height,
@@ -190,7 +195,11 @@ const createMoment = async (userId, { type, uploaded, caption, privacy, duration
           })
         : "",
     caption: cleanCaption,
+    // Story mood picked at capture time (own provenance — never an intensity).
     mood: cleanMood,
+    moodSource: cleanMood ? "user" : null,
+    moodConfidence: cleanMood ? 100 : null,
+    moodAt: cleanMood ? new Date() : null,
     privacy: cleanPrivacy,
     width: uploaded.width || null,
     height: uploaded.height || null,
@@ -233,6 +242,31 @@ const createMoment = async (userId, { type, uploaded, caption, privacy, duration
   emitToUser(userId, "moment:new", dto);
 
   return dto;
+};
+
+// ─── story mood ──────────────────────────────────────────────────────────────
+/**
+ * Attach (or update) the Story Mood for a moment. This is the ONLY way an
+ * AI-suggested mood is accepted — it is recorded on the Moment itself, NOT in the
+ * manual Mood collection, so a Story mood can never inherit a manual mood's
+ * intensity (the original bug). `source` is "ai_suggested" when the author tapped
+ * a suggestion, else "user". Author-only.
+ */
+const setMoodForMoment = async (userId, momentId, { mood, source = "user" }) => {
+  const moment = await Moment.findById(momentId);
+  if (!moment) throw err("Moment not found", 404);
+  assertAuthor(moment, userId);
+  if (!SUGGESTABLE_MOODS.includes(mood)) throw err("Invalid mood");
+
+  moment.mood = mood;
+  moment.moodSource = source === "ai_suggested" ? "ai_suggested" : "user";
+  // AI-suggested moods carry the suggestion's confidence (best-effort); a mood the
+  // author picked themselves is certain.
+  moment.moodConfidence = moment.moodSource === "ai_suggested" ? 80 : 100;
+  moment.moodAt = new Date();
+  await moment.save();
+
+  return toDTO(await moment.populate("authorId", "name profilePhoto"), userId);
 };
 
 // ─── view ────────────────────────────────────────────────────────────────────
@@ -657,6 +691,7 @@ module.exports = {
   toDTO,
   getCircles,
   createMoment,
+  setMoodForMoment,
   markViewed,
   reactToMoment,
   keepMoment,

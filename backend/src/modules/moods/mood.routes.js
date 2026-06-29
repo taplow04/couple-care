@@ -20,6 +20,10 @@ router.post(
 
 router.get("/", authenticateUser, controller.getMine);
 
+// AI Current Mood — declared before "/partner" stays distinct (different paths).
+router.get("/ai-mood", authenticateUser, controller.aiMood);
+router.get("/ai-mood/partner", authenticateUser, controller.partnerAiMood);
+
 router.get("/partner", authenticateUser, controller.getPartner);
 
 router.get("/analytics", authenticateUser, controller.analytics);

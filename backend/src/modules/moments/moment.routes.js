@@ -37,6 +37,7 @@ router.delete("/highlights/:id", authenticateUser, controller.deleteHighlight);
 router.get("/profile/:ownerId", authenticateUser, controller.profileMoments);
 
 // ── Single moment lifecycle ──
+router.patch("/:id/mood", authenticateUser, controller.setMood);
 router.patch("/:id/view", authenticateUser, controller.view);
 router.post("/:id/react", authenticateUser, controller.react);
 router.patch("/:id/keep", authenticateUser, controller.keep);

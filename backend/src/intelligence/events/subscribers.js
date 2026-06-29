@@ -45,6 +45,14 @@ const scheduleRecompute = (coupleId) => {
       } catch (e) {
         console.error("[ccie:subscribers] recompute failed:", e.message);
       }
+      // Recompute + push BOTH partners' AI current mood so the chat header / mood
+      // page update live whenever emotional context changes (chat, calls, moods,
+      // stories, journals…). Best-effort, lazy-required, never throws.
+      try {
+        await require("../../modules/moods/aiMood.service").recomputeAndBroadcast(coupleId);
+      } catch (e) {
+        console.error("[ccie:subscribers] mood broadcast failed:", e.message);
+      }
     }, DEBOUNCE_MS),
   );
 };
