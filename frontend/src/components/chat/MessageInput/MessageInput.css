@@ -197,19 +197,21 @@
   cursor: not-allowed;
 }
 
-/* Send button */
+/* Send button — romantic gradient + glow, matching the own-message bubble so the
+   primary action shares the chat's design language (was a flat pink circle). */
 .msg-input__send {
   border: none;
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--primary);
+  background: linear-gradient(135deg, #ff6fa0 0%, var(--primary) 55%, #a86bff 130%);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: opacity 0.15s, transform 0.15s;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 14px rgba(255, 92, 138, 0.35);
   color: #fff;
   font-weight: 700;
   font-size: 14px;
@@ -218,8 +220,20 @@
 .msg-input__send:disabled {
   opacity: 0.45;
   pointer-events: none;
+  box-shadow: none;
+}
+
+.msg-input__send:not(:disabled):hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 18px rgba(255, 92, 138, 0.42);
 }
 
 .msg-input__send:not(:disabled):active {
   transform: scale(0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-input__send {
+    transition: opacity 0.15s;
+  }
 }

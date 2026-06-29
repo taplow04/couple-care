@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Fragment } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { useVisualViewport } from "../../../hooks/useVisualViewport";
 import {
@@ -22,6 +22,7 @@ import ChatHeader from "../../../components/chat/ChatHeader/ChatHeader";
 import MessageBubble from "../../../components/chat/MessageBubble/MessageBubble";
 import MessageInput from "../../../components/chat/MessageInput/MessageInput";
 import TypingIndicator from "../../../components/chat/TypingIndicator/TypingIndicator";
+import DateDivider from "../../../components/chat/DateDivider/DateDivider";
 import DeleteConfirmModal from "../../../components/chat/DeleteConfirmModal/DeleteConfirmModal";
 import "./ChatPage.css";
 
@@ -30,6 +31,31 @@ const TYPING_STOP_DELAY = 2000;
 // Normalizes senderId to a flat string regardless of whether it's populated or raw
 const flatSenderId = (senderId) =>
   senderId?._id ? String(senderId._id) : String(senderId);
+
+// Day grouping for date dividers (Today / Yesterday / "12 Jun" / "12 Jun 2025").
+const sameDay = (a, b) => {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+};
+const dayLabel = (date) => {
+  const d = new Date(date);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (sameDay(d, now)) return "Today";
+  if (sameDay(d, yesterday)) return "Yesterday";
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" }),
+  }).format(d);
+};
 
 const ChatPage = () => {
   const { user } = useAuth();
@@ -349,18 +375,29 @@ const ChatPage = () => {
           </div>
         ) : (
           <div className="chat-page__thread">
-            {messages.map((msg) => (
-              <MessageBubble
-                key={msg._id}
-                message={msg}
-                isMine={flatSenderId(msg.senderId) === String(user?._id)}
-                currentUserId={user?._id}
-                onDelete={handleDeleteRequest}
-                onReact={handleReact}
-                onReply={handleReply}
-                onForward={handleForward}
-              />
-            ))}
+            {messages.map((msg, i) => {
+              const prev = messages[i - 1];
+              const showDivider = !prev || !sameDay(prev.createdAt, msg.createdAt);
+              const bubble = (
+                <MessageBubble
+                  message={msg}
+                  isMine={flatSenderId(msg.senderId) === String(user?._id)}
+                  currentUserId={user?._id}
+                  onDelete={handleDeleteRequest}
+                  onReact={handleReact}
+                  onReply={handleReply}
+                  onForward={handleForward}
+                />
+              );
+              // Group consecutive messages by day with a centered divider.
+              // Fragment adds no DOM node, so the thread's flex layout is intact.
+              return (
+                <Fragment key={msg._id}>
+                  {showDivider && <DateDivider label={dayLabel(msg.createdAt)} />}
+                  {bubble}
+                </Fragment>
+              );
+            })}
             {isPartnerTyping && <TypingIndicator />}
             <div ref={bottomRef} />
           </div>
