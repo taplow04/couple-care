@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import OnlineStatus from "../OnlineStatus/OnlineStatus";
 import ChatAiCard from "../ChatAiCard/ChatAiCard";
-import MoodWhySheet from "../MoodWhySheet/MoodWhySheet";
 import { useCall } from "../../../context/CallContext";
 import { usePartnerPresence } from "../../../hooks/usePartnerPresence";
 import { usePartnerAiMood } from "../../../hooks/useAiMood";
@@ -25,7 +23,6 @@ const ChatHeader = ({ partner, partnerTyping }) => {
   const { canCall, startCall, callState } = useCall();
   const presence = usePartnerPresence(partner?._id);
   const moodState = usePartnerAiMood(partner?._id);
-  const [whyOpen, setWhyOpen] = useState(false);
   const initial = partner?.name ? partner.name[0].toUpperCase() : "♥";
   const partnerFirst = getFirstName(partner?.name, "Your Partner");
 
@@ -98,19 +95,8 @@ const ChatHeader = ({ partner, partnerTyping }) => {
         )}
       </div>
 
-      {/* ── Section 2: AI Information Card ── */}
-      <ChatAiCard
-        moodState={moodState}
-        onProfile={openPartner}
-        onWhy={() => setWhyOpen(true)}
-      />
-
-      <MoodWhySheet
-        open={whyOpen}
-        mood={moodState.mood}
-        name={partnerFirst}
-        onClose={() => setWhyOpen(false)}
-      />
+      {/* ── Compact AI strip (mood always visible) + expandable insight panel ── */}
+      <ChatAiCard moodState={moodState} onProfile={openPartner} />
     </div>
   );
 };
