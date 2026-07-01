@@ -40,6 +40,7 @@ const PartnerProfile = lazy(() => import("./pages/Partner/PartnerProfile/Partner
 const BucketListPage = lazy(() => import("./pages/BucketList/BucketListPage/BucketListPage"));
 const Moments = lazy(() => import("./pages/Moments/Moments"));
 const OurDayPage = lazy(() => import("./pages/OurDay/OurDayPage"));
+const OurMomentsPage = lazy(() => import("./pages/OurMoments/OurMomentsPage"));
 const SleepPage = lazy(() => import("./pages/Sleep/SleepPage/SleepPage"));
 const Privacy = lazy(() => import("./pages/Privacy/Privacy"));
 const TrustCenter = lazy(() => import("./pages/TrustCenter/TrustCenter"));
@@ -132,6 +133,7 @@ function App() {
               <Route path="/bucket-list" element={<BucketListPage />} />
               <Route path="/moments" element={<Moments />} />
               <Route path="/our-day" element={<OurDayPage />} />
+              <Route path="/our-moments" element={<OurMomentsPage />} />
               <Route path="/sleep" element={<SleepPage />} />
               <Route path="/relationship" element={<RelationshipProfile />} />
               <Route path="/passport" element={<RelationshipPassport />} />

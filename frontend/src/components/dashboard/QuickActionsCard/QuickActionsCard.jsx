@@ -8,11 +8,20 @@ import "./QuickActionsCard.css";
 // repeat, e.g. AI Center hosts both Coach and Letters).
 const ACTIONS = [
   {
-    to: "/journey",
+    // Unified relationship-memories hub (Today · Month · Year · Timeline) —
+    // replaces the separate Our Day / Our Month / Our Year cards.
+    to: "/our-moments",
     emoji: "❤️",
-    label: "Journey",
+    label: "Our Moments",
     color: "#FF5C8A",
     bg: "rgba(255,92,138,0.10)",
+  },
+  {
+    to: "/journey",
+    emoji: "🧭",
+    label: "Journey",
+    color: "#32C36C",
+    bg: "rgba(50,195,108,0.10)",
   },
   {
     to: "/bucket-list",

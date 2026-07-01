@@ -78,7 +78,8 @@
 
 @media (min-width: 768px) {
   .qac-grid {
-    grid-template-columns: repeat(6, 1fr);
+    /* auto-fit keeps rows balanced regardless of item count. */
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
     gap: 12px;
   }
 
