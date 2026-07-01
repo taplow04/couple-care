@@ -149,6 +149,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // Timestamp of the last password change/reset — surfaced in the Security
+    // Center ("Last changed 18 days ago") and factored into the trust score.
+    passwordChangedAt: {
+      type: Date,
+      default: null,
+    },
+
     settings: {
       notificationsEnabled: {
         type: Boolean,

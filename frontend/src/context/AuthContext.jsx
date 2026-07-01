@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
 import { getCurrentUser } from "../services/auth.service";
+import { logoutCurrentSession } from "../services/security.service";
 
 const AuthContext = createContext();
 
@@ -49,9 +50,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-
+    // Clear the UI immediately for a snappy sign-out.
     setUser(null);
+
+    // Best-effort: revoke THIS session server-side so the token can't be reused,
+    // then drop it locally. We keep the token until the request settles so its
+    // Authorization header is still attached; the interceptor removes it on a
+    // 401 too, so this is safe either way.
+    logoutCurrentSession()
+      .catch(() => {})
+      .finally(() => localStorage.removeItem("token"));
   };
 
   const updateUser = (patch) => {

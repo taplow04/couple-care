@@ -125,6 +125,10 @@ const Profile = () => {
               </button>
             </>
           )}
+          <button className="prof-pg-link" onClick={() => navigate("/security")}>
+            <span>🛡 Trust & Security</span>
+            <span className="prof-pg-link__chev">›</span>
+          </button>
           <button className="prof-pg-link" onClick={() => navigate("/privacy")}>
             <span>🔒 Privacy & Visibility</span>
             <span className="prof-pg-link__chev">›</span>

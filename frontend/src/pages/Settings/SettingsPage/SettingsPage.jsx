@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import { getSettings, updateSettings } from "../../../services/security.service";
@@ -51,6 +52,7 @@ const PRIVACY_ROWS = [
 
 const SettingsPage = () => {
   const { updateUser } = useAuth();
+  const navigate = useNavigate();
 
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [privacy, setPrivacy] = useState(DEFAULT_PRIVACY);
@@ -185,6 +187,22 @@ const SettingsPage = () => {
           </div>
         ) : (
           <>
+            {/* ── Trust & Security entry ── */}
+            <button
+              type="button"
+              className="settings-pg__security-entry"
+              onClick={() => navigate("/security")}
+            >
+              <span className="settings-pg__security-icon">🛡</span>
+              <span className="settings-pg__security-text">
+                <span className="settings-pg__security-title">Trust &amp; Security</span>
+                <span className="settings-pg__security-sub">
+                  Password, login activity, devices &amp; account
+                </span>
+              </span>
+              <span className="settings-pg__security-chev">›</span>
+            </button>
+
             {/* ── Appearance ── */}
             <SettingsSection
               title="Appearance"

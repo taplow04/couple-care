@@ -1,5 +1,6 @@
 const asyncHandler = require("../../utils/asyncHandler");
 const securityService = require("./security.service");
+const { buildContext } = require("./request.context");
 
 const sendVerification = asyncHandler(async (req, res) => {
   await securityService.sendVerificationEmail(req.user._id);
@@ -34,13 +35,69 @@ const resetPassword = asyncHandler(async (req, res) => {
 const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
-  await securityService.changePassword(
+  const result = await securityService.changePassword(
     req.user._id,
     currentPassword,
     newPassword,
+    { ctx: buildContext(req), currentSid: req.sessionId || null },
   );
 
-  res.status(200).json({ success: true });
+  res.status(200).json({ success: true, data: result });
+});
+
+// ── Security Center ──
+const getOverview = asyncHandler(async (req, res) => {
+  const data = await securityService.getSecurityOverview(req.user._id);
+  res.status(200).json({ success: true, data });
+});
+
+const getSessions = asyncHandler(async (req, res) => {
+  const data = await securityService.listSessions(
+    req.user._id,
+    req.sessionId || null,
+  );
+  res.status(200).json({ success: true, data });
+});
+
+const revokeSession = asyncHandler(async (req, res) => {
+  const data = await securityService.revokeSession(
+    req.user._id,
+    req.params.id,
+    req.body.password,
+    { ctx: buildContext(req), currentSid: req.sessionId || null },
+  );
+  res.status(200).json({ success: true, data });
+});
+
+const logoutOthers = asyncHandler(async (req, res) => {
+  const data = await securityService.logoutOtherDevices(
+    req.user._id,
+    req.body.password,
+    { ctx: buildContext(req), currentSid: req.sessionId || null },
+  );
+  res.status(200).json({ success: true, data });
+});
+
+const logoutCurrent = asyncHandler(async (req, res) => {
+  const data = await securityService.logoutCurrent(
+    req.user._id,
+    req.sessionId || null,
+    { ctx: buildContext(req) },
+  );
+  res.status(200).json({ success: true, data });
+});
+
+const getActivity = asyncHandler(async (req, res) => {
+  const data = await securityService.getActivity(req.user._id, req.query.limit);
+  res.status(200).json({ success: true, data });
+});
+
+const deleteAccount = asyncHandler(async (req, res) => {
+  const data = await securityService.deleteAccount(
+    req.user._id,
+    req.body.password,
+  );
+  res.status(200).json({ success: true, data });
 });
 
 const getSettings = asyncHandler(async (req, res) => {
@@ -63,4 +120,11 @@ module.exports = {
   changePassword,
   getSettings,
   updateSettings,
+  getOverview,
+  getSessions,
+  revokeSession,
+  logoutOthers,
+  logoutCurrent,
+  getActivity,
+  deleteAccount,
 };

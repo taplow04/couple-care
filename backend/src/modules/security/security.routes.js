@@ -10,6 +10,13 @@ const {
   changePassword,
   getSettings,
   updateSettings,
+  getOverview,
+  getSessions,
+  revokeSession,
+  logoutOthers,
+  logoutCurrent,
+  getActivity,
+  deleteAccount,
 } = require("./security.controller");
 
 const router = express.Router();
@@ -18,6 +25,15 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: "Too many attempts, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Read-only Security Center endpoints are polled by the page — keep them off the
+// tight password limiter but still bounded.
+const readLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -65,7 +81,20 @@ const changePasswordValidation = [
     .withMessage("Current password must be at least 8 characters"),
   body("newPassword")
     .isLength({ min: 8 })
-    .withMessage("New password must be at least 8 characters"),
+    .withMessage("New password must be at least 8 characters")
+    .matches(/[A-Z]/)
+    .withMessage("New password needs an uppercase letter")
+    .matches(/[a-z]/)
+    .withMessage("New password needs a lowercase letter")
+    .matches(/[0-9]/)
+    .withMessage("New password needs a number")
+    .matches(/[^A-Za-z0-9]/)
+    .withMessage("New password needs a special character"),
+  handleValidationErrors,
+];
+
+const passwordConfirmValidation = [
+  body("password").notEmpty().withMessage("Password is required"),
   handleValidationErrors,
 ];
 
@@ -97,5 +126,33 @@ router.patch(
 );
 router.get("/settings", authenticateUser, getSettings);
 router.patch("/settings", authenticateUser, updateSettings);
+
+// ── Security Center ──
+router.get("/overview", readLimiter, authenticateUser, getOverview);
+router.get("/sessions", readLimiter, authenticateUser, getSessions);
+router.get("/activity", readLimiter, authenticateUser, getActivity);
+
+router.post("/logout", authenticateUser, logoutCurrent);
+router.post(
+  "/sessions/logout-others",
+  authLimiter,
+  authenticateUser,
+  passwordConfirmValidation,
+  logoutOthers,
+);
+router.delete(
+  "/sessions/:id",
+  authLimiter,
+  authenticateUser,
+  passwordConfirmValidation,
+  revokeSession,
+);
+router.post(
+  "/delete-account",
+  authLimiter,
+  authenticateUser,
+  passwordConfirmValidation,
+  deleteAccount,
+);
 
 module.exports = router;

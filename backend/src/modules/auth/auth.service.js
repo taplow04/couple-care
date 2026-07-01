@@ -6,6 +6,8 @@ const PendingRegistration = require("./pendingRegistration.model");
 const generateToken = require("../../utils/jwt");
 const { hashToken } = require("../security/token.service");
 const { sendOtpEmail } = require("../security/email.service");
+const sessionService = require("../security/session.service");
+const { logEvent } = require("../security/securityEvent.service");
 
 // ─── OTP config ──────────────────────────────────────────────────────────────
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -35,6 +37,39 @@ const sanitizeUser = (userDoc) => {
   delete obj.emailVerificationToken;
   delete obj.passwordResetToken;
   return obj;
+};
+
+// Create a tracked session + issue a JWT carrying its id (`sid`). Resilient: if
+// session creation fails we still return a grandfathered token with no `sid` so
+// login never breaks. Logs the sign-in + a new-device alert best-effort.
+const issueSessionToken = async (user, ctx = {}, { via = "login" } = {}) => {
+  let sid;
+  try {
+    const { tokenId, isNewDevice } = await sessionService.createSession(
+      user._id,
+      ctx,
+      { via },
+    );
+    sid = tokenId;
+
+    logEvent({
+      userId: user._id,
+      type: "login",
+      message: `Signed in from ${ctx.browser || "a browser"} on ${ctx.os || "a device"}`,
+      ctx,
+    });
+    if (isNewDevice) {
+      logEvent({
+        userId: user._id,
+        type: "new_device",
+        message: `New device: ${[ctx.device, ctx.browser].filter(Boolean).join(" · ") || "Unknown"}`,
+        ctx,
+      });
+    }
+  } catch (err) {
+    console.error("[auth] session creation failed:", err.message);
+  }
+  return generateToken(user._id, sid);
 };
 
 // Step 1 — collect credentials, send an OTP. No User row yet.
@@ -83,7 +118,7 @@ const requestRegistration = async (data) => {
 };
 
 // Step 2 — verify the OTP, create the real User, auto-login.
-const verifyRegistration = async (data) => {
+const verifyRegistration = async (data, ctx = {}) => {
   const email = String(data.email || "")
     .trim()
     .toLowerCase();
@@ -137,7 +172,14 @@ const verifyRegistration = async (data) => {
 
   await PendingRegistration.deleteOne({ _id: pending._id });
 
-  const token = generateToken(user._id);
+  logEvent({
+    userId: user._id,
+    type: "otp_verified",
+    message: "Email verified via one-time code",
+    ctx,
+  });
+
+  const token = await issueSessionToken(user, ctx, { via: "register" });
   return { user: sanitizeUser(user), token };
 };
 
@@ -184,7 +226,7 @@ const resendOtp = async (data) => {
   return { email };
 };
 
-const loginUser = async (data) => {
+const loginUser = async (data, ctx = {}) => {
   const { email, password } = data;
 
   const user = await User.findOne({ email: String(email || "").toLowerCase() }).select(
@@ -198,10 +240,17 @@ const loginUser = async (data) => {
   const isMatch = await user.comparePassword(password);
 
   if (!isMatch) {
+    // Record the failed attempt against the account (surfaced in activity).
+    logEvent({
+      userId: user._id,
+      type: "failed_login",
+      message: "Failed sign-in attempt (wrong password)",
+      ctx,
+    });
     throw badRequest("Invalid credentials", 401);
   }
 
-  const token = generateToken(user._id);
+  const token = await issueSessionToken(user, ctx, { via: "login" });
 
   return { user: sanitizeUser(user), token };
 };

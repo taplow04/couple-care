@@ -512,3 +512,33 @@ All scoring lives in ONE configurable, deterministic, explainable, event-driven 
 - **Determinism is sacred**: no LLM in any SCORE path (LLM only narrates memory text); couple engines use couple-symmetric inputs + sorted partner order. Same couple state + same day ⇒ same output. Don't introduce `Date.now()` inside an engine — take `now` from `features`.
 - **Weights are config-only**: tune `config/weights.js`; never hardcode in an engine. New health inputs are additive (normalised by the active-weight sum) so a data-less couple scores exactly as the original 7-component formula (regression-free), while richer couples blend new signals in (scores shift by design).
 - **`features.js` is the only DB layer** — keep engines pure. Guard every new query so a missing collection degrades a component to null, never crashes scoring.
+
+---
+
+## 🛡 Trust & Security Center (account security)
+
+A dedicated account-security surface (Instagram/Google/Apple-style), distinct from the couple-facing `/trust-center`. Reachable **Profile → Settings → Trust & Security** (and a Profile quick link). Route `/security` (lazy, in the AppLayout group — reachable **without a partner**).
+
+### The one structural change: sessions make the JWT revocable
+The JWT was stateless (`{ userId }`); logout was client-only, so "log out this device / all others" was impossible. Now:
+- **`utils/jwt.generateToken(userId, sid)`** embeds an optional session id (`sid`). **Tokens minted before this (no `sid`) are grandfathered** — never force-logged-out on deploy.
+- **`middleware/authMiddleware`** — if a token has `sid`, it must map to an ACTIVE (non-revoked) `Session`, else **401**; it also throttled-touches `lastActive`. No `sid` ⇒ legacy path, allowed. jwt lib errors are normalized to 401.
+- **`modules/security/session.model.js`** (`Session`) — one row per login: `tokenId` (= JWT `sid`), device/deviceType/browser/os (UA-parsed), `ip`(server-only)/`ipMasked`/`location` (offline **geoip-lite**), `lastActive`, `revokedAt`/`revokedReason`. `session.service` owns create/list/revoke/touch + new-device detection.
+- **`modules/security/request.context.js`** — `buildContext(req)` → device/ip-mask/geo, from `user-agent` + `X-Forwarded-For` (app has `trust proxy` set). Deps: `ua-parser-js`, `geoip-lite`.
+- Login (`auth.service.loginUser`) + OTP verify (`verifyRegistration`) now take a `ctx` and call `issueSessionToken` (resilient: if session create fails, falls back to a grandfathered token with no `sid` — login never breaks). `changePassword` **revokes all OTHER sessions**; `resetPassword` **revokes ALL** (leaked-token defense) and both set `User.passwordChangedAt`.
+
+### Security audit log
+`SecurityEvent` (append-only) + `securityEvent.service.logEvent` (**best-effort, never throws**). Logged: login / failed_login / new_device / logout / password_changed / password_reset / email_verified / otp_verified / verification_sent / pair_connected / partner_unmatched / session_revoked / sessions_revoked_all. Pair/unmatch events are logged from `couple.service` (lazy require, swallowed).
+
+### API (`/api/v1/security`, all `authenticateUser`)
+`GET /overview` (email/verified/2FA-future/created/passwordChangedAt/activeSessions + **deterministic trust score**), `GET /sessions`, `GET /activity?limit`, `POST /logout` (revoke current), `POST /sessions/logout-others` (password), `DELETE /sessions/:id` (password), `POST /delete-account` (password). Read endpoints use a looser `readLimiter`; password/destructive ones stay on `authLimiter`. Password policy enforced server-side (`assertStrongPassword`: 8+ / upper / lower / number / special — **weak rejected**).
+
+- **Trust score** is deterministic: base 100, −30 unverified email, −8 no-2FA (the standing nudge → clean account = **92%**), −8/−7 for >3/>5 sessions, −10 password >180d. Returns `{score, level, checks[]}`.
+- **Delete account** = password-confirmed hard delete: soft-unmatch partner (keeps co-owned couple data), revoke+delete sessions, delete SecurityEvents / PushSubscriptions / PendingRegistration, then the User.
+
+### Frontend
+- `services/security.service.js` gains `getSecurityOverview/getSessions/getSecurityActivity/changePassword/revokeSession/logoutOtherDevices/logoutCurrentSession/deleteAccount`.
+- `pages/Security/SecurityCenter` (all 10 sections: trust hero, account security, change-password w/ strength meter, "Where you're logged in" + device mgmt, lazy account activity, recovery, privacy quick-links, danger zone). Components `components/security/{PasswordStrength,SessionCard,TrustScoreRing,ConfirmDialog}` + `utils/passwordStrength.js` (shared 5-rule model mirroring the backend). Activity is **lazy-loaded on expand**; ConfirmDialog is **mounted only when open** (fresh state, no reset effect).
+- **`AuthContext.logout` now revokes the current session server-side** (best-effort, then clears the token) — no longer a pure client wipe.
+- **axios response interceptor**: an authenticated **401** (e.g. this session was revoked on another device) clears the token and bounces to `/login` — so a revoked token can't linger. Auth endpoints (login/otp/reset) are excluded.
+- **Known limit**: the Socket.io handshake still uses plain `jwt.verify` (no session check). A revoked device's live socket survives until it drops, but its next REST 401 clears the token, so it can't re-establish. Acceptable; not wired to avoid churn on the one shared socket.

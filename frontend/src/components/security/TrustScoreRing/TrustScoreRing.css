@@ -1,0 +1,42 @@
+.trust-ring {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.trust-ring__progress {
+  transition: stroke-dashoffset 0.9s var(--ease-spring);
+}
+
+.trust-ring__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.trust-ring__score {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.trust-ring__pct {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.trust-ring__shield {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-ring__progress { transition: none; }
+}

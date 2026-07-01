@@ -199,3 +199,36 @@
 @media (min-width: 768px) {
   .settings-pg__content { padding: 32px 24px calc(var(--bottom-nav-height) + 40px); }
 }
+
+/* ── Trust & Security entry card ── */
+.settings-pg__security-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--gradient-romantic-soft);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transition-fast);
+}
+.settings-pg__security-entry:active { transform: scale(0.99); }
+
+.settings-pg__security-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.settings-pg__security-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.settings-pg__security-title { font-size: var(--font-body); font-weight: 800; color: var(--text); }
+.settings-pg__security-sub { font-size: var(--font-xs); color: var(--text-secondary); }
+.settings-pg__security-chev { font-size: 1.6rem; color: var(--muted); }

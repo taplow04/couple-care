@@ -89,6 +89,21 @@ const joinCouple = async (userId, pairCode) => {
 
   await user.save();
 
+  // Audit trail for both partners (best-effort — never break pairing).
+  try {
+    const { logEvent } = require("../security/securityEvent.service");
+    for (const id of [userId, couple.partnerOneId].filter(Boolean)) {
+      logEvent({
+        userId: id,
+        type: "pair_connected",
+        message: "Connected with a partner",
+        meta: { coupleId: couple._id },
+      });
+    }
+  } catch {
+    /* audit optional */
+  }
+
   return couple;
 };
 /**
@@ -369,6 +384,21 @@ const unmatchPartner = async (userId) => {
 
   const ids = [couple.partnerOneId, couple.partnerTwoId].filter(Boolean);
   await User.updateMany({ _id: { $in: ids } }, { currentCoupleId: null });
+
+  // Audit trail for both partners (best-effort — never break the unmatch).
+  try {
+    const { logEvent } = require("../security/securityEvent.service");
+    for (const id of ids) {
+      logEvent({
+        userId: id,
+        type: "partner_unmatched",
+        message: "Partner disconnected",
+        meta: { coupleId: couple._id },
+      });
+    }
+  } catch {
+    /* audit optional */
+  }
 
   // Let the partner's app react immediately (transition into Healing mode).
   if (partnerId) {

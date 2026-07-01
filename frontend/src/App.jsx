@@ -24,6 +24,7 @@ const AI = lazy(() => import("./pages/AI/AI"));
 const NotificationsPage = lazy(() => import("./pages/Notifications/NotificationsPage/NotificationsPage"));
 const EditProfile = lazy(() => import("./pages/Profile/EditProfile/EditProfile"));
 const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage/SettingsPage"));
+const SecurityCenter = lazy(() => import("./pages/Security/SecurityCenter/SecurityCenter"));
 const JourneyPage = lazy(() => import("./pages/Journey/JourneyPage/JourneyPage"));
 const MoodAnalyticsPage = lazy(() => import("./pages/MoodAnalytics/MoodAnalyticsPage/MoodAnalyticsPage"));
 const AICenterPage = lazy(() => import("./pages/AICenter/AICenterPage/AICenterPage"));
@@ -92,6 +93,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/security" element={<SecurityCenter />} />
             <Route path="/privacy" element={<Privacy />} />
 
             {/* Stage-adaptive home — reachable in every lifecycle stage

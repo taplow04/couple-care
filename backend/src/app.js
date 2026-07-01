@@ -5,6 +5,10 @@ const app = express();
 const routes = require("./routes");
 const errorHandler = require("./middleware/errorMiddleware");
 
+// Behind Render/Vercel's proxy the real client IP is in X-Forwarded-For. Trust
+// the first proxy hop so req.ip + rate-limiting + session geo/IP are accurate.
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
