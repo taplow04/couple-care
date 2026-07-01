@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 
 import { uploadMoment, setMomentMood } from "../../../services/moments.service";
 import { compressImage } from "../../../utils/compressImage";
+import { useIsMobile } from "../../../hooks/useIsMobile";
+import MobileCamera from "../MobileCamera/MobileCamera";
 import "./MomentCapture.css";
 
 const MAX_DURATION = 20; // seconds (Feature 3/8/15)
@@ -19,22 +21,41 @@ const PRIVACY = [
   { key: "save_journey", label: "⭐ Save to Journey" },
 ];
 
-// Portrait-first constraints. We HINT a 9:16 portrait frame + a decent
-// resolution; browsers that can't honour it (most laptop webcams are landscape)
-// still work — the preview is cropped to a centered portrait frame in CSS, so
-// nothing ever looks stretched on phone, tablet, laptop, or desktop.
-const constraintsFor = (m, facing) =>
-  m === "voice"
-    ? { audio: true }
-    : {
-        video: {
-          facingMode: facing,
-          width: { ideal: 1080 },
-          height: { ideal: 1920 },
-          aspectRatio: { ideal: 9 / 16 },
-        },
-        audio: m === "video",
-      };
+// Camera constraints.
+//
+// DESKTOP (unchanged, already perfect): hint a 9:16 portrait frame — laptop
+// webcams are landscape so the browser returns landscape and the centered 9:16
+// card crops it cleanly.
+//
+// MOBILE (root-cause fix): do NOT force `aspectRatio` or a portrait resolution.
+// Forcing 9:16 on a phone makes the browser digitally crop a narrow slice out of
+// the 4:3/16:9 sensor and scale it up = the "extremely zoomed" bug. We instead
+// request only a native-friendly resolution and let the sensor give its REAL
+// aspect ratio; MobileCamera then renders that ratio 1:1 (no crop, no zoom).
+const constraintsFor = (m, facing, isMobile) => {
+  if (m === "voice") return { audio: true };
+
+  if (isMobile) {
+    return {
+      video: {
+        facingMode: { ideal: facing },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: m === "video",
+    };
+  }
+
+  return {
+    video: {
+      facingMode: facing,
+      width: { ideal: 1080 },
+      height: { ideal: 1920 },
+      aspectRatio: { ideal: 9 / 16 },
+    },
+    audio: m === "video",
+  };
+};
 
 const mapMediaError = (e) => {
   if (e?.name === "NotAllowedError")
@@ -52,6 +73,7 @@ const mapMediaError = (e) => {
  * uploaded with a progress indicator; failures surface gracefully.
  */
 const MomentCapture = ({ onClose, onUploaded }) => {
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState("photo");
   const [facingMode, setFacingMode] = useState("user");
   const [recording, setRecording] = useState(false);
@@ -93,13 +115,15 @@ const MomentCapture = ({ onClose, onUploaded }) => {
       stopStream();
       setReady(false); // show the loader until the new stream paints a frame
       try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraintsFor(m, facing));
+        const stream = await navigator.mediaDevices.getUserMedia(
+          constraintsFor(m, facing, isMobile),
+        );
         attachStream(stream, m);
       } catch (e) {
         setError(mapMediaError(e));
       }
     },
-    [stopStream, attachStream],
+    [stopStream, attachStream, isMobile],
   );
 
   // Start the camera once on mount. The getUserMedia promise chain keeps every
@@ -108,7 +132,7 @@ const MomentCapture = ({ onClose, onUploaded }) => {
   useEffect(() => {
     let cancelled = false;
     navigator.mediaDevices
-      .getUserMedia(constraintsFor("photo", "user"))
+      .getUserMedia(constraintsFor("photo", "user", isMobile))
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -124,7 +148,7 @@ const MomentCapture = ({ onClose, onUploaded }) => {
       stopStream();
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [attachStream, stopStream]);
+  }, [attachStream, stopStream, isMobile]);
 
   const switchMode = (m) => {
     if (recording) return;
@@ -282,7 +306,11 @@ const MomentCapture = ({ onClose, onUploaded }) => {
   const showCamera = !captured && !aiResult;
 
   const body = (
-    <div className="moment-capture" role="dialog" aria-modal="true">
+    <div
+      className={`moment-capture${isMobile ? " moment-capture--mobile" : ""}`}
+      role="dialog"
+      aria-modal="true"
+    >
       <div className="moment-capture__top">
         <button type="button" className="moment-capture__close" onClick={onClose} aria-label="Close">
           ✕
@@ -303,24 +331,34 @@ const MomentCapture = ({ onClose, onUploaded }) => {
       <div className="moment-capture__stage">
         {error && <div className="moment-capture__error">{error}</div>}
 
-        {showCamera && mode !== "voice" && (
-          <div className="moment-capture__frame">
-            <video
-              ref={videoRef}
-              className={`moment-capture__preview${facingMode === "user" ? " moment-capture__preview--mirror" : ""}`}
-              playsInline
-              muted
-              autoPlay
-              onLoadedMetadata={() => setReady(true)}
+        {showCamera && mode !== "voice" &&
+          (isMobile ? (
+            // Dedicated native-feel mobile camera: real aspect ratio, no crop.
+            <MobileCamera
+              videoRef={videoRef}
+              facingMode={facingMode}
+              ready={ready}
+              onReady={() => setReady(true)}
             />
-            {!ready && !error && (
-              <div className="moment-capture__loading">
-                <span className="moment-capture__spinner" />
-                <p>Starting camera…</p>
-              </div>
-            )}
-          </div>
-        )}
+          ) : (
+            // Desktop — unchanged 9:16 portrait card.
+            <div className="moment-capture__frame">
+              <video
+                ref={videoRef}
+                className={`moment-capture__preview${facingMode === "user" ? " moment-capture__preview--mirror" : ""}`}
+                playsInline
+                muted
+                autoPlay
+                onLoadedMetadata={() => setReady(true)}
+              />
+              {!ready && !error && (
+                <div className="moment-capture__loading">
+                  <span className="moment-capture__spinner" />
+                  <p>Starting camera…</p>
+                </div>
+              )}
+            </div>
+          ))}
 
         {showCamera && mode === "voice" && (
           <div className="moment-capture__voice">
