@@ -200,7 +200,7 @@
   .settings-pg__content { padding: 32px 24px calc(var(--bottom-nav-height) + 40px); }
 }
 
-/* ── Trust & Security entry card ── */
+/* ── Security Center entry card ── */
 .settings-pg__security-entry {
   display: flex;
   align-items: center;

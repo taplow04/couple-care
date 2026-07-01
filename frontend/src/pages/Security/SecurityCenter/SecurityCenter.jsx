@@ -351,7 +351,7 @@ const SecurityCenter = () => {
   return (
     <div className="sec-pg">
       <BackHeader
-        title="Trust & Security"
+        title="Security Center"
         subtitle="Manage your account security"
         fallback="/settings"
       />

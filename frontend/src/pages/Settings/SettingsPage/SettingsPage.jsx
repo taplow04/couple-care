@@ -187,7 +187,7 @@ const SettingsPage = () => {
           </div>
         ) : (
           <>
-            {/* ── Trust & Security entry ── */}
+            {/* ── Security Center entry ── */}
             <button
               type="button"
               className="settings-pg__security-entry"
@@ -195,7 +195,7 @@ const SettingsPage = () => {
             >
               <span className="settings-pg__security-icon">🛡</span>
               <span className="settings-pg__security-text">
-                <span className="settings-pg__security-title">Trust &amp; Security</span>
+                <span className="settings-pg__security-title">Security Center</span>
                 <span className="settings-pg__security-sub">
                   Password, login activity, devices &amp; account
                 </span>
