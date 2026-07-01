@@ -63,6 +63,7 @@ const MomentCapture = ({ onClose, onUploaded }) => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [aiResult, setAiResult] = useState(null); // post-upload suggestion
+  const [ready, setReady] = useState(false); // camera has a live frame to show
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -90,6 +91,7 @@ const MomentCapture = ({ onClose, onUploaded }) => {
   const startStream = useCallback(
     async (m, facing) => {
       stopStream();
+      setReady(false); // show the loader until the new stream paints a frame
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraintsFor(m, facing));
         attachStream(stream, m);
@@ -309,7 +311,14 @@ const MomentCapture = ({ onClose, onUploaded }) => {
               playsInline
               muted
               autoPlay
+              onLoadedMetadata={() => setReady(true)}
             />
+            {!ready && !error && (
+              <div className="moment-capture__loading">
+                <span className="moment-capture__spinner" />
+                <p>Starting camera…</p>
+              </div>
+            )}
           </div>
         )}
 

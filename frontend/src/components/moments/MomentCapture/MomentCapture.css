@@ -73,6 +73,35 @@
   transform: scaleX(-1);
 }
 
+/* Camera-starting loader (over the live frame until the first frame paints). */
+.moment-capture__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #0b0b10;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+}
+
+.moment-capture__spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  animation: moment-capture-spin 0.8s linear infinite;
+}
+
+@keyframes moment-capture-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .moment-capture__captured {
   width: 100%;
   height: 100%;
@@ -331,4 +360,94 @@
   border-radius: var(--radius-sm);
   padding: 12px 28px;
   cursor: pointer;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MOBILE (≤768px) — Instagram/Snapchat-style full-bleed viewfinder.
+   Desktop keeps the centered 9:16 portrait card (rules above) UNCHANGED.
+
+   The default `.moment-capture__frame` is a fixed 9:16 card that, on a phone,
+   becomes a narrow letterboxed rectangle floating with big side gaps (the
+   reported "bulky / floating / not centered / mis-scaled" bug). On mobile we
+   instead let the LIVE preview occupy the whole available camera area (full
+   width + height between the top bar and controls) with object-fit: cover, so
+   it reads as a natural viewfinder — no side bars, no zoom-y over-crop, centered
+   and correctly scaled. The captured review uses `contain` so the full shot is
+   visible before sharing.
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .moment-capture__stage {
+    padding: 0;
+  }
+
+  /* LIVE camera frame → fill the available area (direct child of the stage). */
+  .moment-capture__stage > .moment-capture__frame {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: auto;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* CAPTURED review → fill the area but show the whole frame (no crop). */
+  .moment-capture__captured .moment-capture__frame {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: auto;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .moment-capture__captured img,
+  .moment-capture__captured video {
+    object-fit: contain;
+  }
+
+  /* Legible controls over the full-bleed preview + premium glass buttons. */
+  .moment-capture__top {
+    position: relative;
+    z-index: 3;
+  }
+  .moment-capture__close,
+  .moment-capture__flip {
+    background: rgba(0, 0, 0, 0.38);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .moment-capture__controls {
+    padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  }
+
+  /* Slightly larger, premium tap targets on phones. */
+  .moment-capture__shutter {
+    width: 76px;
+    height: 76px;
+  }
+}
+
+/* Landscape phones (touch only): keep the viewfinder full-bleed and the controls
+   compact so nothing overflows when vertical space is scarce. `pointer: coarse`
+   ensures a narrow desktop window is never affected. */
+@media (max-width: 900px) and (orientation: landscape) and (pointer: coarse) {
+  .moment-capture__controls {
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  }
+  .moment-capture__hint {
+    display: none;
+  }
+  .moment-capture__shutter {
+    width: 60px;
+    height: 60px;
+  }
 }
