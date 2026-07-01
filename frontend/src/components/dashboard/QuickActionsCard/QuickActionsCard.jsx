@@ -2,44 +2,38 @@ import { memo } from "react";
 import { Link } from "react-router-dom";
 import "./QuickActionsCard.css";
 
-// Relationship-centric shortcuts. Mood / AI Center / Chat were dropped — they're
-// already one tap away (bottom nav + the TopHeader chat icon). These surface the
-// emotional, memory-rich corners of the app that have no nav home.
+// Relationship-centric shortcuts. Journey now lives here (moved off the bottom
+// nav, which gained Explore). These surface the emotional, memory-rich corners
+// of the app that have no dedicated nav home. `key` is the label (some routes
+// repeat, e.g. AI Center hosts both Coach and Letters).
 const ACTIONS = [
   {
-    to: "/our-day",
+    to: "/journey",
     emoji: "❤️",
-    label: "Our Day",
+    label: "Journey",
     color: "#FF5C8A",
     bg: "rgba(255,92,138,0.10)",
   },
   {
-    to: "/our-day?replay=month",
-    emoji: "🗓️",
-    label: "Our Month",
+    to: "/bucket-list",
+    emoji: "🪄",
+    label: "Bucket List",
     color: "#7C5CFF",
     bg: "rgba(124,92,255,0.10)",
   },
   {
-    to: "/our-day?replay=year",
-    emoji: "✨",
-    label: "Our Year",
-    color: "#FFAA00",
-    bg: "rgba(255,170,0,0.10)",
-  },
-  {
-    to: "/journey",
-    emoji: "🧭",
-    label: "Couple Timeline",
+    to: "/relationship",
+    emoji: "🖼️",
+    label: "Gallery",
     color: "#32C36C",
     bg: "rgba(50,195,108,0.10)",
   },
   {
-    to: "/moments",
-    emoji: "🌟",
-    label: "Story Highlights",
-    color: "#FF5C8A",
-    bg: "rgba(255,92,138,0.10)",
+    to: "/ai-center?tab=coach",
+    emoji: "🤖",
+    label: "AI Coach",
+    color: "#FFAA00",
+    bg: "rgba(255,170,0,0.10)",
   },
   {
     to: "/memories",
@@ -47,6 +41,13 @@ const ACTIONS = [
     label: "Memories",
     color: "#7C5CFF",
     bg: "rgba(124,92,255,0.10)",
+  },
+  {
+    to: "/ai-center?tab=letter",
+    emoji: "💌",
+    label: "Love Letters",
+    color: "#FF5C8A",
+    bg: "rgba(255,92,138,0.10)",
   },
 ];
 

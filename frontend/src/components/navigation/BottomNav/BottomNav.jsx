@@ -25,15 +25,12 @@ const MoodIcon = () => (
   </svg>
 );
 
-const JourneyIcon = () => (
+const ExploreIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <path d="M12 21C12 21 4 14.5 4 9C4 6.24 6.24 4 9 4C10.73 4 12.26 4.87 13.12 6.2C13.12 6.2 12 8.5 12 9C12 10.66 13.34 12 15 12C15.5 12 15.96 11.87 16.36 11.64C16.77 12.43 17 13.21 17 14C17 17.87 12 21 12 21Z"
-      fill="currentColor" opacity="0.15" />
-    <path d="M12 21C12 21 4 14.5 4 9C4 6.24 6.24 4 9 4C10.73 4 12.26 4.87 13.12 6.2"
-      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-    <path d="M20 9C20 12.87 15 17 15 17C15 17 10 12.87 10 9C10 6.79 12.24 5 15 5C17.76 5 20 6.79 20 9Z"
-      stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="15" cy="9" r="1.5" fill="currentColor" />
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.9" />
+    <path d="M12 3C9.5 5.5 8.5 9 8.5 12C8.5 15 9.5 18.5 12 21C14.5 18.5 15.5 15 15.5 12C15.5 9 14.5 5.5 12 3Z"
+      stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" fill="currentColor" fillOpacity="0.12" />
+    <path d="M3.5 12H20.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
   </svg>
 );
 
@@ -85,9 +82,9 @@ const ReflectIcon = () => (
 const NAV_BY_STAGE = {
   [STAGE.GROWING]: [
     { to: "/dashboard", label: "Home", Icon: HomeIcon },
-    { to: "/moods", label: "Mood", Icon: MoodIcon },
+    { to: "/explore", label: "Explore", Icon: ExploreIcon },
     { to: "/ai-center", label: "AI Center", Icon: AICenterIcon },
-    { to: "/journey", label: "Journey", Icon: JourneyIcon },
+    { to: "/moods", label: "Mood", Icon: MoodIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
   [STAGE.PREPARING]: [

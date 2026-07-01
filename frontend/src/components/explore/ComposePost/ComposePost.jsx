@@ -1,0 +1,182 @@
+import { useRef, useState } from "react";
+
+import { createExplorePost } from "../../../services/explore.service";
+import { compressImage } from "../../../utils/compressImage";
+import { CATEGORIES } from "../../../utils/exploreTaxonomy";
+import "./ComposePost.css";
+
+const VISIBILITY = [
+  { key: "public", label: "🌍 Public", hint: "Shown in Explore (if your profile is public)" },
+  { key: "partner_only", label: "❤️ Partner Only", hint: "Only your partner sees it" },
+  { key: "private", label: "🔒 Private", hint: "Only you" },
+];
+
+// Create a relationship post for Explore. Media → Cloudinary via multipart.
+const ComposePost = ({ onClose, onCreated }) => {
+  const fileRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState("");
+  const [isVideo, setIsVideo] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [category, setCategory] = useState("date");
+  const [location, setLocation] = useState("");
+  const [visibility, setVisibility] = useState("public");
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
+
+  const pick = async (f) => {
+    if (!f) return;
+    setError("");
+    const video = f.type.startsWith("video/");
+    setIsVideo(video);
+    if (video) {
+      setFile(f);
+      setPreview(URL.createObjectURL(f));
+    } else {
+      try {
+        const compressed = await compressImage(f);
+        setFile(compressed);
+        setPreview(URL.createObjectURL(compressed));
+      } catch {
+        setFile(f);
+        setPreview(URL.createObjectURL(f));
+      }
+    }
+  };
+
+  const submit = async () => {
+    if (!file || uploading) return;
+    setUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("caption", caption);
+      fd.append("category", category);
+      fd.append("location", location);
+      fd.append("visibility", visibility);
+      const res = await createExplorePost(fd, setProgress);
+      onCreated?.(res.data);
+      onClose?.();
+    } catch (err) {
+      setError(err.response?.data?.message || "Couldn't share the post. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="compose" role="dialog" aria-modal="true" aria-label="Share a post">
+      <button type="button" className="compose__scrim" aria-label="Close" onClick={onClose} />
+      <div className="compose__panel glass">
+        <div className="compose__head">
+          <button type="button" className="compose__close" onClick={onClose} aria-label="Close">✕</button>
+          <h3 className="compose__title">Share a Moment</h3>
+          <button
+            type="button"
+            className="compose__post"
+            onClick={submit}
+            disabled={!file || uploading}
+          >
+            {uploading ? `${progress}%` : "Share"}
+          </button>
+        </div>
+
+        <div className="compose__body">
+          {/* Media picker / preview */}
+          {preview ? (
+            <div className="compose__preview">
+              {isVideo ? (
+                <video src={preview} controls playsInline />
+              ) : (
+                <img src={preview} alt="preview" />
+              )}
+              <button
+                type="button"
+                className="compose__change"
+                onClick={() => fileRef.current?.click()}
+              >
+                Change
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="compose__drop"
+              onClick={() => fileRef.current?.click()}
+            >
+              <span className="compose__drop-icon">📷</span>
+              <span>Add a photo or video</span>
+            </button>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/*"
+            hidden
+            onChange={(e) => {
+              pick(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+
+          <textarea
+            className="compose__caption"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            placeholder="Write a caption…"
+            maxLength={2000}
+            rows={2}
+          />
+
+          <label className="compose__field-label">Category</label>
+          <div className="compose__cats">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                className={`compose__cat${category === c.key ? " is-active" : ""}`}
+                onClick={() => setCategory(c.key)}
+              >
+                {c.emoji} {c.label}
+              </button>
+            ))}
+          </div>
+
+          <input
+            className="compose__loc"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="📍 Add location (optional)"
+            maxLength={120}
+          />
+
+          <label className="compose__field-label">Who can see this?</label>
+          <div className="compose__vis">
+            {VISIBILITY.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                className={`compose__vis-btn${visibility === v.key ? " is-active" : ""}`}
+                onClick={() => setVisibility(v.key)}
+              >
+                <span>{v.label}</span>
+                <span className="compose__vis-hint">{v.hint}</span>
+              </button>
+            ))}
+          </div>
+
+          {uploading && (
+            <div className="compose__progress">
+              <div className="compose__progress-fill" style={{ width: `${progress}%` }} />
+            </div>
+          )}
+          {error && <p className="compose__error" role="alert">{error}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ComposePost;

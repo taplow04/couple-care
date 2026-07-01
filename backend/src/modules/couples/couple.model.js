@@ -31,6 +31,28 @@ const coupleSchema = new mongoose.Schema(
       default: "",
     },
 
+    // ── 🌍 Explore / public Relationship Profile ──
+    // Optional public handle for the couple, e.g. "@ritik_monika". Sparse-unique
+    // so most couples (who never set one) don't collide on null.
+    relationshipUsername: {
+      type: String,
+      default: null,
+      lowercase: true,
+      trim: true,
+    },
+    relationshipBio: {
+      type: String,
+      default: "",
+    },
+    // Discovery visibility. PRIVATE by default — a couple only appears in Explore
+    // after explicitly choosing "public". `friends` is future-ready (treated as
+    // non-public today). This is the single gate for the whole public profile.
+    exploreVisibility: {
+      type: String,
+      enum: ["public", "friends", "partner_only", "private"],
+      default: "private",
+    },
+
     relationshipStatus: {
       type: String,
       enum: ["active", "paused", "broken_up"],
@@ -111,5 +133,10 @@ const coupleSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// Public handle is unique only among couples who actually set one.
+coupleSchema.index({ relationshipUsername: 1 }, { unique: true, sparse: true });
+// Fast "public couples" lookups for Explore.
+coupleSchema.index({ exploreVisibility: 1 });
 
 module.exports = mongoose.model("Couple", coupleSchema);

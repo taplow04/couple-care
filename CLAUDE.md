@@ -542,3 +542,34 @@ The JWT was stateless (`{ userId }`); logout was client-only, so "log out this d
 - **`AuthContext.logout` now revokes the current session server-side** (best-effort, then clears the token) — no longer a pure client wipe.
 - **axios response interceptor**: an authenticated **401** (e.g. this session was revoked on another device) clears the token and bounces to `/login` — so a revoked token can't linger. Auth endpoints (login/otp/reset) are excluded.
 - **Known limit**: the Socket.io handshake still uses plain `jwt.verify` (no session check). A revoked device's live socket survives until it drops, but its next REST 401 clears the token, so it can't re-establish. Acceptable; not wired to avoid churn on the one shared socket.
+
+---
+
+## 🌍 Explore — AI-powered Relationship Discovery (`modules/explore/`)
+
+A privacy-first discovery feed: browse PUBLIC relationship posts + PUBLIC relationship profiles for inspiration (date/travel/photography/anniversary ideas). **Not** engagement-optimised — no follows/trending/reels, curated by category, warm CoupleCare reactions instead of likes. Reuses the whole spine (Couple, Cloudinary, AI engine, privacy) — no new SDK.
+
+### Data model (extend, don't duplicate)
+- **`Couple`** gains the public Relationship Profile: `relationshipUsername` (sparse-unique), `relationshipBio`, `exploreVisibility` (`public|friends|partner_only|private`, **default `private`**). A couple appears in Explore ONLY after opting in to `public` (which requires a username). `friends` is future-ready (non-public today).
+- **`RelationshipPost`** (new) — the feed unit: coupleId/authorId, `caption`, `category` (12: date/travel/photography/birthday/anniversary/coffee/food/vacation/proposal/nature/music/movies), `location`, `type image|video` + Cloudinary `mediaUrl/publicId`, `visibility public|partner_only|private` (default partner_only), CoupleCare `reactions[{userId,type}]` (loved/beautiful/emotional/precious/celebrate — one per user, toggleable), denormalised `reactionCount/commentCount`. Indexes on `{visibility,createdAt}`, `{visibility,category,createdAt}`, `{coupleId,createdAt}`.
+- **`PostComment`** (new) — separate collection, `{postId,createdAt}` indexed; comments only allowed on **public** posts (server-enforced → privacy respected).
+
+### Privacy gate (the #1 rule)
+Explore shows a post only when **its couple's `exploreVisibility === "public"` AND the post's `visibility === "public"`**. `explore.service.publicCoupleIds()` is the single gate; feed/inspiration/search all filter through it. Public profile (`getPublicProfile`) exposes public data only — public posts + gamification badges; never moods/chat/private gallery.
+
+### API (`/api/v1/explore`, all auth'd; browsing needs no partner, **posting requires a couple**)
+`GET /meta` (categories+reactions), `GET /feed?category&q&before&limit` (cursor pagination), `GET /inspiration` (curated rails — **mapped by category, never popularity**), `GET /ai-inspiration` (Groq via `explore.ai`, best-effort + deterministic fallback, explicitly told NOT to rank by popularity), `GET /search?q` (public profiles), `GET /profile/:username`, `GET /my-posts`, `POST /posts` (multipart→Cloudinary), `DELETE /posts/:id`, `POST /posts/:id/react`, `GET|POST /posts/:id/comments`, `GET|PATCH /settings` (the public opt-in + username/bio).
+
+### Frontend
+- `services/explore.service.js`; `utils/exploreTaxonomy.js` (categories/reactions mirror of the backend constants).
+- **Route `/explore`** (lazy, bottom-nav root — no back button) and **`/r/:username`** (public profile, lazy). Both in the AppLayout group (no `RequireCouple`).
+- `pages/Explore/ExplorePage` (sticky glass header, debounced search, category chips, collapsible AI inspiration, curated rails, infinite-scroll feed via `IntersectionObserver`; feed is a **child remounted by `key={category|q|feedKey}`** so filter changes reload with a fresh loading state — React-compiler-safe, no synchronous setState in effects). `pages/Explore/PublicProfile`.
+- `components/explore/{PostCard (owns its reactions + comments sheet + local counts), CommentsSheet, ComposePost, ExploreSettings}`. Optimistic reactions; client-compressed images on compose.
+
+### Navigation change
+Growing **BottomNav** is now Home · **Explore** · AI Center · Mood · Profile (**Journey removed from the nav**). Journey moved into the Home **Quick Access** card (`QuickActionsCard`): Journey · Bucket List · Gallery · AI Coach · Memories · Love Letters. Preparing/Healing navs unchanged.
+
+### Gotchas
+- **Explore is opt-in and private by default** — a couple is invisible until they set a username AND flip `exploreVisibility` to public (both enforced in `updateSettings`).
+- **Never rank by popularity** — inspiration rails are category-curated; the AI prompt is explicitly instructed to prioritise meaning over trends. Don't add engagement sorting.
+- The couple-public gate is a two-step query (`publicCoupleIds()` → posts). Fine at early scale; denormalise a `coupleExplorePublic` flag onto posts if the public-couple set grows large.

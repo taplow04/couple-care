@@ -1,0 +1,101 @@
+.rprofile {
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.rprofile__loading,
+.rprofile__error {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--muted);
+  font-size: var(--font-sm);
+}
+.rprofile__error span { font-size: 2.4rem; display: block; margin-bottom: 10px; }
+
+.rprofile__content { max-width: 620px; margin: 0 auto; }
+
+.rprofile__cover {
+  height: 170px;
+  background: var(--gradient-romantic-soft);
+  overflow: hidden;
+}
+.rprofile__cover img { width: 100%; height: 100%; object-fit: cover; }
+
+.rprofile__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 20px 16px;
+  margin-top: -44px;
+}
+.rprofile__dp {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  background: var(--gradient-romantic-soft);
+  border: 4px solid var(--card);
+  box-shadow: var(--shadow);
+}
+.rprofile__dp img { width: 100%; height: 100%; object-fit: cover; }
+
+.rprofile__name {
+  margin: 10px 0 0;
+  font-size: var(--font-h2);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: var(--tracking-tight);
+}
+.rprofile__handle { margin: 2px 0 0; font-size: var(--font-sm); color: var(--muted); }
+.rprofile__bio {
+  margin: 10px 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 420px;
+}
+
+.rprofile__stats {
+  display: flex;
+  gap: 28px;
+  margin: 16px 0 12px;
+}
+.rprofile__stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.rprofile__stat-n { font-size: var(--font-h3); font-weight: 800; color: var(--text); }
+.rprofile__stat-l { font-size: var(--font-xs); color: var(--muted); }
+
+.rprofile__since {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.rprofile__section { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.rprofile__section-title {
+  margin: 0;
+  font-size: var(--font-body);
+  font-weight: 800;
+  color: var(--text);
+}
+
+.rprofile__badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.rprofile__badge {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 7px 12px;
+  border-radius: 999px;
+}
+
+.rprofile__posts { display: flex; flex-direction: column; gap: 16px; }
+.rprofile__empty { color: var(--muted); font-size: var(--font-sm); text-align: center; padding: 20px 0; }
