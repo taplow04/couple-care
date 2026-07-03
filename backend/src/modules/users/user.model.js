@@ -48,6 +48,19 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    // ── 🌍 Explore / public Personal Profile ──
+    // Discovery visibility for the user's OWN personal profile + personal posts.
+    // PRIVATE by default — a user only appears in Explore (and their personal
+    // posts only surface) after explicitly choosing "public" (which also
+    // requires a `username`). `friends` is future-ready (non-public today).
+    // Independent of the couple's exploreVisibility and of relationship status,
+    // so single / connected / unmatched users can all opt in.
+    exploreVisibility: {
+      type: String,
+      enum: ["public", "friends", "partner_only", "private"],
+      default: "private",
+    },
+
     hobbies: {
       type: [String],
       default: [],
@@ -324,6 +337,8 @@ const userSchema = new mongoose.Schema(
 
 // Optional handle: unique only among users who actually set one.
 userSchema.index({ username: 1 }, { unique: true, sparse: true });
+// Fast "public users" lookups for Explore.
+userSchema.index({ exploreVisibility: 1 });
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) {

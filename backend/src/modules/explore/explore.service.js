@@ -7,7 +7,12 @@ const {
   getRelationshipStart,
   getDaysTogether,
 } = require("../couples/couple.helpers");
-const { CATEGORY_KEYS, REACTION_KEYS, INSPIRATION_RAILS } = require("./explore.constants");
+const {
+  CATEGORY_KEYS,
+  REACTION_KEYS,
+  INSPIRATION_RAILS,
+  EXPLORE_VISIBILITY,
+} = require("./explore.constants");
 
 const FEED_LIMIT = 12;
 
@@ -32,10 +37,19 @@ const COUPLE_POPULATE = {
   ],
 };
 
-// The public "couple card" shown on every feed item + profile header. Public
-// fields only — never private data.
+// Personal posts hydrate their author (the public Personal Profile card).
+const AUTHOR_POPULATE = {
+  path: "authorId",
+  select: "name username profilePhoto coverPhoto exploreVisibility",
+};
+
+// Every feed/profile read hydrates BOTH — mapPost picks by scope.
+const POST_POPULATE = [COUPLE_POPULATE, AUTHOR_POPULATE];
+
+// The public "couple card" shown on relationship feed items + profile header.
+// Public fields only — never private data.
 const publicCoupleCard = (couple) => {
-  if (!couple) return null;
+  if (!couple || typeof couple !== "object") return null;
   const names = [couple.partnerOneId?.name, couple.partnerTwoId?.name]
     .map(firstName)
     .filter(Boolean);
@@ -48,6 +62,48 @@ const publicCoupleCard = (couple) => {
     coverPhoto: couple.coverPhoto || "",
     togetherSince: getRelationshipStart(couple),
     daysTogether: getDaysTogether(couple),
+  };
+};
+
+// The public "personal card" shown on personal feed items + profile header.
+const publicPersonalCard = (user) => {
+  if (!user || typeof user !== "object") return null;
+  return {
+    id: user._id,
+    username: user.username || null,
+    name: user.name || "Someone",
+    photo: user.profilePhoto || "",
+    coverPhoto: user.coverPhoto || "",
+  };
+};
+
+// Unified profile descriptor attached to every mapped post so the client can
+// render one card component + resolve the right href regardless of scope.
+const profileForPost = (post) => {
+  if (post.scope === "personal") {
+    const card = publicPersonalCard(post.authorId);
+    if (!card) return null;
+    return {
+      kind: "personal",
+      id: card.id,
+      username: card.username,
+      name: card.name,
+      photo: card.photo,
+      coverPhoto: card.coverPhoto,
+      href: card.username ? `/u/${card.username}` : null,
+    };
+  }
+  const card = publicCoupleCard(post.coupleId);
+  if (!card) return null;
+  return {
+    kind: "couple",
+    id: card.id,
+    username: card.username,
+    name: card.name,
+    photo: card.photo,
+    coverPhoto: card.coverPhoto,
+    daysTogether: card.daysTogether,
+    href: card.username ? `/r/${card.username}` : null,
   };
 };
 
@@ -65,6 +121,7 @@ const reactionsSummary = (post, viewerId) => {
 
 const mapPost = (post, viewerId, { includeVisibility = false } = {}) => ({
   _id: post._id,
+  scope: post.scope || "relationship",
   caption: post.caption,
   category: post.category,
   location: post.location,
@@ -73,7 +130,10 @@ const mapPost = (post, viewerId, { includeVisibility = false } = {}) => ({
   width: post.width,
   height: post.height,
   createdAt: post.createdAt,
-  couple: publicCoupleCard(post.coupleId),
+  // Unified card (works for both scopes).
+  profile: profileForPost(post),
+  // Back-compat: relationship posts still expose `couple` for older callers.
+  couple: post.scope === "personal" ? null : publicCoupleCard(post.coupleId),
   reactions: reactionsSummary(post, viewerId),
   commentCount: post.commentCount || 0,
   ...(includeVisibility ? { visibility: post.visibility } : {}),
@@ -85,29 +145,47 @@ const publicCoupleIds = async () => {
   return rows.map((r) => r._id);
 };
 
+// The set of users whose PERSONAL profile is public in Explore.
+const publicUserIds = async () => {
+  const rows = await User.find({ exploreVisibility: "public" }).select("_id").lean();
+  return rows.map((r) => r._id);
+};
+
+// The two-scope privacy gate as an $or fragment. Any Explore read that surfaces
+// public posts MUST filter through this so nothing private ever leaks.
+const publicScopeGate = async () => {
+  const [coupleIds, userIds] = await Promise.all([publicCoupleIds(), publicUserIds()]);
+  const branches = [];
+  if (coupleIds.length)
+    branches.push({ scope: "relationship", coupleId: { $in: coupleIds }, visibility: "public" });
+  if (userIds.length)
+    branches.push({ scope: "personal", authorId: { $in: userIds }, visibility: "public" });
+  return { branches, coupleIds, userIds };
+};
+
 // ─── Feed (paginated, category + search filtered, privacy-enforced) ───────────
 const getFeed = async ({ viewerId, category, q, before, limit } = {}) => {
   const lim = Math.min(Number(limit) || FEED_LIMIT, 30);
-  const ids = await publicCoupleIds();
-  if (!ids.length) return { items: [], nextCursor: null, hasMore: false };
+  const { branches, coupleIds, userIds } = await publicScopeGate();
+  if (!branches.length) return { items: [], nextCursor: null, hasMore: false };
 
-  const filter = { coupleId: { $in: ids }, visibility: "public" };
-  if (category && CATEGORY_KEYS.includes(category)) filter.category = category;
+  const and = [{ $or: branches }];
+  if (category && CATEGORY_KEYS.includes(category)) and.push({ category });
   if (before) {
     const d = new Date(before);
-    if (!Number.isNaN(d.getTime())) filter.createdAt = { $lt: d };
+    if (!Number.isNaN(d.getTime())) and.push({ createdAt: { $lt: d } });
   }
 
   if (q && q.trim()) {
     const rx = new RegExp(escapeRegex(q.trim()), "i");
-    // Couples (within the public set) whose handle/name/bio match the query.
-    const matched = await Couple.find({ _id: { $in: ids } })
+    // Public couples whose handle/name/bio match the query.
+    const matchedCouples = await Couple.find({ _id: { $in: coupleIds } })
       .select("relationshipUsername relationshipBio partnerOneId partnerTwoId")
       .populate([
         { path: "partnerOneId", select: "name" },
         { path: "partnerTwoId", select: "name" },
       ]);
-    const matchedIds = matched
+    const matchedCoupleIds = matchedCouples
       .filter(
         (c) =>
           rx.test(c.relationshipUsername || "") ||
@@ -116,13 +194,32 @@ const getFeed = async ({ viewerId, category, q, before, limit } = {}) => {
           rx.test(c.partnerTwoId?.name || ""),
       )
       .map((c) => c._id);
-    filter.$or = [{ caption: rx }, { location: rx }, { coupleId: { $in: matchedIds } }];
+    // Public users whose handle/name/bio match the query.
+    const matchedUsers = await User.find({ _id: { $in: userIds } })
+      .select("username name bio")
+      .lean();
+    const matchedUserIds = matchedUsers
+      .filter(
+        (u) =>
+          rx.test(u.username || "") ||
+          rx.test(u.name || "") ||
+          rx.test(u.bio || ""),
+      )
+      .map((u) => u._id);
+    and.push({
+      $or: [
+        { caption: rx },
+        { location: rx },
+        { coupleId: { $in: matchedCoupleIds } },
+        { authorId: { $in: matchedUserIds }, scope: "personal" },
+      ],
+    });
   }
 
-  const rows = await RelationshipPost.find(filter)
+  const rows = await RelationshipPost.find({ $and: and })
     .sort({ createdAt: -1 })
     .limit(lim + 1)
-    .populate(COUPLE_POPULATE);
+    .populate(POST_POPULATE);
 
   const hasMore = rows.length > lim;
   const items = rows.slice(0, lim).map((p) => mapPost(p, viewerId));
@@ -132,19 +229,17 @@ const getFeed = async ({ viewerId, category, q, before, limit } = {}) => {
 
 // ─── Inspiration rails (manually curated by category — NOT engagement-ranked) ──
 const getInspiration = async ({ viewerId } = {}) => {
-  const ids = await publicCoupleIds();
-  if (!ids.length) return { rails: [] };
+  const { branches } = await publicScopeGate();
+  if (!branches.length) return { rails: [] };
 
   const rails = await Promise.all(
     INSPIRATION_RAILS.map(async (rail) => {
       const rows = await RelationshipPost.find({
-        coupleId: { $in: ids },
-        visibility: "public",
-        category: { $in: rail.categories },
+        $and: [{ $or: branches }, { category: { $in: rail.categories } }],
       })
         .sort({ createdAt: -1 })
         .limit(10)
-        .populate(COUPLE_POPULATE);
+        .populate(POST_POPULATE);
       return {
         key: rail.key,
         title: rail.title,
@@ -157,21 +252,27 @@ const getInspiration = async ({ viewerId } = {}) => {
   return { rails: rails.filter((r) => r.posts.length > 0) };
 };
 
-// ─── Search public relationship profiles ──────────────────────────────────────
+// ─── Search public relationship profiles AND public personal profiles ─────────
 const searchProfiles = async (q) => {
-  if (!q || !q.trim()) return { profiles: [] };
+  if (!q || !q.trim()) return { couples: [], users: [], profiles: [] };
   const rx = new RegExp(escapeRegex(q.trim()), "i");
-  const couples = await Couple.find({ exploreVisibility: "public" })
-    .select(
-      "relationshipUsername relationshipBio coverPhoto relationshipPhoto relationshipStartDate relationshipStartedAt partnerOneId partnerTwoId",
-    )
-    .populate([
-      { path: "partnerOneId", select: "name profilePhoto" },
-      { path: "partnerTwoId", select: "name profilePhoto" },
-    ])
-    .limit(50);
 
-  const profiles = couples
+  const [couplesRaw, usersRaw] = await Promise.all([
+    Couple.find({ exploreVisibility: "public" })
+      .select(
+        "relationshipUsername relationshipBio coverPhoto relationshipPhoto relationshipStartDate relationshipStartedAt partnerOneId partnerTwoId",
+      )
+      .populate([
+        { path: "partnerOneId", select: "name profilePhoto" },
+        { path: "partnerTwoId", select: "name profilePhoto" },
+      ])
+      .limit(60),
+    User.find({ exploreVisibility: "public" })
+      .select("name username bio profilePhoto coverPhoto")
+      .limit(60),
+  ]);
+
+  const couples = couplesRaw
     .filter(
       (c) =>
         rx.test(c.relationshipUsername || "") ||
@@ -182,7 +283,18 @@ const searchProfiles = async (q) => {
     .slice(0, 20)
     .map((c) => publicCoupleCard(c));
 
-  return { profiles };
+  const users = usersRaw
+    .filter(
+      (u) =>
+        rx.test(u.username || "") ||
+        rx.test(u.name || "") ||
+        rx.test(u.bio || ""),
+    )
+    .slice(0, 20)
+    .map((u) => ({ ...publicPersonalCard(u), bio: u.bio || "" }));
+
+  // `profiles` kept as an alias of `couples` for backward compatibility.
+  return { couples, users, profiles: couples };
 };
 
 // ─── Public relationship profile (public data only) ───────────────────────────
@@ -199,11 +311,12 @@ const getPublicProfile = async (username, viewerId) => {
 
   const posts = await RelationshipPost.find({
     coupleId: couple._id,
+    scope: "relationship",
     visibility: "public",
   })
     .sort({ createdAt: -1 })
     .limit(30)
-    .populate(COUPLE_POPULATE);
+    .populate(POST_POPULATE);
 
   // Achievements (gamification badges — not sensitive) if available.
   let achievements = [];
@@ -229,19 +342,76 @@ const getPublicProfile = async (username, viewerId) => {
   };
 };
 
+// ─── Public personal profile (public data only) ───────────────────────────────
+const getPersonalProfile = async (username, viewerId) => {
+  const user = await User.findOne({
+    username: String(username || "").toLowerCase(),
+    exploreVisibility: "public",
+  }).select("name username bio profilePhoto coverPhoto createdAt growthAchievements");
+
+  if (!user) throw badRequest("This profile isn't public.", 404);
+
+  const posts = await RelationshipPost.find({
+    authorId: user._id,
+    scope: "personal",
+    visibility: "public",
+  })
+    .sort({ createdAt: -1 })
+    .limit(30)
+    .populate(POST_POPULATE);
+
+  // Personal (solo) growth badges from the user's unlocked-keys set — never
+  // sensitive (gamification only). Mapped against the catalog for labels/emoji.
+  let achievements = [];
+  try {
+    const {
+      GROWTH_ACHIEVEMENT_MAP,
+    } = require("../growth/growth.achievements.catalog");
+    achievements = (user.growthAchievements || [])
+      .map((key) => GROWTH_ACHIEVEMENT_MAP[key])
+      .filter(Boolean)
+      .map((a) => ({ key: a.key, label: a.title, emoji: a.emoji }));
+  } catch {
+    /* achievements optional */
+  }
+
+  return {
+    user: {
+      id: user._id,
+      username: user.username || null,
+      name: user.name,
+      bio: user.bio || "",
+      photo: user.profilePhoto || "",
+      coverPhoto: user.coverPhoto || "",
+      memberSince: user.createdAt,
+    },
+    stats: { posts: posts.length },
+    posts: posts.map((p) => mapPost(p, viewerId)),
+    achievements,
+  };
+};
+
 // ─── Create / delete posts ────────────────────────────────────────────────────
 const requireCouple = async (userId) => {
   const user = await User.findById(userId).select("currentCoupleId");
   if (!user?.currentCoupleId) {
-    throw badRequest("You need an active relationship to post to Explore.", 400);
+    throw badRequest("You need an active relationship to share a relationship post.", 400);
   }
   return user.currentCoupleId;
 };
 
-const createPost = async (userId, { uploaded, type, caption, category, location, visibility }) => {
-  const coupleId = await requireCouple(userId);
+const createPost = async (
+  userId,
+  { uploaded, type, caption, category, location, visibility, scope },
+) => {
+  const wantsRelationship = scope === "relationship";
+  // Relationship posts stay exclusive to active couples; everyone else (and
+  // anyone choosing "personal") posts personally.
+  const coupleId = wantsRelationship ? await requireCouple(userId) : null;
+  const finalScope = wantsRelationship ? "relationship" : "personal";
 
   const post = await RelationshipPost.create({
+    scope: finalScope,
     coupleId,
     authorId: userId,
     caption: String(caption || "").slice(0, 2000),
@@ -257,14 +427,21 @@ const createPost = async (userId, { uploaded, type, caption, category, location,
       : "partner_only",
   });
 
-  await post.populate(COUPLE_POPULATE);
+  await post.populate(POST_POPULATE);
   return mapPost(post, userId, { includeVisibility: true });
 };
 
 const deletePost = async (userId, postId) => {
-  const coupleId = await requireCouple(userId);
-  const post = await RelationshipPost.findOne({ _id: postId, coupleId });
+  const post = await RelationshipPost.findById(postId);
   if (!post) throw badRequest("Post not found.", 404);
+
+  // Authorize: personal posts by author; relationship posts by a current partner.
+  if ((post.scope || "relationship") === "personal") {
+    if (String(post.authorId) !== String(userId)) throw badRequest("Post not found.", 404);
+  } else {
+    const coupleId = await requireCouple(userId);
+    if (String(post.coupleId) !== String(coupleId)) throw badRequest("Post not found.", 404);
+  }
 
   if (post.publicId && cloudinary.isConfigured()) {
     try {
@@ -281,10 +458,13 @@ const deletePost = async (userId, postId) => {
 };
 
 const getMyPosts = async (userId) => {
-  const coupleId = await requireCouple(userId);
-  const rows = await RelationshipPost.find({ coupleId })
+  const user = await User.findById(userId).select("currentCoupleId");
+  const or = [{ authorId: userId, scope: "personal" }];
+  if (user?.currentCoupleId) or.push({ coupleId: user.currentCoupleId, scope: "relationship" });
+
+  const rows = await RelationshipPost.find({ $or: or })
     .sort({ createdAt: -1 })
-    .populate(COUPLE_POPULATE);
+    .populate(POST_POPULATE);
   return rows.map((p) => mapPost(p, userId, { includeVisibility: true }));
 };
 
@@ -365,62 +545,142 @@ const addComment = async (userId, postId, text) => {
   };
 };
 
-// ─── Explore settings (the public-profile opt-in) ─────────────────────────────
+// ─── Explore settings (personal + relationship public-profile opt-ins) ────────
 const getSettings = async (userId) => {
-  const user = await User.findById(userId).select("currentCoupleId");
-  if (!user?.currentCoupleId) return { hasCouple: false };
-  const couple = await Couple.findById(user.currentCoupleId).select(
-    "relationshipUsername relationshipBio exploreVisibility",
+  const user = await User.findById(userId).select(
+    "currentCoupleId username exploreVisibility bio",
   );
+
+  const personal = {
+    username: user.username || "",
+    bio: user.bio || "",
+    exploreVisibility: user.exploreVisibility || "private",
+    isPublic: user.exploreVisibility === "public",
+  };
+
+  let relationship = { hasCouple: false };
+  if (user.currentCoupleId) {
+    const couple = await Couple.findById(user.currentCoupleId).select(
+      "relationshipUsername relationshipBio exploreVisibility",
+    );
+    if (couple) {
+      relationship = {
+        hasCouple: true,
+        relationshipUsername: couple.relationshipUsername || "",
+        relationshipBio: couple.relationshipBio || "",
+        exploreVisibility: couple.exploreVisibility,
+        isPublic: couple.exploreVisibility === "public",
+      };
+    }
+  }
+
   return {
-    hasCouple: true,
-    relationshipUsername: couple.relationshipUsername || "",
-    relationshipBio: couple.relationshipBio || "",
-    exploreVisibility: couple.exploreVisibility,
-    isPublic: couple.exploreVisibility === "public",
+    personal,
+    relationship,
+    // Back-compat flat fields (older ExploreSettings read these directly).
+    hasCouple: relationship.hasCouple,
+    relationshipUsername: relationship.relationshipUsername || "",
+    relationshipBio: relationship.relationshipBio || "",
+    exploreVisibility: relationship.exploreVisibility,
+    isPublic: relationship.isPublic || false,
   };
 };
 
-const updateSettings = async (userId, { relationshipUsername, relationshipBio, exploreVisibility }) => {
-  const coupleId = await requireCouple(userId);
-  const couple = await Couple.findById(coupleId);
+const USERNAME_RX = /^[a-z0-9_]{3,20}$/;
 
-  if (relationshipUsername !== undefined) {
-    const handle = String(relationshipUsername || "").trim().toLowerCase();
+const updateSettings = async (
+  userId,
+  {
+    relationshipUsername,
+    relationshipBio,
+    exploreVisibility,
+    personalUsername,
+    personalBio,
+    personalExploreVisibility,
+  },
+) => {
+  const user = await User.findById(userId);
+  if (!user) throw badRequest("User not found.", 404);
+
+  // ── Personal profile settings (available to EVERY user, no couple needed) ──
+  if (personalUsername !== undefined) {
+    const handle = String(personalUsername || "").trim().toLowerCase();
     if (handle) {
-      if (!/^[a-z0-9_]{3,20}$/.test(handle)) {
-        throw badRequest(
-          "Username must be 3–20 characters: letters, numbers or underscores.",
-        );
+      if (!USERNAME_RX.test(handle)) {
+        throw badRequest("Username must be 3–20 characters: letters, numbers or underscores.");
       }
-      const clash = await Couple.findOne({
-        relationshipUsername: handle,
-        _id: { $ne: coupleId },
-      }).select("_id");
-      if (clash) throw badRequest("That relationship username is taken.");
-      couple.relationshipUsername = handle;
+      const clash = await User.findOne({ username: handle, _id: { $ne: userId } }).select("_id");
+      if (clash) throw badRequest("That username is taken.");
+      user.username = handle;
     } else {
-      couple.relationshipUsername = null;
+      user.username = null;
     }
   }
-
-  if (relationshipBio !== undefined) {
-    couple.relationshipBio = String(relationshipBio || "").slice(0, 300);
+  if (personalBio !== undefined) {
+    user.bio = String(personalBio || "").slice(0, 300);
   }
-
-  if (exploreVisibility !== undefined) {
-    if (!["public", "friends", "partner_only", "private"].includes(exploreVisibility)) {
+  if (personalExploreVisibility !== undefined) {
+    if (!EXPLORE_VISIBILITY.includes(personalExploreVisibility)) {
       throw badRequest("Invalid visibility.");
     }
-    // Going public requires a handle so the profile is reachable.
-    if (exploreVisibility === "public" && !couple.relationshipUsername) {
-      throw badRequest("Set a relationship username before going public.");
+    if (personalExploreVisibility === "public" && !user.username) {
+      throw badRequest("Set a username before making your profile public.");
     }
-    couple.exploreVisibility = exploreVisibility;
+    user.exploreVisibility = personalExploreVisibility;
+  }
+  await user.save();
+
+  // ── Relationship profile settings (require an active couple) ──
+  const touchesRelationship =
+    relationshipUsername !== undefined ||
+    relationshipBio !== undefined ||
+    exploreVisibility !== undefined;
+
+  if (touchesRelationship) {
+    const coupleId = await requireCoupleForSettings(userId);
+    const couple = await Couple.findById(coupleId);
+
+    if (relationshipUsername !== undefined) {
+      const handle = String(relationshipUsername || "").trim().toLowerCase();
+      if (handle) {
+        if (!USERNAME_RX.test(handle)) {
+          throw badRequest("Username must be 3–20 characters: letters, numbers or underscores.");
+        }
+        const clash = await Couple.findOne({
+          relationshipUsername: handle,
+          _id: { $ne: coupleId },
+        }).select("_id");
+        if (clash) throw badRequest("That relationship username is taken.");
+        couple.relationshipUsername = handle;
+      } else {
+        couple.relationshipUsername = null;
+      }
+    }
+    if (relationshipBio !== undefined) {
+      couple.relationshipBio = String(relationshipBio || "").slice(0, 300);
+    }
+    if (exploreVisibility !== undefined) {
+      if (!EXPLORE_VISIBILITY.includes(exploreVisibility)) {
+        throw badRequest("Invalid visibility.");
+      }
+      if (exploreVisibility === "public" && !couple.relationshipUsername) {
+        throw badRequest("Set a relationship username before going public.");
+      }
+      couple.exploreVisibility = exploreVisibility;
+    }
+    await couple.save();
   }
 
-  await couple.save();
   return getSettings(userId);
+};
+
+// Relationship settings need a couple; personal settings never do.
+const requireCoupleForSettings = async (userId) => {
+  const user = await User.findById(userId).select("currentCoupleId");
+  if (!user?.currentCoupleId) {
+    throw badRequest("You need an active relationship to edit the relationship profile.", 400);
+  }
+  return user.currentCoupleId;
 };
 
 module.exports = {
@@ -428,6 +688,7 @@ module.exports = {
   getInspiration,
   searchProfiles,
   getPublicProfile,
+  getPersonalProfile,
   createPost,
   deletePost,
   getMyPosts,
@@ -438,4 +699,6 @@ module.exports = {
   updateSettings,
   // exported for the AI module
   publicCoupleIds,
+  publicUserIds,
+  publicScopeGate,
 };

@@ -35,6 +35,8 @@
 }
 .post-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
 .post-card__avatar-fallback { font-size: 1.1rem; }
+/* Personal (solo) authors read as a rounded square vs the couple's circle. */
+.post-card__avatar--personal { border-radius: 13px; }
 
 .post-card__head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .post-card__couple {

@@ -30,6 +30,7 @@ router.get("/inspiration", readLimiter, controller.getInspiration);
 router.get("/ai-inspiration", controller.aiInspiration);
 router.get("/search", readLimiter, controller.search);
 router.get("/profile/:username", readLimiter, controller.getProfile);
+router.get("/user/:username", readLimiter, controller.getUserProfile);
 
 // Posts (couple-owned)
 router.get("/my-posts", controller.getMyPosts);

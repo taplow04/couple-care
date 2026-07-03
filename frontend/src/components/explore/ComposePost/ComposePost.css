@@ -182,6 +182,27 @@
 .compose__vis-btn.is-active { border-color: var(--primary); background: var(--primary-light); }
 .compose__vis-hint { font-size: var(--font-xs); font-weight: 500; color: var(--muted); }
 
+/* Post-as scope selector (Relationship vs Personal) */
+.compose__scope { display: flex; gap: 8px; }
+.compose__scope-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+}
+.compose__scope-btn.is-active { border-color: var(--primary); background: var(--primary-light); }
+.compose__scope-emoji { font-size: 1.3rem; }
+.compose__scope-label { font-size: var(--font-sm); font-weight: 700; }
+.compose__scope-hint { font-size: var(--font-xs); font-weight: 500; color: var(--muted); }
+
 .compose__progress {
   height: 6px;
   background: var(--surface-2);

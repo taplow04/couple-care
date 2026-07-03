@@ -11,8 +11,9 @@ const VISIBILITY = [
   { key: "private", label: "🔒 Private", hint: "Only you" },
 ];
 
-// Create a relationship post for Explore. Media → Cloudinary via multipart.
-const ComposePost = ({ onClose, onCreated }) => {
+// Create an Explore post. Relationship users choose Personal vs Relationship;
+// single / unmatched users always post Personal. Media → Cloudinary (multipart).
+const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
   const fileRef = useRef(null);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
@@ -21,6 +22,9 @@ const ComposePost = ({ onClose, onCreated }) => {
   const [category, setCategory] = useState("date");
   const [location, setLocation] = useState("");
   const [visibility, setVisibility] = useState("public");
+  // Couples default to a shared relationship post; solo users can only post
+  // personally (relationship posts stay exclusive to active couples).
+  const [scope, setScope] = useState(hasCouple ? "relationship" : "personal");
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
@@ -56,6 +60,7 @@ const ComposePost = ({ onClose, onCreated }) => {
       fd.append("category", category);
       fd.append("location", location);
       fd.append("visibility", visibility);
+      fd.append("scope", hasCouple ? scope : "personal");
       const res = await createExplorePost(fd, setProgress);
       onCreated?.(res.data);
       onClose?.();
@@ -120,6 +125,33 @@ const ComposePost = ({ onClose, onCreated }) => {
               e.target.value = "";
             }}
           />
+
+          {/* Post as — couples pick shared vs personal; solo users post personal */}
+          {hasCouple && (
+            <>
+              <label className="compose__field-label">Post as</label>
+              <div className="compose__scope">
+                <button
+                  type="button"
+                  className={`compose__scope-btn${scope === "relationship" ? " is-active" : ""}`}
+                  onClick={() => setScope("relationship")}
+                >
+                  <span className="compose__scope-emoji">❤️</span>
+                  <span className="compose__scope-label">Relationship</span>
+                  <span className="compose__scope-hint">Shared couple post</span>
+                </button>
+                <button
+                  type="button"
+                  className={`compose__scope-btn${scope === "personal" ? " is-active" : ""}`}
+                  onClick={() => setScope("personal")}
+                >
+                  <span className="compose__scope-emoji">🙂</span>
+                  <span className="compose__scope-label">Personal</span>
+                  <span className="compose__scope-hint">Just from you</span>
+                </button>
+              </div>
+            </>
+          )}
 
           <textarea
             className="compose__caption"

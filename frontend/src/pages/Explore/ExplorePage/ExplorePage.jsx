@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { useAuth } from "../../../context/AuthContext";
 import {
   getFeed,
   getInspiration,
@@ -112,30 +113,37 @@ const InspirationRail = ({ rail }) => (
       <span>{rail.emoji}</span> {rail.title}
     </h3>
     <div className="explore-rail__scroll">
-      {rail.posts.map((p) => (
-        <Link
-          key={p._id}
-          to={p.couple?.username ? `/r/${p.couple.username}` : "/explore"}
-          className="explore-tile"
-        >
-          <span className="explore-tile__media">
-            {p.type === "video" ? (
-              <video src={p.mediaUrl} muted playsInline preload="metadata" />
-            ) : (
-              <img src={p.mediaUrl} alt={p.caption || rail.title} loading="lazy" />
-            )}
-          </span>
-          <span className="explore-tile__name">{p.couple?.name}</span>
-          {p.couple?.daysTogether ? (
-            <span className="explore-tile__meta">{togetherLabel(p.couple.daysTogether)}</span>
-          ) : null}
-        </Link>
-      ))}
+      {rail.posts.map((p) => {
+        const prof = p.profile || {};
+        const meta =
+          prof.kind === "personal"
+            ? prof.username
+              ? `@${prof.username}`
+              : ""
+            : prof.daysTogether
+              ? togetherLabel(prof.daysTogether)
+              : "";
+        return (
+          <Link key={p._id} to={prof.href || "/explore"} className="explore-tile">
+            <span className="explore-tile__media">
+              {p.type === "video" ? (
+                <video src={p.mediaUrl} muted playsInline preload="metadata" />
+              ) : (
+                <img src={p.mediaUrl} alt={p.caption || rail.title} loading="lazy" />
+              )}
+            </span>
+            <span className="explore-tile__name">{prof.name}</span>
+            {meta ? <span className="explore-tile__meta">{meta}</span> : null}
+          </Link>
+        );
+      })}
     </div>
   </section>
 );
 
 const ExplorePage = () => {
+  const { user } = useAuth();
+  const hasCouple = Boolean(user?.currentCoupleId);
   const [category, setCategory] = useState(null);
   const [rawQ, setRawQ] = useState("");
   const [q, setQ] = useState("");
@@ -143,6 +151,7 @@ const ExplorePage = () => {
   const [aiIdeas, setAiIdeas] = useState(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [profiles, setProfiles] = useState([]);
+  const [people, setPeople] = useState([]);
   const [showCompose, setShowCompose] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [feedKey, setFeedKey] = useState(0);
@@ -168,12 +177,18 @@ const ExplorePage = () => {
     };
   }, []);
 
-  // Profile search (only when there's a query).
+  // Profile search (only when there's a query) — couples AND personal profiles.
+  // Results are only rendered while `q` is truthy, so stale state is harmless
+  // (no synchronous clear needed — keeps the effect side-effect-free on empty q).
   useEffect(() => {
     if (!q) return undefined;
     let active = true;
     searchProfiles(q)
-      .then((r) => active && setProfiles(r.data.profiles || []))
+      .then((r) => {
+        if (!active) return;
+        setProfiles(r.data.couples || r.data.profiles || []);
+        setPeople(r.data.users || []);
+      })
       .catch(() => {});
     return () => {
       active = false;
@@ -278,7 +293,33 @@ const ExplorePage = () => {
           </section>
         )}
 
-        {/* Profile search results */}
+        {/* Profile search results — people first, then couples */}
+        {q && people.length > 0 && (
+          <section className="explore-profiles">
+            <h3 className="explore-section-title">People</h3>
+            <div className="explore-profiles__list">
+              {people.map((p) => (
+                <Link
+                  key={p.id}
+                  to={p.username ? `/u/${p.username}` : "/explore"}
+                  className="explore-profile-row"
+                >
+                  <span className="explore-profile-row__avatar explore-profile-row__avatar--personal">
+                    {p.photo ? <img src={p.photo} alt={p.name} loading="lazy" /> : "🙂"}
+                  </span>
+                  <span className="explore-profile-row__text">
+                    <span className="explore-profile-row__name">{p.name}</span>
+                    <span className="explore-profile-row__meta">
+                      {p.username ? `@${p.username}` : ""}
+                    </span>
+                  </span>
+                  <span className="explore-profile-row__chev">›</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {q && profiles.length > 0 && (
           <section className="explore-profiles">
             <h3 className="explore-section-title">Relationship profiles</h3>
@@ -321,7 +362,11 @@ const ExplorePage = () => {
       {toast && <div className="explore-toast">{toast}</div>}
 
       {showCompose && (
-        <ComposePost onClose={() => setShowCompose(false)} onCreated={onCreated} />
+        <ComposePost
+          hasCouple={hasCouple}
+          onClose={() => setShowCompose(false)}
+          onCreated={onCreated}
+        />
       )}
       {showSettings && <ExploreSettings onClose={() => setShowSettings(false)} />}
     </div>

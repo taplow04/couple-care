@@ -48,6 +48,11 @@ const getProfile = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data });
 });
 
+const getUserProfile = asyncHandler(async (req, res) => {
+  const data = await exploreService.getPersonalProfile(req.params.username, req.user._id);
+  res.status(200).json({ success: true, data });
+});
+
 const createPost = asyncHandler(async (req, res) => {
   const file = req.file;
   if (!file) return res.status(400).json({ success: false, message: "No file provided" });
@@ -72,10 +77,21 @@ const createPost = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: `File must be smaller than ${mb} MB` });
   }
 
+  // Relationship posts stay exclusive to active couples; everyone else posts
+  // personally. Choose the Cloudinary folder to match.
+  const scope =
+    req.body.scope === "relationship" && req.user.currentCoupleId
+      ? "relationship"
+      : "personal";
+  const folder =
+    scope === "relationship"
+      ? `couple-care/explore/${req.user.currentCoupleId}`
+      : `couple-care/explore/personal/${req.user._id}`;
+
   let uploaded;
   try {
     uploaded = await uploadBuffer(file.buffer, {
-      folder: `couple-care/explore/${req.user.currentCoupleId || "shared"}`,
+      folder,
       resource_type: type === "video" ? "video" : "image",
     });
   } catch (err) {
@@ -88,6 +104,7 @@ const createPost = asyncHandler(async (req, res) => {
   const data = await exploreService.createPost(req.user._id, {
     uploaded,
     type,
+    scope,
     caption: req.body.caption,
     category: req.body.category,
     location: req.body.location,
@@ -145,6 +162,7 @@ module.exports = {
   getInspiration,
   search,
   getProfile,
+  getUserProfile,
   createPost,
   deletePost,
   getMyPosts,

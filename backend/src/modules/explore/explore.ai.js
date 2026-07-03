@@ -1,5 +1,5 @@
 const RelationshipPost = require("./relationshipPost.model");
-const { publicCoupleIds } = require("./explore.service");
+const { publicScopeGate } = require("./explore.service");
 const { CATEGORIES } = require("./explore.constants");
 
 // Deterministic fallback so the panel is never empty (and free when Groq is off).
@@ -24,12 +24,9 @@ const clean = (s) =>
 const getInspiration = async () => {
   let sample = [];
   try {
-    const ids = await publicCoupleIds();
-    if (ids.length) {
-      const rows = await RelationshipPost.find({
-        coupleId: { $in: ids },
-        visibility: "public",
-      })
+    const { branches } = await publicScopeGate();
+    if (branches.length) {
+      const rows = await RelationshipPost.find({ $or: branches })
         .sort({ createdAt: -1 })
         .limit(40)
         .select("category caption location");

@@ -20,6 +20,10 @@ export const searchProfiles = async (q) =>
 export const getPublicProfile = async (username) =>
   (await api.get(`/explore/profile/${username}`)).data;
 
+// Public PERSONAL profile (single/connected/unmatched — universal).
+export const getUserPublicProfile = async (username) =>
+  (await api.get(`/explore/user/${username}`)).data;
+
 export const getMyExplorePosts = async () =>
   (await api.get("/explore/my-posts")).data;
 

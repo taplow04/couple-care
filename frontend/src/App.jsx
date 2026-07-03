@@ -27,6 +27,7 @@ const SettingsPage = lazy(() => import("./pages/Settings/SettingsPage/SettingsPa
 const SecurityCenter = lazy(() => import("./pages/Security/SecurityCenter/SecurityCenter"));
 const ExplorePage = lazy(() => import("./pages/Explore/ExplorePage/ExplorePage"));
 const PublicProfile = lazy(() => import("./pages/Explore/PublicProfile/PublicProfile"));
+const PersonalPublicProfile = lazy(() => import("./pages/Explore/PersonalPublicProfile/PersonalPublicProfile"));
 const JourneyPage = lazy(() => import("./pages/Journey/JourneyPage/JourneyPage"));
 const MoodAnalyticsPage = lazy(() => import("./pages/MoodAnalytics/MoodAnalyticsPage/MoodAnalyticsPage"));
 const AICenterPage = lazy(() => import("./pages/AICenter/AICenterPage/AICenterPage"));
@@ -99,10 +100,12 @@ function App() {
             <Route path="/security" element={<SecurityCenter />} />
             <Route path="/privacy" element={<Privacy />} />
 
-            {/* 🌍 Explore — Relationship Discovery. Browsable without a partner
-                (posting requires a couple, enforced server-side). */}
+            {/* 🌍 Explore — universal Relationship Discovery. Browsable by every
+                user (single / connected / unmatched). Relationship posts require
+                a couple; personal posts are open to all (enforced server-side). */}
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/r/:username" element={<PublicProfile />} />
+            <Route path="/u/:username" element={<PersonalPublicProfile />} />
 
             {/* Stage-adaptive home — reachable in every lifecycle stage
                 (preparing / growing / healing). The component switches on stage. */}

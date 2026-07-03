@@ -53,27 +53,12 @@ const GrowthIcon = () => (
   </svg>
 );
 
-const JournalIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <rect x="5" y="3.5" width="14" height="17" rx="2.2" stroke="currentColor" strokeWidth="1.8" />
-    <path d="M8.5 8H15.5M8.5 11.5H15.5M8.5 15H13" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-  </svg>
-);
-
 const HealIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <path d="M12 20S4 14 4 8.8A4.3 4.3 0 0 1 12 6.5 4.3 4.3 0 0 1 20 8.8C20 14 12 20 12 20Z"
       fill="currentColor" opacity="0.13" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
     <path d="M8.5 11.5H11L12.2 9L13.6 13.5L14.8 11.5H16" stroke="currentColor" strokeWidth="1.7"
       strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const ReflectIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="9" r="5" stroke="currentColor" strokeWidth="1.8" />
-    <circle cx="12" cy="9" r="1.6" fill="currentColor" />
-    <path d="M7 18C7 18 9 16 12 16C15 16 17 18 17 18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
   </svg>
 );
 
@@ -87,18 +72,20 @@ const NAV_BY_STAGE = {
     { to: "/moods", label: "Mood", Icon: MoodIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
+  // Solo stages get Explore too — discovery is universal (single / connected /
+  // unmatched all browse the same public feed).
   [STAGE.PREPARING]: [
     { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/explore", label: "Explore", Icon: ExploreIcon },
     { to: "/growth", label: "Growth", Icon: GrowthIcon },
     { to: "/ai-coach", label: "Coach", Icon: AICenterIcon },
-    { to: "/journal", label: "Journal", Icon: JournalIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
   [STAGE.HEALING]: [
     { to: "/dashboard", label: "Home", Icon: HomeIcon },
+    { to: "/explore", label: "Explore", Icon: ExploreIcon },
     { to: "/growth", label: "Heal", Icon: HealIcon },
     { to: "/ai-coach", label: "Coach", Icon: AICenterIcon },
-    { to: "/journal", label: "Reflect", Icon: ReflectIcon },
     { to: "/profile", label: "Profile", Icon: "avatar" },
   ],
 };

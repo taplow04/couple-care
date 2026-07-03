@@ -20,7 +20,19 @@ const PostCard = ({ post, compact = false }) => {
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentCount || 0);
 
-  const couple = post.couple || {};
+  // Unified profile card (personal OR couple); fall back to legacy `couple`.
+  const profile =
+    post.profile ||
+    (post.couple
+      ? { kind: "couple", ...post.couple, href: post.couple.username ? `/r/${post.couple.username}` : null }
+      : {});
+  const isPersonal = profile.kind === "personal";
+  const metaLine = [
+    profile.username ? `@${profile.username}` : "",
+    !isPersonal && profile.daysTogether ? togetherLabel(profile.daysTogether) : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const cat = categoryMeta(post.category);
 
   const react = async (type) => {
@@ -54,19 +66,16 @@ const PostCard = ({ post, compact = false }) => {
 
   const ProfileHeader = (
     <div className="post-card__head">
-      <span className="post-card__avatar">
-        {couple.photo ? (
-          <img src={couple.photo} alt={couple.name} loading="lazy" />
+      <span className={`post-card__avatar${isPersonal ? " post-card__avatar--personal" : ""}`}>
+        {profile.photo ? (
+          <img src={profile.photo} alt={profile.name} loading="lazy" />
         ) : (
-          <span className="post-card__avatar-fallback">❤️</span>
+          <span className="post-card__avatar-fallback">{isPersonal ? "🙂" : "❤️"}</span>
         )}
       </span>
       <div className="post-card__head-text">
-        <span className="post-card__couple">{couple.name}</span>
-        <span className="post-card__meta">
-          {couple.username ? `@${couple.username}` : ""}
-          {couple.daysTogether ? ` · ${togetherLabel(couple.daysTogether)}` : ""}
-        </span>
+        <span className="post-card__couple">{profile.name}</span>
+        {metaLine && <span className="post-card__meta">{metaLine}</span>}
       </div>
       <span className="post-card__cat" title={cat.label}>
         {cat.emoji} {cat.label}
@@ -76,8 +85,8 @@ const PostCard = ({ post, compact = false }) => {
 
   return (
     <article className={`post-card${compact ? " post-card--compact" : ""}`}>
-      {couple.username ? (
-        <Link to={`/r/${couple.username}`} className="post-card__head-link">
+      {profile.href ? (
+        <Link to={profile.href} className="post-card__head-link">
           {ProfileHeader}
         </Link>
       ) : (
