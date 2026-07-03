@@ -5,9 +5,19 @@
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.25s ease, transform 0.25s ease;
+  /* Gentle entrance — opacity/transform only, so it never shifts layout. */
+  animation: post-card-in 0.34s ease both;
 }
 .post-card:hover {
   box-shadow: var(--shadow);
+}
+
+@keyframes post-card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .post-card { animation: none; }
 }
 
 .post-card__head-link {
@@ -64,7 +74,9 @@
 
 .post-card__media {
   width: 100%;
-  background: #000;
+  /* Theme-aware letterbox fill (contain = no-crop) — soft neutral in light,
+     deep surface in dark. Avoids heavy pure-black bars on portrait photos. */
+  background: var(--surface-2);
   max-height: 70vh;
   overflow: hidden;
   display: flex;

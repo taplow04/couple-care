@@ -23,10 +23,13 @@ const isImmersive = (pathname) =>
 // shown everywhere EXCEPT the dashboard and immersive screens. The Personal
 // Profile belongs to the current user, so a notifications shortcut there is
 // redundant — hide it (notifications stay reachable from the dashboard/others).
+// Explore has its own sticky header with top-right actions (settings + compose),
+// so the floating bell would overlap them — hide it there too.
 const showFloatingBell = (pathname) =>
   !isImmersive(pathname) &&
   pathname !== "/dashboard" &&
-  pathname !== "/profile";
+  pathname !== "/profile" &&
+  pathname !== "/explore";
 
 const AppLayout = () => {
   // App-wide: keep the unread badges live and seeded.

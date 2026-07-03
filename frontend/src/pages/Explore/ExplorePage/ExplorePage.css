@@ -13,6 +13,17 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* Keep the header's inner content aligned with the centered feed (620px) on
+   wide screens, while the glass bar itself spans full width. */
+.explore-header__top,
+.explore-search,
+.explore-cats {
+  width: 100%;
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .explore-header__top {
   display: flex;
   align-items: center;
