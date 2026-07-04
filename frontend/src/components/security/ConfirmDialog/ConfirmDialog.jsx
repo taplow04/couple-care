@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+
+import PasswordInput from "../../common/PasswordInput/PasswordInput";
 import "./ConfirmDialog.css";
 
 /**
@@ -56,17 +58,16 @@ const ConfirmDialog = ({
         {message && <p className="confirm-dlg__msg">{message}</p>}
 
         {requirePassword && (
-          <label className="confirm-dlg__field">
+          <div className="confirm-dlg__field">
             <span>Confirm your password</span>
-            <input
-              type="password"
+            <PasswordInput
               autoFocus
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Current password"
               autoComplete="current-password"
             />
-          </label>
+          </div>
         )}
 
         {error && <p className="confirm-dlg__error" role="alert">{error}</p>}

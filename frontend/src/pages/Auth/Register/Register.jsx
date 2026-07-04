@@ -185,6 +185,7 @@ const Register = () => {
           placeholder="Create a password (min 8 characters)"
           value={form.password}
           onChange={handleChange}
+          autoComplete="new-password"
         />
 
         <AuthButton loading={loading}>Send Verification Code</AuthButton>

@@ -99,6 +99,7 @@ const ResetPassword = () => {
           placeholder="Enter new password"
           value={form.password}
           onChange={handleChange}
+          autoComplete="new-password"
         />
 
         <AuthInput
@@ -108,6 +109,7 @@ const ResetPassword = () => {
           placeholder="Confirm password"
           value={form.confirmPassword}
           onChange={handleChange}
+          autoComplete="new-password"
         />
 
         <AuthButton loading={loading}>Update Password</AuthButton>

@@ -84,6 +84,7 @@ const Login = () => {
           placeholder="Enter your password"
           value={form.password}
           onChange={handleChange}
+          autoComplete="current-password"
         />
 
         <div className="forgot-link">

@@ -7,6 +7,7 @@ import PasswordStrength from "../../../components/security/PasswordStrength/Pass
 import SessionCard from "../../../components/security/SessionCard/SessionCard";
 import TrustScoreRing from "../../../components/security/TrustScoreRing/TrustScoreRing";
 import ConfirmDialog from "../../../components/security/ConfirmDialog/ConfirmDialog";
+import PasswordInput from "../../../components/common/PasswordInput/PasswordInput";
 import { evaluatePassword } from "../../../utils/passwordStrength";
 import {
   getSecurityOverview,
@@ -118,7 +119,6 @@ const SecurityCenter = () => {
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwBusy, setPwBusy] = useState(false);
   const [pwError, setPwError] = useState("");
-  const [showPw, setShowPw] = useState(false);
 
   // Account activity (lazy).
   const [activity, setActivity] = useState(null);
@@ -440,9 +440,9 @@ const SecurityCenter = () => {
               ) : (
                 <form className="sec-pwform" onSubmit={submitPassword}>
                   <div className="sec-field">
-                    <label>Current password</label>
-                    <input
-                      type={showPw ? "text" : "password"}
+                    <label htmlFor="pw-current">Current password</label>
+                    <PasswordInput
+                      id="pw-current"
                       value={pw.current}
                       autoComplete="current-password"
                       onChange={(e) => setPw({ ...pw, current: e.target.value })}
@@ -450,9 +450,9 @@ const SecurityCenter = () => {
                     />
                   </div>
                   <div className="sec-field">
-                    <label>New password</label>
-                    <input
-                      type={showPw ? "text" : "password"}
+                    <label htmlFor="pw-next">New password</label>
+                    <PasswordInput
+                      id="pw-next"
                       value={pw.next}
                       autoComplete="new-password"
                       onChange={(e) => setPw({ ...pw, next: e.target.value })}
@@ -461,9 +461,9 @@ const SecurityCenter = () => {
                     <PasswordStrength password={pw.next} />
                   </div>
                   <div className="sec-field">
-                    <label>Confirm new password</label>
-                    <input
-                      type={showPw ? "text" : "password"}
+                    <label htmlFor="pw-confirm">Confirm new password</label>
+                    <PasswordInput
+                      id="pw-confirm"
                       value={pw.confirm}
                       autoComplete="new-password"
                       onChange={(e) => setPw({ ...pw, confirm: e.target.value })}
@@ -475,15 +475,6 @@ const SecurityCenter = () => {
                       </p>
                     )}
                   </div>
-
-                  <label className="sec-showpw">
-                    <input
-                      type="checkbox"
-                      checked={showPw}
-                      onChange={(e) => setShowPw(e.target.checked)}
-                    />
-                    Show passwords
-                  </label>
 
                   {pwError && <p className="sec-form-err" role="alert">{pwError}</p>}
 
