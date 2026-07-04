@@ -1,7 +1,17 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { getExploreSettings, updateExploreSettings } from "../../../services/explore.service";
 import "./ExploreSettings.css";
+
+const BIO_MAX_H = 132; // px — bio grows up to this, then scrolls
+
+// Grow a textarea to fit its content (capped), so pre-filled + long bios show
+// fully without a fixed, clipped height.
+const autoGrow = (el) => {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${Math.min(el.scrollHeight, BIO_MAX_H)}px`;
+};
 
 // Manage BOTH public profiles:
 //   • Personal Profile (every user — single / connected / unmatched)
@@ -24,6 +34,15 @@ const ExploreSettings = ({ onClose, onSaved }) => {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Lock background page scroll while the sheet is open.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -49,6 +68,13 @@ const ExploreSettings = ({ onClose, onSaved }) => {
       active = false;
     };
   }, []);
+
+  // Callback ref: size a bio textarea to its pre-filled content on mount.
+  const bioRef = useCallback((el) => autoGrow(el), []);
+  const onBio = (setter) => (e) => {
+    setter(e.target.value);
+    autoGrow(e.target);
+  };
 
   const save = async () => {
     setSaving(true);
@@ -78,117 +104,130 @@ const ExploreSettings = ({ onClose, onSaved }) => {
     <div className="expset" role="dialog" aria-modal="true" aria-label="Explore settings">
       <button type="button" className="expset__scrim" aria-label="Close" onClick={onClose} />
       <div className="expset__panel glass">
-        <div className="expset__grab" />
-        <h3 className="expset__title">Discovery & Public Profiles</h3>
+        <div className="expset__grab" aria-hidden="true" />
+        <div className="expset__header">
+          <h3 className="expset__title">Discovery &amp; Public Profiles</h3>
+          <button type="button" className="expset__close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
 
-        {loading ? (
-          <p className="expset__empty">Loading…</p>
-        ) : (
-          <>
-            {/* ── Personal Profile (everyone) ── */}
-            <p className="expset__section-head">🙂 Your Personal Profile</p>
+        <div className="expset__body">
+          {loading ? (
+            <p className="expset__empty">Loading…</p>
+          ) : (
+            <>
+              {/* ── Personal Profile (everyone) ── */}
+              <p className="expset__section-head">🙂 Your Personal Profile</p>
 
-            <label className="expset__label">Username</label>
-            <div className="expset__handle">
-              <span>@</span>
-              <input
-                value={pUsername}
-                onChange={(e) => setPUsername(e.target.value.toLowerCase())}
-                placeholder="your_handle"
-                maxLength={20}
-                autoCapitalize="none"
-                autoCorrect="off"
+              <label className="expset__label">Username</label>
+              <div className="expset__handle">
+                <span>@</span>
+                <input
+                  value={pUsername}
+                  onChange={(e) => setPUsername(e.target.value.toLowerCase())}
+                  placeholder="your_handle"
+                  maxLength={20}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+              </div>
+              <p className="expset__hint">3–20 characters · letters, numbers, underscores.</p>
+
+              <label className="expset__label">Bio</label>
+              <textarea
+                ref={bioRef}
+                className="expset__bio"
+                value={pBio}
+                onChange={onBio(setPBio)}
+                placeholder="A little about you…"
+                maxLength={300}
+                rows={2}
               />
-            </div>
-            <p className="expset__hint">3–20 characters · letters, numbers, underscores.</p>
 
-            <label className="expset__label">Bio</label>
-            <textarea
-              className="expset__bio"
-              value={pBio}
-              onChange={(e) => setPBio(e.target.value)}
-              placeholder="A little about you…"
-              maxLength={300}
-              rows={2}
-            />
+              <button
+                type="button"
+                className={`expset__toggle${pPublic ? " is-on" : ""}`}
+                onClick={() => setPPublic((v) => !v)}
+                role="switch"
+                aria-checked={pPublic}
+              >
+                <span className="expset__toggle-text">
+                  <span className="expset__toggle-title">🌍 Show in Explore</span>
+                  <span className="expset__toggle-sub">
+                    Let anyone discover your public personal posts. Off by default.
+                  </span>
+                </span>
+                <span className="expset__switch"><span className="expset__knob" /></span>
+              </button>
 
+              {/* ── Relationship Profile (couples only) ── */}
+              {hasCouple && (
+                <>
+                  <p className="expset__section-head expset__section-head--mt">
+                    ❤️ Your Relationship Profile
+                  </p>
+
+                  <label className="expset__label">Relationship username</label>
+                  <div className="expset__handle">
+                    <span>@</span>
+                    <input
+                      value={rUsername}
+                      onChange={(e) => setRUsername(e.target.value.toLowerCase())}
+                      placeholder="ritik_monika"
+                      maxLength={20}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                    />
+                  </div>
+                  <p className="expset__hint">3–20 characters · letters, numbers, underscores.</p>
+
+                  <label className="expset__label">Relationship bio</label>
+                  <textarea
+                    ref={bioRef}
+                    className="expset__bio"
+                    value={rBio}
+                    onChange={onBio(setRBio)}
+                    placeholder="A little about the two of you…"
+                    maxLength={300}
+                    rows={2}
+                  />
+
+                  <button
+                    type="button"
+                    className={`expset__toggle${rPublic ? " is-on" : ""}`}
+                    onClick={() => setRPublic((v) => !v)}
+                    role="switch"
+                    aria-checked={rPublic}
+                  >
+                    <span className="expset__toggle-text">
+                      <span className="expset__toggle-title">🌍 Show in Explore</span>
+                      <span className="expset__toggle-sub">
+                        Let others discover your shared couple posts. Off by default.
+                      </span>
+                    </span>
+                    <span className="expset__switch"><span className="expset__knob" /></span>
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="expset__footer">
+          {error && <p className="expset__error" role="alert">{error}</p>}
+          <div className="expset__actions">
+            <button type="button" className="expset__cancel" onClick={onClose}>
+              Cancel
+            </button>
             <button
               type="button"
-              className={`expset__toggle${pPublic ? " is-on" : ""}`}
-              onClick={() => setPPublic((v) => !v)}
-              role="switch"
-              aria-checked={pPublic}
+              className="expset__save"
+              onClick={save}
+              disabled={saving || loading}
             >
-              <span className="expset__toggle-text">
-                <span className="expset__toggle-title">🌍 Show in Explore</span>
-                <span className="expset__toggle-sub">
-                  Let anyone discover your public personal posts. Off by default.
-                </span>
-              </span>
-              <span className="expset__switch"><span className="expset__knob" /></span>
+              {saving ? "Saving…" : "Save"}
             </button>
-
-            {/* ── Relationship Profile (couples only) ── */}
-            {hasCouple && (
-              <>
-                <p className="expset__section-head expset__section-head--mt">
-                  ❤️ Your Relationship Profile
-                </p>
-
-                <label className="expset__label">Relationship username</label>
-                <div className="expset__handle">
-                  <span>@</span>
-                  <input
-                    value={rUsername}
-                    onChange={(e) => setRUsername(e.target.value.toLowerCase())}
-                    placeholder="ritik_monika"
-                    maxLength={20}
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                  />
-                </div>
-                <p className="expset__hint">3–20 characters · letters, numbers, underscores.</p>
-
-                <label className="expset__label">Relationship bio</label>
-                <textarea
-                  className="expset__bio"
-                  value={rBio}
-                  onChange={(e) => setRBio(e.target.value)}
-                  placeholder="A little about the two of you…"
-                  maxLength={300}
-                  rows={2}
-                />
-
-                <button
-                  type="button"
-                  className={`expset__toggle${rPublic ? " is-on" : ""}`}
-                  onClick={() => setRPublic((v) => !v)}
-                  role="switch"
-                  aria-checked={rPublic}
-                >
-                  <span className="expset__toggle-text">
-                    <span className="expset__toggle-title">🌍 Show in Explore</span>
-                    <span className="expset__toggle-sub">
-                      Let others discover your shared couple posts. Off by default.
-                    </span>
-                  </span>
-                  <span className="expset__switch"><span className="expset__knob" /></span>
-                </button>
-              </>
-            )}
-
-            {error && <p className="expset__error" role="alert">{error}</p>}
-
-            <div className="expset__actions">
-              <button type="button" className="expset__cancel" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="button" className="expset__save" onClick={save} disabled={saving}>
-                {saving ? "Saving…" : "Save"}
-              </button>
-            </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );
