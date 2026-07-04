@@ -1,5 +1,6 @@
 .jp {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--background);
 }
 
@@ -203,6 +204,7 @@
   align-items: center;
   justify-content: center;
   min-height: 70vh;
+  min-height: 70dvh;
   padding: 32px 24px;
   text-align: center;
   gap: 12px;
