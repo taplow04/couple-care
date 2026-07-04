@@ -5,29 +5,29 @@
 }
 
 .register-error {
-  background: #ffe5e5;
+  background: rgba(255, 82, 82, 0.12);
 
-  color: #ff3b3b;
+  color: var(--danger);
 
   padding: 12px;
 
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
 
   margin-bottom: 16px;
 
   text-align: center;
 
-  font-size: 14px;
+  font-size: var(--font-sm);
 }
 
 .register-success {
-  background: #e7fff0;
+  background: rgba(50, 195, 108, 0.14);
 
-  color: #18a558;
+  color: var(--success);
 
   padding: 12px;
 
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
 
   margin-bottom: 16px;
 
