@@ -33,9 +33,9 @@
 
   border: none;
 
-  color: #ff5c8a;
+  color: var(--primary);
 
-  font-size: 14px;
+  font-size: var(--font-sm);
 
   font-weight: 600;
 

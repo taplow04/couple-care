@@ -181,10 +181,10 @@
 }
 .pp-chip--success {
   background: rgba(50, 195, 108, 0.12);
-  color: #239a52;
+  color: var(--success);
 }
 .pp-chip--muted {
-  background: #eef0f5;
+  background: var(--surface-2);
   color: var(--text-secondary);
 }
 
@@ -291,7 +291,7 @@
   padding: 24px;
 }
 .pp__modal {
-  background: #fff;
+  background: var(--card);
   border-radius: var(--radius-lg, 24px);
   padding: 24px;
   max-width: 360px;

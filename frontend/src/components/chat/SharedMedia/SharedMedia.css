@@ -16,8 +16,8 @@
   position: relative;
   padding: 0;
   border: none;
-  background: #efefef;
-  border-radius: 10px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   aspect-ratio: 1 / 1;
   cursor: pointer;

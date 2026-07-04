@@ -57,8 +57,8 @@
   flex-shrink: 0;
 }
 
-.mtc__legend-dot--me      { background: #ff5c8a; }
-.mtc__legend-dot--partner { background: #7c5cff; }
+.mtc__legend-dot--me      { background: var(--primary); }
+.mtc__legend-dot--partner { background: var(--secondary); }
 
 .mtc__legend-label {
   font-size: 12px;

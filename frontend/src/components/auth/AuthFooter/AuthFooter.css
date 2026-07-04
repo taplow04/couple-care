@@ -3,15 +3,15 @@
 
   margin-top: 20px;
 
-  font-size: 14px;
+  font-size: var(--font-sm);
 
-  color: #666;
+  color: var(--muted);
 }
 
 .auth-footer a {
   margin-left: 6px;
 
-  color: #ff5c8a;
+  color: var(--primary);
 
   font-weight: 600;
 }

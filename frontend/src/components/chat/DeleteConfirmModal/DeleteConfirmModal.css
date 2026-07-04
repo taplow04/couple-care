@@ -93,7 +93,7 @@
 }
 
 .del-modal__btn--cancel:hover {
-  background: #eee;
+  background: var(--surface-2);
 }
 
 .del-modal__btn--confirm {
@@ -102,5 +102,5 @@
 }
 
 .del-modal__btn--confirm:hover {
-  background: #e03e3e;
+  filter: brightness(0.92);
 }
