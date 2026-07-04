@@ -5,6 +5,11 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  /* Use the *dynamic* viewport so the sheet fits the actually-visible area on
+     iOS Safari / Android Chrome (toolbars overlap 100vh, which used to push the
+     footer under the fold and make the action button unreachable). */
+  height: 100vh;
+  height: 100dvh;
 }
 @media (min-width: 560px) {
   .compose { align-items: center; padding: 20px; }
@@ -24,84 +29,122 @@
   position: relative;
   width: 100%;
   max-width: 520px;
-  max-height: 92vh;
+  /* Cap to the visible viewport; the body scrolls, head + footer stay pinned. */
+  max-height: 94vh;
+  max-height: 94dvh;
   display: flex;
   flex-direction: column;
-  border-radius: 24px 24px 0 0;
+  border-radius: 26px 26px 0 0;
   box-shadow: var(--shadow-lg);
-  animation: compose-up 0.28s var(--ease-spring);
+  overflow: hidden;
+  animation: compose-up 0.32s var(--ease-spring);
 }
 @media (min-width: 560px) {
-  .compose__panel { border-radius: var(--radius-lg); }
+  .compose__panel {
+    border-radius: var(--radius-lg);
+    max-height: 90dvh;
+  }
 }
 
+/* Drag affordance */
+.compose__grab {
+  flex-shrink: 0;
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 999px;
+  background: var(--border);
+}
+@media (min-width: 560px) {
+  .compose__grab { display: none; }
+}
+
+/* ---------- Header (title + close; primary action lives in the footer) ---- */
 .compose__head {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 8px 14px 12px;
   border-bottom: 1px solid var(--border);
 }
-.compose__title { margin: 0; font-size: var(--font-body); font-weight: 800; color: var(--text); }
+.compose__title {
+  margin: 0;
+  font-size: var(--font-body);
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  flex: 1;
+}
 .compose__close {
+  flex-shrink: 0;
   width: 34px; height: 34px;
+  display: grid;
+  place-items: center;
   border: none; border-radius: 50%;
   background: var(--surface-2); color: var(--text);
-  font-size: 1rem; cursor: pointer;
+  font-size: 0.95rem; cursor: pointer;
+  transition: var(--transition-fast);
 }
-.compose__post {
-  padding: 8px 18px;
-  border: none;
-  border-radius: 999px;
-  background: var(--gradient-romantic);
-  color: #fff;
-  font-weight: 800;
-  font-size: var(--font-sm);
-  cursor: pointer;
-}
-.compose__post:disabled { opacity: 0.5; }
+.compose__close:active { transform: scale(0.92); }
+.compose__head-spacer { flex-shrink: 0; width: 34px; height: 34px; }
 
+/* ---------- Scrollable body -------------------------------------------------*/
 .compose__body {
-  padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+  flex: 1;
+  min-height: 0;
+  padding: 14px 16px 16px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
+.compose__field { display: flex; flex-direction: column; gap: 8px; }
 
+/* ---------- Upload area (compact) ------------------------------------------*/
 .compose__drop {
   width: 100%;
-  min-height: 180px;
+  min-height: 128px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
   border: 2px dashed var(--border);
   border-radius: var(--radius);
   background: var(--surface-2);
   color: var(--muted);
-  font-size: var(--font-sm);
-  font-weight: 600;
   cursor: pointer;
+  transition: var(--transition-fast);
 }
-.compose__drop-icon { font-size: 2rem; }
+.compose__drop:active { transform: scale(0.99); border-color: var(--primary); }
+.compose__drop-icon { font-size: 1.9rem; }
+.compose__drop-title { font-size: var(--font-sm); font-weight: 700; color: var(--text); }
+.compose__drop-hint { font-size: var(--font-xs); font-weight: 500; }
 
 .compose__preview {
   position: relative;
   border-radius: var(--radius);
   overflow: hidden;
   background: #000;
-  max-height: 46vh;
+  /* Keep the preview tidy — never let a tall portrait shot dominate the sheet */
+  max-height: 38dvh;
+  animation: compose-fade 0.25s ease;
 }
 .compose__preview img,
-.compose__preview video { width: 100%; max-height: 46vh; object-fit: contain; display: block; }
+.compose__preview video {
+  width: 100%;
+  max-height: 38dvh;
+  object-fit: contain;
+  display: block;
+}
 .compose__change {
   position: absolute;
   top: 10px; right: 10px;
-  padding: 6px 12px;
+  padding: 6px 13px;
   border: none;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.5);
@@ -113,77 +156,106 @@
   backdrop-filter: blur(6px);
 }
 
+/* ---------- Caption (auto-grow) --------------------------------------------*/
 .compose__caption {
   width: 100%;
   padding: 12px 14px;
+  min-height: 52px;
+  max-height: 168px;
   font-size: 16px;
+  line-height: 1.45;
+  font-family: inherit;
   color: var(--text);
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   outline: none;
-  resize: vertical;
+  resize: none;
+  transition: border-color 0.15s ease;
 }
 .compose__caption:focus { border-color: var(--primary); }
 
 .compose__field-label {
   font-size: var(--font-xs);
   font-weight: 700;
+  letter-spacing: 0.02em;
   color: var(--muted);
-  margin-bottom: -4px;
 }
 
-.compose__cats { display: flex; flex-wrap: wrap; gap: 7px; }
+/* ---------- Categories (horizontal scroll — no awkward wrapping) -----------*/
+.compose__cats {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  padding-bottom: 2px;
+  margin: 0 -16px; /* bleed to the sheet edges */
+  padding-left: 16px;
+  padding-right: 16px;
+  scrollbar-width: none;
+}
+.compose__cats::-webkit-scrollbar { display: none; }
 .compose__cat {
-  padding: 7px 12px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding: 8px 14px;
   border: 1.5px solid var(--border);
   border-radius: 999px;
   background: var(--card);
   color: var(--text-secondary);
-  font-size: var(--font-xs);
+  font-size: var(--font-sm);
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: var(--transition-fast);
 }
+.compose__cat:active { transform: scale(0.95); }
 .compose__cat.is-active {
   border-color: var(--primary);
   background: var(--primary-light);
   color: var(--primary-dark);
 }
 
+/* ---------- Location -------------------------------------------------------*/
 .compose__loc {
   width: 100%;
-  padding: 11px 14px;
+  padding: 12px 14px;
   font-size: 16px;
+  font-family: inherit;
   color: var(--text);
   background: var(--surface-2);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   outline: none;
+  transition: border-color 0.15s ease;
 }
 .compose__loc:focus { border-color: var(--primary); }
 
+/* ---------- Privacy (compact rows) -----------------------------------------*/
 .compose__vis { display: flex; flex-direction: column; gap: 8px; }
 .compose__vis-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
-  padding: 11px 14px;
+  gap: 1px;
+  padding: 10px 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--card);
   color: var(--text);
-  font-size: var(--font-sm);
-  font-weight: 700;
   cursor: pointer;
   text-align: left;
+  transition: var(--transition-fast);
 }
+.compose__vis-btn:active { transform: scale(0.99); }
 .compose__vis-btn.is-active { border-color: var(--primary); background: var(--primary-light); }
+.compose__vis-label { font-size: var(--font-sm); font-weight: 700; }
 .compose__vis-hint { font-size: var(--font-xs); font-weight: 500; color: var(--muted); }
 
-/* Post-as scope selector (Relationship vs Personal) */
-.compose__scope { display: flex; gap: 8px; }
+/* ---------- Post-as scope selector -----------------------------------------*/
+.compose__scope { display: flex; gap: 10px; }
 .compose__scope-btn {
   flex: 1;
   display: flex;
@@ -197,26 +269,68 @@
   color: var(--text);
   cursor: pointer;
   text-align: center;
+  transition: var(--transition-fast);
 }
+.compose__scope-btn:active { transform: scale(0.98); }
 .compose__scope-btn.is-active { border-color: var(--primary); background: var(--primary-light); }
 .compose__scope-emoji { font-size: 1.3rem; }
 .compose__scope-label { font-size: var(--font-sm); font-weight: 700; }
 .compose__scope-hint { font-size: var(--font-xs); font-weight: 500; color: var(--muted); }
 
+.compose__error { margin: 0; font-size: var(--font-xs); color: var(--danger); font-weight: 600; }
+
+/* ---------- Sticky bottom action bar ---------------------------------------*/
+.compose__footer {
+  flex-shrink: 0;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.compose__post {
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--gradient-romantic);
+  color: #fff;
+  font-weight: 800;
+  font-size: var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(255, 92, 138, 0.32);
+  transition: transform 0.12s ease, opacity 0.2s ease;
+}
+.compose__post:active { transform: scale(0.98); }
+.compose__post:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .compose__progress {
-  height: 6px;
+  height: 5px;
+  margin-bottom: 10px;
   background: var(--surface-2);
   border-radius: 999px;
   overflow: hidden;
 }
 .compose__progress-fill { height: 100%; background: var(--gradient-romantic); transition: width 0.2s ease; }
 
-.compose__error { margin: 0; font-size: var(--font-xs); color: var(--danger); font-weight: 600; }
-
 @keyframes compose-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+@keyframes compose-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .compose__panel { animation: none; }
+  .compose__panel,
+  .compose__preview { animation: none; }
+  .compose__post:active,
+  .compose__cat:active,
+  .compose__vis-btn:active,
+  .compose__scope-btn:active,
+  .compose__close:active { transform: none; }
 }

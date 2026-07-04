@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createExplorePost } from "../../../services/explore.service";
 import { compressImage } from "../../../utils/compressImage";
@@ -11,10 +11,13 @@ const VISIBILITY = [
   { key: "private", label: "🔒 Private", hint: "Only you" },
 ];
 
+const CAPTION_MAX_H = 168; // px — caption grows up to this, then scrolls
+
 // Create an Explore post. Relationship users choose Personal vs Relationship;
 // single / unmatched users always post Personal. Media → Cloudinary (multipart).
 const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
   const fileRef = useRef(null);
+  const captionRef = useRef(null);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [isVideo, setIsVideo] = useState(false);
@@ -28,6 +31,27 @@ const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
+
+  // Lock the background page scroll while the composer sheet is open so the
+  // feed underneath doesn't move as the user scrolls the composer.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const autoGrow = (el) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, CAPTION_MAX_H)}px`;
+  };
+
+  const onCaptionChange = (e) => {
+    setCaption(e.target.value);
+    autoGrow(e.target);
+  };
 
   const pick = async (f) => {
     if (!f) return;
@@ -75,23 +99,17 @@ const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
     <div className="compose" role="dialog" aria-modal="true" aria-label="Share a post">
       <button type="button" className="compose__scrim" aria-label="Close" onClick={onClose} />
       <div className="compose__panel glass">
+        <div className="compose__grab" aria-hidden="true" />
         <div className="compose__head">
           <button type="button" className="compose__close" onClick={onClose} aria-label="Close">✕</button>
           <h3 className="compose__title">Share a Moment</h3>
-          <button
-            type="button"
-            className="compose__post"
-            onClick={submit}
-            disabled={!file || uploading}
-          >
-            {uploading ? `${progress}%` : "Share"}
-          </button>
+          <span className="compose__head-spacer" aria-hidden="true" />
         </div>
 
         <div className="compose__body">
           {/* Media picker / preview */}
           {preview ? (
-            <div className="compose__preview">
+            <div className={`compose__preview${isVideo ? " is-video" : ""}`}>
               {isVideo ? (
                 <video src={preview} controls playsInline />
               ) : (
@@ -112,7 +130,8 @@ const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
               onClick={() => fileRef.current?.click()}
             >
               <span className="compose__drop-icon">📷</span>
-              <span>Add a photo or video</span>
+              <span className="compose__drop-title">Add a photo or video</span>
+              <span className="compose__drop-hint">Tap to choose from your device</span>
             </button>
           )}
           <input
@@ -128,7 +147,7 @@ const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
 
           {/* Post as — couples pick shared vs personal; solo users post personal */}
           {hasCouple && (
-            <>
+            <div className="compose__field">
               <label className="compose__field-label">Post as</label>
               <div className="compose__scope">
                 <button
@@ -150,61 +169,81 @@ const ComposePost = ({ onClose, onCreated, hasCouple = false }) => {
                   <span className="compose__scope-hint">Just from you</span>
                 </button>
               </div>
-            </>
+            </div>
           )}
 
-          <textarea
-            className="compose__caption"
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="Write a caption…"
-            maxLength={2000}
-            rows={2}
-          />
-
-          <label className="compose__field-label">Category</label>
-          <div className="compose__cats">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                className={`compose__cat${category === c.key ? " is-active" : ""}`}
-                onClick={() => setCategory(c.key)}
-              >
-                {c.emoji} {c.label}
-              </button>
-            ))}
+          <div className="compose__field">
+            <textarea
+              ref={captionRef}
+              className="compose__caption"
+              value={caption}
+              onChange={onCaptionChange}
+              placeholder="Write a caption…"
+              maxLength={2000}
+              rows={2}
+            />
           </div>
 
-          <input
-            className="compose__loc"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="📍 Add location (optional)"
-            maxLength={120}
-          />
-
-          <label className="compose__field-label">Who can see this?</label>
-          <div className="compose__vis">
-            {VISIBILITY.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                className={`compose__vis-btn${visibility === v.key ? " is-active" : ""}`}
-                onClick={() => setVisibility(v.key)}
-              >
-                <span>{v.label}</span>
-                <span className="compose__vis-hint">{v.hint}</span>
-              </button>
-            ))}
+          <div className="compose__field">
+            <label className="compose__field-label">Category</label>
+            <div className="compose__cats">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={`compose__cat${category === c.key ? " is-active" : ""}`}
+                  onClick={() => setCategory(c.key)}
+                >
+                  {c.emoji} {c.label}
+                </button>
+              ))}
+            </div>
           </div>
 
+          <div className="compose__field">
+            <input
+              className="compose__loc"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="📍 Add location (optional)"
+              maxLength={120}
+            />
+          </div>
+
+          <div className="compose__field">
+            <label className="compose__field-label">Who can see this?</label>
+            <div className="compose__vis">
+              {VISIBILITY.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  className={`compose__vis-btn${visibility === v.key ? " is-active" : ""}`}
+                  onClick={() => setVisibility(v.key)}
+                >
+                  <span className="compose__vis-label">{v.label}</span>
+                  <span className="compose__vis-hint">{v.hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && <p className="compose__error" role="alert">{error}</p>}
+        </div>
+
+        <div className="compose__footer">
           {uploading && (
             <div className="compose__progress">
               <div className="compose__progress-fill" style={{ width: `${progress}%` }} />
             </div>
           )}
-          {error && <p className="compose__error" role="alert">{error}</p>}
+          <button
+            type="button"
+            className="compose__post"
+            onClick={submit}
+            disabled={!file || uploading}
+          >
+            {uploading ? `Sharing… ${progress}%` : "Share Moment"}
+          </button>
         </div>
       </div>
     </div>
