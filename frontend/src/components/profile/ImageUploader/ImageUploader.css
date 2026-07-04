@@ -19,7 +19,7 @@
 
 .img-uploader__error {
   font-size: 12px;
-  color: #ffb3c6;
+  color: var(--danger);
   font-weight: 600;
   text-align: center;
   max-width: 240px;

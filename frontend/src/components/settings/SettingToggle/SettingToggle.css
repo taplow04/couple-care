@@ -82,6 +82,11 @@
   border-radius: 99px;
   transition: background 0.25s ease;
 }
+/* Off-track needs a visible, theme-aware neutral on dark cards
+   (a bare light-gray track reads like an "on" state in dark mode). */
+:root[data-theme="dark"] .setting-toggle__slider {
+  background: #3a3a48;
+}
 
 .setting-toggle__slider::before {
   content: "";
