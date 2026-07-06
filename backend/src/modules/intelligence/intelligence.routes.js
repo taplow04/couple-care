@@ -12,6 +12,10 @@ router.get("/trust", c.trust);
 router.get("/growth", c.growth);
 router.get("/emotion", c.emotion);
 router.get("/memory/:period", c.memory);
+router.get("/maturity", c.maturity);
+router.get("/behavior", c.behavior);
+router.get("/healing", c.healing);
+router.get("/history/:engine", c.history);
 router.get("/config", c.config);
 
 module.exports = router;

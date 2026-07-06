@@ -38,6 +38,13 @@ module.exports = {
     conflictRecovery: 0.03,
     trust: 0.06,
     growth: 0.06,
+    // ── Love Meter 2.0 inputs (ADDITIVE, same graceful-degrade rule). maturity
+    // is the couple-symmetric average of both partners' latest Relationship
+    // Maturity snapshots; emotionalSupport is the supportive-interaction share;
+    // sharedGoals reflects joint bucket-list intent (not just completions). ──
+    maturity: 0.05,
+    emotionalSupport: 0.04,
+    sharedGoals: 0.03,
   },
 
   trust: {
@@ -75,5 +82,77 @@ module.exports = {
     dailyMoments: 0.08,
     loveLetters: 0.06,
     aiSessions: 0.06,
+  },
+
+  // ── Relationship Maturity engine (PER-USER — behavioural, not a personality
+  // test). Ten dimensions, each 0..100, normalised by the active-weight sum so
+  // a user without (say) sleep or partner data is scored only on what they
+  // actually do. Equal defaults; tune freely. ──
+  maturity: {
+    emotionalRegulation: 0.1,
+    communication: 0.1,
+    conflictResolution: 0.1,
+    trustBuilding: 0.1,
+    consistency: 0.1,
+    empathy: 0.1,
+    accountability: 0.1,
+    respect: 0.1,
+    patience: 0.1,
+    reliability: 0.1,
+  },
+
+  // ── Behaviour Intelligence engine (COUPLE — identical for both partners).
+  // Indicator weights feed the overall behavioural-wellness score used for the
+  // trend snapshot; each indicator is also reported individually with its own
+  // confidence-hedged insight. emotionalDistance is scored INVERTED (higher =
+  // less distance) so all weights point the same direction. ──
+  behavior: {
+    healthyCommunication: 0.2,
+    emotionalSupport: 0.16,
+    mutualEffort: 0.16,
+    consistency: 0.14,
+    engagement: 0.14,
+    conflictPressure: 0.1, // inverted conflict frequency (higher = calmer)
+    emotionalCloseness: 0.1, // inverted emotional distance
+  },
+
+  // ── Attraction / Attachment / Growing-Love pattern model (COUPLE). Each
+  // pattern is a weighted blend of deterministic signals; the three are then
+  // normalised to a 100-point distribution. NEVER presented as fact — the
+  // engine wraps the result in confidence-hedged language. ──
+  behaviorPatterns: {
+    attraction: {
+      messageIntensity: 0.3, // bursty, high-volume messaging
+      novelty: 0.3, // early-days effect (fades with time together)
+      excitementMoods: 0.25, // excited/happy mood share
+      mediaPlayfulness: 0.15, // stories/voice/video experimentation
+    },
+    attachment: {
+      routine: 0.3, // steady daily active-day coverage
+      streakHabit: 0.25, // sustained streaks (daily habit)
+      responsiveness: 0.25, // reliance on quick mutual replies
+      dailyRituals: 0.2, // daily couple moments / recurring habits
+    },
+    growingLove: {
+      trust: 0.25,
+      conflictRecovery: 0.2,
+      longevity: 0.15,
+      mutualEffort: 0.15,
+      sharedGrowth: 0.15, // bucket goals, achievements, milestones
+      supportiveness: 0.1,
+    },
+  },
+
+  // ── Healing & Recovery engine (PER-USER, Stage 3). The Healing Progress score
+  // reflects ENGAGEMENT with recovery activities — never emotional worth. Each
+  // dimension degrades to null when the user has no data for it. ──
+  healing: {
+    routine: 0.18, // showing up (active days + growth streak)
+    journaling: 0.16, // journal/reflection/gratitude consistency
+    moodCare: 0.14, // logging moods + gentle recovery trend
+    challenges: 0.14, // daily healing challenges completed
+    sleep: 0.12, // sleep logging + adequacy
+    support: 0.13, // coach conversations / reaching out
+    selfDiscovery: 0.13, // quizzes, growth report, learning activities
   },
 };

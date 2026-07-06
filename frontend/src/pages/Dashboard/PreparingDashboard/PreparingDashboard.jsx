@@ -192,6 +192,9 @@ const PreparingDashboard = () => {
           <button className="prep-quick__item" onClick={() => navigate("/ai-coach")}>
             <span>💬</span>Coach
           </button>
+          <button className="prep-quick__item" onClick={() => navigate("/maturity")}>
+            <span>🧭</span>Maturity
+          </button>
           <button className="prep-quick__item" onClick={() => navigate("/profile")}>
             <span>👤</span>Profile
           </button>

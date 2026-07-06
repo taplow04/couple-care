@@ -181,9 +181,17 @@ const startNotificationJobs = () => {
           partnerTwoId: { $ne: null },
         }).select("_id");
         const { computeCoupleHealth } = require("../couples/health.service");
+        const intelligence = require("../../intelligence");
         let done = 0;
         for (const c of couples) {
           try {
+            // Behaviour + partner maturity FIRST so today's health pass (Love
+            // Meter 2.0) reads fresh maturity snapshots.
+            const pair = await Couple.findById(c._id).select("partnerOneId partnerTwoId");
+            for (const uid of [pair?.partnerOneId, pair?.partnerTwoId].filter(Boolean)) {
+              await intelligence.getMaturity(uid).catch(() => {});
+            }
+            await intelligence.getBehavior(c._id).catch(() => {});
             await computeCoupleHealth(c._id);
             done += 1;
           } catch {

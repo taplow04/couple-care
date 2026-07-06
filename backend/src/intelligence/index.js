@@ -19,6 +19,9 @@ const emotionEngine = require("./engines/emotion.engine");
 const trustEngine = require("./engines/trust.engine");
 const growthEngine = require("./engines/growth.engine");
 const memoryEngine = require("./engines/memory.engine");
+const maturityEngine = require("./engines/maturity.engine");
+const behaviorEngine = require("./engines/behavior.engine");
+const healingEngine = require("./engines/healing.engine");
 
 /**
  * Relationship Health for a couple — deterministic, identical for both partners.
@@ -128,6 +131,64 @@ const getCurrentMood = async (userId, now = Date.now()) => {
   };
 };
 
+/**
+ * Relationship Maturity for a USER — continuously evolving, behaviour-based
+ * (never a personality test). Works in every lifecycle stage; couple-only
+ * dimensions simply degrade for solo users.
+ */
+const getMaturity = async (userId, now = Date.now()) => {
+  const feats = await features.gatherMaturityFeatures(userId, now);
+  const history = await learning.getHistory(userId, "maturity", 30);
+  feats.historyDays = history.length;
+
+  const result = maturityEngine.score(feats, getConfig(), history[0]?.breakdown || null);
+  result.trend = learning.trend(result.score, history.map((h) => h.score).filter((n) => typeof n === "number"));
+
+  learning.recordSnapshot("user", userId, "maturity", dayKey(now), result);
+  return result;
+};
+
+/**
+ * Behaviour Intelligence for a COUPLE — confidence-hedged indicators plus the
+ * Attraction / Attachment / Growing-Love pattern estimate. Identical for both
+ * partners (couple-symmetric inputs only).
+ */
+const getBehavior = async (coupleId, now = Date.now()) => {
+  const feats = await features.gatherHealthFeatures(coupleId, now);
+  const history = await learning.getHistory(coupleId, "behavior", 14);
+  feats.historyDays = history.length;
+
+  const result = behaviorEngine.score(feats, getConfig());
+  result.trend = learning.trend(result.score, history.map((h) => h.score).filter((n) => typeof n === "number"));
+
+  learning.recordSnapshot("couple", coupleId, "behavior", dayKey(now), result);
+  return result;
+};
+
+/**
+ * Healing Progress for a USER (Stage 3) — engagement with recovery activities,
+ * never emotional worth. Includes gentle, non-clinical behavioural insights.
+ */
+const getHealing = async (userId, now = Date.now()) => {
+  const feats = await features.gatherHealingFeatures(userId, now);
+  const history = await learning.getHistory(userId, "healing", 30);
+  feats.historyDays = history.length;
+
+  const result = healingEngine.score(feats, getConfig(), history[0]?.breakdown || null);
+  result.trend = learning.trend(result.score, history.map((h) => h.score).filter((n) => typeof n === "number"));
+
+  learning.recordSnapshot("user", userId, "healing", dayKey(now), result);
+  return result;
+};
+
+// Self-history timeline for trend charts: [{day, score, confidence}] oldest-first.
+const getHistorySeries = async (subjectId, engine, days = 30) => {
+  const rows = await learning.getHistory(subjectId, engine, Math.min(Math.max(days, 1), 365));
+  return rows
+    .map((r) => ({ day: r.day, score: r.score }))
+    .reverse();
+};
+
 // Relationship recap/timeline for a period (daily|weekly|monthly|yearly).
 // Deterministic assembly of existing sources; no LLM in the structure.
 const getMemory = async (coupleId, period = "weekly", now = Date.now()) => {
@@ -142,6 +203,10 @@ module.exports = {
   getEmotion,
   getCurrentMood,
   getMemory,
+  getMaturity,
+  getBehavior,
+  getHealing,
+  getHistorySeries,
   // pure engines (for tests / future facades)
   engines: {
     health: healthEngine,
@@ -149,6 +214,9 @@ module.exports = {
     trust: trustEngine,
     growth: growthEngine,
     memory: memoryEngine,
+    maturity: maturityEngine,
+    behavior: behaviorEngine,
+    healing: healingEngine,
   },
   getConfig,
 };

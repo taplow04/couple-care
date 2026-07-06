@@ -27,6 +27,27 @@ const createError = (message, statusCode = 400) => {
 const HISTORY_WINDOW = 12;
 
 /**
+ * Compact intelligence snapshot appended to the coach system prompt so advice
+ * tracks the user's actual behavioural picture (maturity in growing/preparing,
+ * healing progress in healing). Best-effort — the coach must never fail
+ * because scoring did. Lazy require avoids a coach↔intelligence load cycle.
+ * The line explicitly tells the model these are estimates, never facts.
+ */
+const intelligenceContextLine = async (userId, stage) => {
+  try {
+    const intelligence = require("../../intelligence");
+    if (stage === "healing") {
+      const h = await intelligence.getHealing(userId);
+      return `\n\nBehavioural snapshot (deterministic estimate, ${h.confidence}% confidence — treat as a hint, never state as fact or quote numbers unprompted): recovery-activity engagement ${h.score}/100, trend ${h.trend?.direction || "stable"}. Gentle focus areas: ${(h.factors?.focusAreas || []).map((f) => f.label).join(", ") || "none observed"}.`;
+    }
+    const m = await intelligence.getMaturity(userId);
+    return `\n\nBehavioural snapshot (deterministic estimate, ${m.confidence}% confidence — treat as a hint, never state as fact or quote numbers unprompted): relationship-maturity ${m.score}/100, trend ${m.trend?.direction || "stable"}. Observed strengths: ${(m.factors?.strengths || []).map((f) => f.label).join(", ") || "none yet"}. Growth areas: ${(m.factors?.growthAreas || []).map((f) => f.label).join(", ") || "none observed"}.`;
+  } catch {
+    return "";
+  }
+};
+
+/**
  * Resolve the coach persona for a user based on their lifecycle stage. The coach
  * is stage-aware:
  *   growing   → couple Relationship Coach (couple context) — unchanged behaviour
@@ -44,7 +65,7 @@ const resolveCoachPersona = async (userId) => {
       stage,
       buildSystemPrompt: async () => {
         const ctx = await buildRelationshipContext(userId);
-        return buildCoachReplyPrompt(formatContext(ctx));
+        return buildCoachReplyPrompt(formatContext(ctx)) + (await intelligenceContextLine(userId, stage));
       },
       recordEngagement: () =>
         recordActivity(user.currentCoupleId, userId, ACTIVITY_TYPES.COACH, {}),
@@ -58,7 +79,7 @@ const resolveCoachPersona = async (userId) => {
     stage,
     buildSystemPrompt: async () => {
       const ctx = await buildPersonalContext(userId);
-      return buildSolo(formatPersonalContext(ctx));
+      return buildSolo(formatPersonalContext(ctx)) + (await intelligenceContextLine(userId, stage));
     },
     recordEngagement: () => recordGrowthActivity(userId, GROWTH_ACTIVITY.COACH, {}),
   };

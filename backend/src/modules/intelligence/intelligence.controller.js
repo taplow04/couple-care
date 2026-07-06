@@ -37,6 +37,39 @@ const emotion = asyncHandler(async (req, res) => {
   ok(res, await intelligence.getEmotion(req.user._id));
 });
 
+// Maturity + Healing are per-USER (no couple required — work in every stage).
+const maturity = asyncHandler(async (req, res) => {
+  ok(res, await intelligence.getMaturity(req.user._id));
+});
+
+const healing = asyncHandler(async (req, res) => {
+  ok(res, await intelligence.getHealing(req.user._id));
+});
+
+// Behaviour Intelligence is a COUPLE engine (identical for both partners).
+const behavior = asyncHandler(async (req, res) => {
+  ok(res, await intelligence.getBehavior(await requireCouple(req.user._id)));
+});
+
+// Self-history series for trend charts. Couple engines resolve the couple as
+// the subject; user engines use the caller — nobody can read another subject.
+const USER_ENGINES = new Set(["emotion", "maturity", "healing"]);
+const COUPLE_ENGINES = new Set(["relationshipHealth", "trust", "growth", "behavior"]);
+
+const history = asyncHandler(async (req, res) => {
+  const { engine } = req.params;
+  const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
+  let subjectId;
+  if (USER_ENGINES.has(engine)) subjectId = req.user._id;
+  else if (COUPLE_ENGINES.has(engine)) subjectId = await requireCouple(req.user._id);
+  else {
+    const e = new Error("Unknown engine");
+    e.statusCode = 400;
+    throw e;
+  }
+  ok(res, { engine, series: await intelligence.getHistorySeries(subjectId, engine, days) });
+});
+
 const ALLOWED_PERIODS = ["daily", "weekly", "monthly", "yearly"];
 const memory = asyncHandler(async (req, res) => {
   const period = ALLOWED_PERIODS.includes(req.params.period) ? req.params.period : "weekly";
@@ -50,4 +83,4 @@ const config = asyncHandler(async (req, res) => {
   ok(res, { weights: cfg.weights, thresholds: cfg.thresholds });
 });
 
-module.exports = { health, trust, growth, emotion, memory, config };
+module.exports = { health, trust, growth, emotion, memory, config, maturity, behavior, healing, history };

@@ -8,6 +8,7 @@ import { getGrowthSummary, getMoodSummary, getDailyTip } from "../../../services
 import { getRelationshipSummary } from "../../../services/lifecycle.service";
 
 import GrowthXPBar from "../../../components/growth/GrowthXPBar";
+import HealingProgressCard from "../../../components/intelligence/HealingProgressCard";
 import ChallengeCard from "../../../components/growth/ChallengeCard";
 import JournalQuickCard from "../../../components/growth/JournalQuickCard";
 import GrowthAchievements from "../../../components/growth/GrowthAchievements";
@@ -67,6 +68,7 @@ const HealingDashboard = () => {
         {/* Healing progress */}
         <div className="heal-section-label">Healing Progress</div>
         <GrowthXPBar summary={summary} />
+        <HealingProgressCard />
 
         {/* Mood recovery */}
         <div className="gcard">
@@ -120,6 +122,16 @@ const HealingDashboard = () => {
           ) : (
             <p className="heal-summary-card__pending">Your permanent summary of the journey.</p>
           )}
+        </button>
+
+        {/* Relationship maturity */}
+        <button className="heal-link-card" onClick={() => navigate("/maturity")}>
+          <span className="heal-link-card__icon">🧭</span>
+          <div className="heal-link-card__body">
+            <div className="heal-link-card__title">Relationship Maturity</div>
+            <div className="heal-link-card__sub">Watch your growth carry forward</div>
+          </div>
+          <span className="heal-link-card__chev">›</span>
         </button>
 
         {/* Growth report */}

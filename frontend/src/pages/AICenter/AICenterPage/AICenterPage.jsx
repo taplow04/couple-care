@@ -18,12 +18,16 @@ import GrowthRoadmap        from "../../../components/ai/GrowthRoadmap/GrowthRoa
 import LoveLetterGenerator  from "../../../components/ai/LoveLetterGenerator/LoveLetterGenerator";
 import CoachChat            from "../../../components/ai/CoachChat/CoachChat";
 import AIHistory            from "../../../components/ai/AIHistory/AIHistory";
+import BehaviorInsights     from "../../../components/intelligence/BehaviorInsights";
+import MaturityInsights     from "../../../components/intelligence/MaturityInsights";
 import "./AICenterPage.css";
 
 const TABS = [
   { id: "coach",   emoji: "🤖", label: "Coach"   },
   { id: "ask",     emoji: "🫂", label: "Ask AI"  },
   { id: "health",  emoji: "❤️", label: "Health"  },
+  { id: "signals", emoji: "💞", label: "Signals" },
+  { id: "maturity", emoji: "🧭", label: "Maturity" },
   { id: "letter",  emoji: "💌", label: "Letter"  },
   { id: "dates",   emoji: "💑", label: "Dates"   },
   { id: "talk",    emoji: "💬", label: "Talk"    },
@@ -170,6 +174,8 @@ const AICenterPage = () => {
         />
       );
       case "ask":     return <CoachChat />;
+      case "signals": return <BehaviorInsights />;
+      case "maturity": return <MaturityInsights />;
       case "letter":  return <LoveLetterGenerator />;
       case "dates":   return <DatePlanner />;
       case "talk":    return <ConversationStarters onSaved={handleSaved} />;

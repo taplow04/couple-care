@@ -65,6 +65,66 @@ module.exports = {
     historyBonus: 4, // ≥7 prior daily snapshots
   },
 
+  // ── Maturity engine anchors ──
+  maturity: {
+    // Negative-mood intensity a regulated response stays under (1-10 scale).
+    regulatedIntensityCeiling: 7,
+    // Reply-gap (minutes) considered "patient, considered" vs rapid-fire.
+    patienceIdealGapMin: 10,
+    // Message burst size beyond which messaging reads as impulsive.
+    impulsiveBurstSize: 6,
+    // Empathy: hours within which a reply to a partner's negative mood counts
+    // as showing up for them.
+    empathyResponseHours: 24,
+    saturation: {
+      activeDays: 20, // distinct active days in 30d → 100
+      journalEntries: 10,
+      supportiveReplies: 6,
+      repairMoves: 4, // accountability phrases after conflict
+    },
+  },
+
+  // ── Behaviour Intelligence pattern-model anchors ──
+  behavior: {
+    // Novelty half-life: attraction's "new relationship" signal decays as days
+    // together grow (piecewise below = score at day X).
+    noveltyAnchors: [
+      [0, 100],
+      [60, 80],
+      [180, 45],
+      [365, 20],
+      [730, 8],
+    ],
+    // Messages/day that reads as high-intensity courtship messaging.
+    intensityMessagesPerDay: 25,
+    // Distinct-active-day share (of the window) that reads as full routine.
+    routineFullShare: 0.8,
+    // Minimum overall data points before the pattern model reports a dominant
+    // pattern at all (below this it reports "not enough signal yet").
+    patternMinDataPoints: 20,
+  },
+
+  // ── Healing engine anchors ──
+  healing: {
+    saturation: {
+      journalEntries: 12, // entries in 30d → 100
+      challengesCompleted: 10,
+      coachMessages: 8,
+      sleepLogs: 10,
+      moodLogs: 12,
+      activeDays: 18,
+      quizzes: 3,
+    },
+    // Behavioural-insight detection (gentle, non-clinical).
+    inactivityDays: 5, // no activity this long → gentle nudge
+    withdrawalRatio: 0.45, // recent activity < 45% of own baseline
+    moodDeclineDelta: -12, // mood-positivity drop (pts) vs prior window
+    ruminationNegativeShare: 0.7, // journal negativity share considered heavy
+    // How many concurrent distress signals before we surface the
+    // reach-out-to-people-you-trust encouragement.
+    distressSignalCount: 3,
+  },
+
   // Relationship-longevity piecewise anchors [days, score] (original curve).
   longevityAnchors: [
     [0, 40],

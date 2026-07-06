@@ -76,6 +76,7 @@ const gatherHealthFeatures = async (coupleId, now = Date.now()) => {
     dailyMomentsCount,
     loveLettersCount,
     storiesAll,
+    bucketTotal,
   ] = await Promise.all([
     Mood.find({ coupleId, createdAt: { $gte: since } }).select("moodType intensity userId createdAt"),
     Memory.find({ coupleId }).select("memoryType memoryDate createdAt"),
@@ -96,7 +97,12 @@ const gatherHealthFeatures = async (coupleId, now = Date.now()) => {
     safeCount(DailyCoupleMoment, { coupleId }),
     safeCount(LoveLetter, { coupleId }),
     safeCount(Moment, { coupleId }),
+    safeCount(BucketItem, { coupleId }),
   ]);
+
+  // Love Meter 2.0: couple-symmetric average of both partners' latest maturity
+  // snapshots (null ⇒ component skipped — regression-free for new couples).
+  const maturityAvg = await latestMaturityAvg(partnerIds);
 
   const moodsA = moods.filter((m) => String(m.userId) === String(pOne));
   const moodsB = moods.filter((m) => String(m.userId) === String(pTwo));
@@ -157,6 +163,9 @@ const gatherHealthFeatures = async (coupleId, now = Date.now()) => {
     conflictRecoveryPct,
     activityVsBaseline,
     supportRatio,
+    bucketTotal,
+    maturityAvg,
+    dailyMomentsCount,
     // sub-engine feature sets (trust & growth as health inputs)
     trustFeatures: {
       myMsgs: myMsgsAll,
@@ -373,4 +382,180 @@ const gatherMemoryFeatures = async (coupleId, period = "weekly", now = Date.now(
   return { memories, moments, dailyMoments, achievements, period };
 };
 
-module.exports = { gatherHealthFeatures, gatherEmotionFeatures, gatherMemoryFeatures };
+// ── Relationship Maturity (PER-USER, works in EVERY lifecycle stage). Couple
+// signals (messages/partner moods) are simply absent for solo users — those
+// dimensions degrade to null and the engine scores what it can observe. ──
+const GrowthChallengeModel = optionalModel("../../modules/growth/growth.model");
+const CoachConversation = optionalModel("../../modules/coach/coach.model");
+
+const gatherMaturityFeatures = async (userId, now = Date.now()) => {
+  const user = await User.findById(userId).select(
+    "currentCoupleId privacy growthStreak readinessScore loveLanguage attachmentStyle",
+  );
+  const coupleId = user?.currentCoupleId || null;
+  const since = new Date(now - 30 * DAY_MS);
+
+  let partnerId = null;
+  if (coupleId) {
+    const couple = await Couple.findById(coupleId).select("partnerOneId partnerTwoId").catch(() => null);
+    if (couple) {
+      partnerId =
+        String(couple.partnerOneId) === String(userId) ? couple.partnerTwoId : couple.partnerOneId;
+    }
+  }
+
+  const [
+    myMoods,
+    coupleMessages,
+    partnerMoods,
+    memories,
+    journalRows,
+    challengeRows,
+    activityDays,
+    engagement,
+  ] = await Promise.all([
+    Mood.find({ userId, createdAt: { $gte: since } })
+      .select("moodType intensity visibility createdAt")
+      .catch(() => []),
+    coupleId
+      ? Message.find({ coupleId, createdAt: { $gte: since } }).select("senderId text createdAt").catch(() => [])
+      : [],
+    partnerId
+      ? Mood.find({
+          userId: partnerId,
+          coupleId,
+          visibility: { $ne: "private" },
+          createdAt: { $gte: since },
+        })
+          .select("moodType intensity createdAt")
+          .catch(() => [])
+      : [],
+    coupleId ? Memory.find({ coupleId, createdAt: { $gte: since } }).select("memoryDate createdAt").catch(() => []) : [],
+    GrowthJournal
+      ? GrowthJournal.GrowthJournal.find({ userId, createdAt: { $gte: since } }).select("day createdAt").catch(() => [])
+      : [],
+    GrowthChallengeModel
+      ? GrowthChallengeModel.GrowthChallenge.find({ userId, createdAt: { $gte: since } }).select("completed day").catch(() => [])
+      : [],
+    coupleId ? ActivityLog.distinct("day", { userId, coupleId, createdAt: { $gte: since } }).catch(() => []) : [],
+    coupleId ? Engagement.findOne({ coupleId }).select("currentStreak").catch(() => null) : null,
+  ]);
+
+  // Transparency: share of privacy settings that are partner-visible.
+  const privacyObj = user?.privacy ? (user.privacy.toObject ? user.privacy.toObject() : user.privacy) : {};
+  const privacyKeys = Object.keys(privacyObj);
+  const transparencyPct = privacyKeys.length
+    ? (privacyKeys.filter((k) => privacyObj[k] !== "private").length / privacyKeys.length) * 100
+    : null;
+
+  const sentMessages = coupleMessages.filter((m) => String(m.senderId) === String(userId));
+
+  return {
+    now,
+    userId: String(userId),
+    hasCouple: Boolean(coupleId),
+    myMoods,
+    sentMessages,
+    coupleMessages,
+    partnerMoods,
+    memories,
+    journalDays: (journalRows || []).map((j) => j.day || dayKey(j.createdAt)),
+    challenges: challengeRows || [],
+    activityDays: activityDays || [],
+    streak: engagement?.currentStreak ?? user?.growthStreak?.current ?? 0,
+    transparencyPct,
+    quizzesTaken:
+      (user?.readinessScore != null ? 1 : 0) +
+      (user?.loveLanguage ? 1 : 0) +
+      (user?.attachmentStyle ? 1 : 0),
+  };
+};
+
+// ── Healing & Recovery (PER-USER, Stage 3). Measures ENGAGEMENT with recovery
+// activities — never emotional worth. Two mood windows so the engine can see a
+// gentle recovery trend without over-reading it. ──
+const gatherHealingFeatures = async (userId, now = Date.now()) => {
+  const user = await User.findById(userId).select(
+    "growthStreak personalXp readinessScore loveLanguage attachmentStyle",
+  );
+  const since30 = new Date(now - 30 * DAY_MS);
+  const since60 = new Date(now - 60 * DAY_MS);
+
+  const endedCouple = await Couple.findOne({
+    relationshipStatus: "broken_up",
+    $or: [{ partnerOneId: userId }, { partnerTwoId: userId }],
+  })
+    .sort({ endedAt: -1, updatedAt: -1 })
+    .select("endedAt updatedAt")
+    .catch(() => null);
+
+  const [moods, journalRows, challengeRows, sleepRows, coachConvos, growthReports] = await Promise.all([
+    Mood.find({ userId, createdAt: { $gte: since60 } }).select("moodType intensity createdAt").catch(() => []),
+    GrowthJournal
+      ? GrowthJournal.GrowthJournal.find({ userId, createdAt: { $gte: since30 } })
+          .select("type day content createdAt")
+          .catch(() => [])
+      : [],
+    GrowthChallengeModel
+      ? GrowthChallengeModel.GrowthChallenge.find({ userId, createdAt: { $gte: since30 } })
+          .select("completed day")
+          .catch(() => [])
+      : [],
+    SleepLog.find({ userId }).sort({ day: -1 }).limit(30).select("hours quality day").catch(() => []),
+    CoachConversation
+      ? CoachConversation.find({ userId, updatedAt: { $gte: since30 } }).select("messages.role updatedAt").catch(() => [])
+      : [],
+    safeCount(optionalModel("../../modules/lifecycle/lifecycle.model")?.GrowthReport, { userId }),
+  ]);
+
+  const coachMessages = (coachConvos || []).reduce(
+    (a, c) => a + (c.messages || []).filter((m) => m.role === "user").length,
+    0,
+  );
+
+  return {
+    now,
+    userId: String(userId),
+    endedAt: endedCouple?.endedAt || endedCouple?.updatedAt || null,
+    moods,
+    journal: journalRows || [],
+    challenges: challengeRows || [],
+    sleepRows: sleepRows || [],
+    coachMessages,
+    growthReports,
+    growthStreak: user?.growthStreak?.current ?? 0,
+    quizzesTaken:
+      (user?.readinessScore != null ? 1 : 0) +
+      (user?.loveLanguage ? 1 : 0) +
+      (user?.attachmentStyle ? 1 : 0),
+  };
+};
+
+// Latest maturity snapshots for a couple's two partners (Love Meter 2.0 input).
+// Couple-symmetric: averages whatever exists regardless of which partner asks.
+const IntelSnapshot = require("../intelSnapshot.model");
+const latestMaturityAvg = async (partnerIds) => {
+  try {
+    const rows = await Promise.all(
+      partnerIds.map((id) =>
+        IntelSnapshot.findOne({ subjectId: id, engine: "maturity" })
+          .sort({ createdAt: -1 })
+          .select("score"),
+      ),
+    );
+    const scores = rows.filter((r) => r && typeof r.score === "number").map((r) => r.score);
+    if (!scores.length) return null;
+    return scores.reduce((a, b) => a + b, 0) / scores.length;
+  } catch {
+    return null;
+  }
+};
+
+module.exports = {
+  gatherHealthFeatures,
+  gatherEmotionFeatures,
+  gatherMemoryFeatures,
+  gatherMaturityFeatures,
+  gatherHealingFeatures,
+  latestMaturityAvg,
+};

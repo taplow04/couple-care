@@ -31,7 +31,47 @@ const SUGGESTIONS = {
   consistency: { label: "Consistency", low: "Small daily habits beat occasional bursts." },
   supportiveness: { label: "Supportiveness", low: "A supportive reaction or word goes a long way." },
   transparency: { label: "Transparency", low: "Sharing a little more openly builds closeness." },
+  // Love Meter 2.0 components
+  maturity: { label: "Relationship maturity", low: "Growing individually strengthens what you build together." },
+  emotionalSupport: { label: "Emotional support", low: "Acknowledging each other's feelings builds a safety net." },
+  sharedGoals: { label: "Shared goals", low: "Add a dream to your bucket list — shared plans build a future." },
+  // maturity-engine dimensions
+  emotionalRegulation: { label: "Emotional regulation", low: "Naming a feeling before reacting helps it pass through you, not into the conversation." },
+  conflictResolution: { label: "Conflict resolution", low: "After a hard moment, a small reconnect within a day or two rebuilds the bridge." },
+  trustBuilding: { label: "Trust building", low: "Openness in small things is what trust is made of." },
+  empathy: { label: "Empathy", low: "When your partner has a hard day, even a short check-in shows you're there." },
+  accountability: { label: "Accountability", low: "Owning a small mistake out loud is a quiet superpower." },
+  respect: { label: "Respect", low: "Warmth in everyday words keeps respect visible." },
+  patience: { label: "Patience", low: "Leaving space before responding often says more than a fast reply." },
+  reliability: { label: "Reliability", low: "Doing what you said you'd do — even tiny things — compounds." },
+  // behaviour-engine indicators
+  healthyCommunication: { label: "Healthy communication", low: "Balanced, regular exchanges keep you both feeling heard." },
+  mutualEffort: { label: "Mutual effort", low: "When both partners initiate, connection feels effortless." },
+  conflictPressure: { label: "Conflict pressure", low: "Frequent tense stretches deserve a gentle conversation about what's underneath." },
+  emotionalCloseness: { label: "Emotional closeness", low: "A little more sharing — a mood, a moment — narrows distance." },
+  // healing-engine dimensions
+  routine: { label: "Routine", low: "One small daily anchor — a walk, a note, a check-in with yourself — rebuilds rhythm." },
+  journaling: { label: "Journaling", low: "Writing a few honest lines helps feelings move through you." },
+  moodCare: { label: "Mood care", low: "Logging how you feel gently maps your recovery — no judgment, just awareness." },
+  challenges: { label: "Daily challenges", low: "Tiny completed goals rebuild confidence faster than big plans." },
+  support: { label: "Support", low: "Talking it through — with the coach or someone you trust — lightens the load." },
+  selfDiscovery: { label: "Self-discovery", low: "Learning about yourself now is an investment in every future relationship." },
 };
+
+// ── Maturity lexicons (deterministic, transparent). REPAIR = accountability
+// phrases (owning mistakes, committing to change); WARMTH = everyday respect
+// markers. Matched lowercase on sent-message text. ──
+const REPAIR_PHRASES = [
+  "i'm sorry", "im sorry", "my fault", "my bad", "i was wrong", "forgive me",
+  "i apologize", "i apologise", "i shouldn't have", "i shouldnt have",
+  "i'll do better", "ill do better", "i promise", "let me make it up",
+  "you were right", "i understand now", "i hear you",
+];
+const WARMTH_WORDS = [
+  "please", "thank", "thanks", "appreciate", "grateful", "proud of you",
+  "love you", "miss you", "you matter", "take your time", "no rush",
+  "of course", "always here", "i'm here", "im here",
+];
 
 // Deterministic sentiment lexicon (lowercase stems). Small, transparent.
 const POSITIVE_WORDS = [
@@ -55,4 +95,11 @@ const EMOJI_VALENCE = {
   "😤": -1, "😰": -1, "🙄": -1, "😒": -1, "😩": -1,
 };
 
-module.exports = { SUGGESTIONS, POSITIVE_WORDS, NEGATIVE_WORDS, EMOJI_VALENCE };
+module.exports = {
+  SUGGESTIONS,
+  POSITIVE_WORDS,
+  NEGATIVE_WORDS,
+  EMOJI_VALENCE,
+  REPAIR_PHRASES,
+  WARMTH_WORDS,
+};

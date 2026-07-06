@@ -56,6 +56,7 @@ const PrepCoachPage = lazy(() => import("./pages/Growth/PrepCoachPage/PrepCoachP
 // Stage 3 (Healing) surfaces — solo, no couple needed.
 const RelationshipSummaryPage = lazy(() => import("./pages/Summary/RelationshipSummaryPage/RelationshipSummaryPage"));
 const GrowthReportPage = lazy(() => import("./pages/GrowthReport/GrowthReportPage/GrowthReportPage"));
+const MaturityPage = lazy(() => import("./pages/Maturity/MaturityPage/MaturityPage"));
 
 function App() {
   return (
@@ -116,6 +117,8 @@ function App() {
             <Route path="/growth" element={<GrowthHub />} />
             <Route path="/journal" element={<JournalPage />} />
             <Route path="/ai-coach" element={<PrepCoachPage />} />
+            {/* Relationship Maturity — behaviour-based, works in every stage. */}
+            <Route path="/maturity" element={<MaturityPage />} />
             {/* Stage 3 (Healing) — solo, reachable without a partner. */}
             <Route path="/summary" element={<RelationshipSummaryPage />} />
             <Route path="/growth-report" element={<GrowthReportPage />} />

@@ -1,0 +1,12 @@
+.maturity-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.maturity-page__content {
+  padding: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+}

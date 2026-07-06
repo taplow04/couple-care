@@ -17,7 +17,16 @@ const intelSnapshotSchema = new mongoose.Schema(
     scope: { type: String, enum: ["couple", "user"], required: true },
     engine: {
       type: String,
-      enum: ["relationshipHealth", "emotion", "trust", "growth", "memory"],
+      enum: [
+        "relationshipHealth",
+        "emotion",
+        "trust",
+        "growth",
+        "memory",
+        "maturity", // per-user Relationship Maturity
+        "behavior", // couple Behaviour Intelligence
+        "healing", // per-user Healing Progress
+      ],
       required: true,
     },
     day: { type: String, required: true }, // UTC YYYY-MM-DD

@@ -199,6 +199,19 @@ const score = (features, cfg, prevBreakdown = null) => {
       add("growth", growthEngine.score(g, cfg).score);
     }
   }
+  // ── Love Meter 2.0 (additive, couple-symmetric — identical for both partners) ──
+  // maturity: avg of both partners' latest Relationship Maturity snapshots.
+  add("maturity", features.maturityAvg);
+  // emotionalSupport: supportive-interaction share from chat sentiment.
+  if (features.supportRatio != null) add("emotionalSupport", features.supportRatio * 100);
+  // sharedGoals: joint bucket-list intent — planning counts, finishing counts more.
+  if ((features.bucketTotal || 0) > 0) {
+    add(
+      "sharedGoals",
+      0.4 * saturate(features.bucketTotal, t.saturation.bucketCompleted * 2) +
+        0.6 * saturate(features.bucketCompleted || 0, t.saturation.bucketCompleted),
+    );
+  }
 
   // ── Context: detect scenario tags + apply component modifiers BEFORE weighting
   // (this is how context "modifies all algorithms"). Established/no-match ⇒ 1.0. ──
