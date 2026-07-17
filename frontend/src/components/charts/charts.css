@@ -1,0 +1,203 @@
+/* ── Chart kit — token-driven, theme-aware (light + dark), mobile-first.
+   Rules baked in from the dataviz method: thin marks, 2px lines, recessive
+   grid, text always in text tokens (never the series color), legend for ≥2
+   series, hover tooltip layer, 2px surface gaps between fills. ── */
+
+.chart {
+  position: relative;
+  width: 100%;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart__grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.chart__axis-label {
+  fill: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart__area {
+  opacity: 0.12;
+}
+
+.chart__dot {
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.chart__end-label {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--text-secondary);
+}
+
+.chart__crosshair {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+/* ── Legend (text tokens + color chip; identity never color-alone) ── */
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 8px;
+}
+
+.chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.chart-legend__chip {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+
+/* ── Tooltip layer ── */
+.chart-tooltip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--chart-tooltip-bg);
+  color: var(--chart-tooltip-text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  box-shadow: var(--shadow);
+  transform: translate(-50%, calc(-100% - 10px));
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.chart-tooltip__title {
+  font-weight: 700;
+  margin-bottom: 2px;
+  opacity: 0.85;
+}
+
+.chart-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-tooltip__row .chart-legend__chip {
+  width: 8px;
+  height: 8px;
+}
+
+/* ── Heatmap calendar ── */
+.heatmap {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.heatmap__week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 0 0 auto;
+}
+
+.heatmap__cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: var(--chart-grid);
+}
+
+.heatmap-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.heatmap-meta__scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.heatmap-meta__scale .heatmap__cell {
+  width: 10px;
+  height: 10px;
+}
+
+/* ── Radar ── */
+.radar__ring {
+  fill: none;
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.radar__spoke {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.radar__shape {
+  stroke-width: 2;
+  stroke-linejoin: round;
+  fill-opacity: 0.14;
+}
+
+.radar__vertex {
+  stroke: var(--card);
+  stroke-width: 1.5;
+}
+
+.radar__label {
+  fill: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.radar__value {
+  fill: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* ── Empty state shared by all charts ── */
+.chart-empty {
+  padding: 22px 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}

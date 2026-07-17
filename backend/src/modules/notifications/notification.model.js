@@ -53,9 +53,61 @@ const notificationSchema = new mongoose.Schema(
         "summary_ready",
         "healing_checkin",
         "reconnect_available",
+        // ── AI Relationship Assistant (real-time AI notifications) ──
+        "ai_insight",
+        "behaviour_change",
+        "positive_progress",
+        "activity_drop",
+        "conversation_reminder",
+        "story_reminder",
+        "reflection_reminder",
+        "date_night_suggestion",
+        "good_morning",
+        "good_night",
+        "coach_recommendation",
         "system",
       ],
       default: "system",
+    },
+
+    // Optional second line under the title (AI notifications use it).
+    subtitle: {
+      type: String,
+      default: "",
+      maxlength: 200,
+    },
+
+    // Notification-center grouping. Defaulted from `type` in the service when
+    // the caller doesn't set one, so existing call-sites need no changes.
+    category: {
+      type: String,
+      enum: [
+        "ai",
+        "relationship",
+        "mood",
+        "security",
+        "memories",
+        "stories",
+        "calls",
+        "chat",
+        "goals",
+        "system",
+      ],
+      default: "system",
+    },
+
+    priority: {
+      type: String,
+      enum: ["low", "normal", "high"],
+      default: "normal",
+    },
+
+    // Optional plain-language "why am I seeing this" — always grounded in
+    // in-app behaviour only (privacy-first transparency).
+    aiExplanation: {
+      type: String,
+      default: "",
+      maxlength: 500,
     },
 
     isRead: {

@@ -169,6 +169,18 @@ const getFeed = async ({ viewerId, category, q, before, limit } = {}) => {
   const { branches, coupleIds, userIds } = await publicScopeGate();
   if (!branches.length) return { items: [], nextCursor: null, hasMore: false };
 
+  // Interest Engine: browsing a category / searching inside Explore is an
+  // explicit in-app interest signal (fire-and-forget, never blocks the feed).
+  if (viewerId && !before) {
+    const interestService = require("../interests/interest.service");
+    if (category && CATEGORY_KEYS.includes(category)) {
+      interestService.recordExploreCategory(viewerId, category, "explore_filter");
+    }
+    if (q && q.trim()) {
+      interestService.recordSignalFromText(viewerId, q, "search");
+    }
+  }
+
   const and = [{ $or: branches }];
   if (category && CATEGORY_KEYS.includes(category)) and.push({ category });
   if (before) {
@@ -488,6 +500,16 @@ const reactToPost = async (userId, postId, type) => {
   }
   post.reactionCount = post.reactions.length;
   await post.save();
+
+  // Reacting to a post is a strong interest signal for its category
+  // (fire-and-forget; only when the user ADDED/kept a reaction, not on toggle-off).
+  if (post.reactions.some((r) => String(r.userId) === String(userId))) {
+    require("../interests/interest.service").recordExploreCategory(
+      userId,
+      post.category,
+      "reaction",
+    );
+  }
 
   return reactionsSummary(post, userId);
 };

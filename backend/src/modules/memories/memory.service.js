@@ -46,6 +46,10 @@ const createMemory = async (userId, data) => {
     memoryType: memory.memoryType,
   });
 
+  // Interest Engine: the kind of memory a couple records is an in-app interest
+  // signal (fire-and-forget, never blocks the create).
+  require("../interests/interest.service").recordMemoryType(userId, memory.memoryType);
+
   return memory;
 };
 

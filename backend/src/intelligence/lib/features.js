@@ -363,23 +363,29 @@ const gatherEmotionFeatures = async (userId, now = Date.now()) => {
 
 const PERIOD_DAYS = { daily: 1, weekly: 7, monthly: 30, yearly: 365 };
 
-// Couple memory sources for the Memory engine (timeline assembly).
+// Couple memory sources for the Memory engine (timeline assembly). Includes
+// activity counts (messages / moods / calls) so the assembled recap can speak
+// to the day's communication, not just its artifacts.
 const gatherMemoryFeatures = async (coupleId, period = "weekly", now = Date.now()) => {
   const days = PERIOD_DAYS[period] || 7;
   const since = new Date(now - days * DAY_MS);
 
-  const [memories, moments, dailyMoments, achievements] = await Promise.all([
-    Memory.find({ coupleId, $or: [{ memoryDate: { $gte: since } }, { createdAt: { $gte: since } }] })
-      .select("title memoryType memoryDate createdAt photos")
-      .catch(() => []),
-    Moment.find({ coupleId, createdAt: { $gte: since } }).select("type createdAt caption").catch(() => []),
-    DailyCoupleMoment
-      ? DailyCoupleMoment.find({ coupleId, createdAt: { $gte: since } }).select("day createdAt").catch(() => [])
-      : [],
-    Achievement.find({ coupleId, unlockedAt: { $gte: since } }).select("key unlockedAt").catch(() => []),
-  ]);
+  const [memories, moments, dailyMoments, achievements, messageCount, moods, callCount] =
+    await Promise.all([
+      Memory.find({ coupleId, $or: [{ memoryDate: { $gte: since } }, { createdAt: { $gte: since } }] })
+        .select("title memoryType memoryDate createdAt photos")
+        .catch(() => []),
+      Moment.find({ coupleId, createdAt: { $gte: since } }).select("type createdAt caption").catch(() => []),
+      DailyCoupleMoment
+        ? DailyCoupleMoment.find({ coupleId, createdAt: { $gte: since } }).select("day createdAt").catch(() => [])
+        : [],
+      Achievement.find({ coupleId, unlockedAt: { $gte: since } }).select("key unlockedAt").catch(() => []),
+      safeCount(Message, { coupleId, createdAt: { $gte: since } }),
+      Mood.find({ coupleId, createdAt: { $gte: since } }).select("moodType intensity").catch(() => []),
+      safeCount(Call, { coupleId, status: "completed", createdAt: { $gte: since } }),
+    ]);
 
-  return { memories, moments, dailyMoments, achievements, period };
+  return { memories, moments, dailyMoments, achievements, messageCount, moods, callCount, period };
 };
 
 // ── Relationship Maturity (PER-USER, works in EVERY lifecycle stage). Couple
@@ -531,6 +537,121 @@ const gatherHealingFeatures = async (userId, now = Date.now()) => {
   };
 };
 
+// ── Relationship Change Detection (COUPLE). Two windows of the couple's OWN
+// activity: recent 7 days vs the prior 21-day baseline. Every query is guarded
+// so a missing collection degrades a metric to 0/null, never crashes. ──
+const DailyReflection = optionalModel("../../modules/reflection/reflection.model");
+const { positivityRatio } = require("./normalize");
+
+const gatherChangeFeatures = async (coupleId, now = Date.now()) => {
+  const couple = await Couple.findById(coupleId).select("partnerOneId partnerTwoId");
+  if (!couple) throw new Error("Couple not found");
+  const partnerIds = [couple.partnerOneId, couple.partnerTwoId].filter(Boolean);
+
+  const recentStart = new Date(now - 7 * DAY_MS);
+  const baseStart = new Date(now - 28 * DAY_MS);
+
+  const countBoth = async (model, base) => {
+    const [recent, baseline] = await Promise.all([
+      safeCount(model, { ...base, createdAt: { $gte: recentStart } }),
+      safeCount(model, { ...base, createdAt: { $gte: baseStart, $lt: recentStart } }),
+    ]);
+    return { recent, baseline };
+  };
+
+  const [messages, calls, stories, memories, reflections, moodsRecent, moodsBaseline] =
+    await Promise.all([
+      countBoth(Message, { coupleId }),
+      countBoth(Call, { coupleId, status: "completed" }),
+      countBoth(Moment, { coupleId }),
+      countBoth(Memory, { coupleId }),
+      DailyReflection && partnerIds.length
+        ? countBoth(DailyReflection, { userId: { $in: partnerIds } })
+        : { recent: 0, baseline: 0 },
+      Mood.find({ coupleId, createdAt: { $gte: recentStart } })
+        .select("moodType intensity")
+        .catch(() => []),
+      Mood.find({ coupleId, createdAt: { $gte: baseStart, $lt: recentStart } })
+        .select("moodType intensity")
+        .catch(() => []),
+    ]);
+
+  const lastOf = async (model, query, field = "createdAt") => {
+    if (!model) return null;
+    try {
+      const row = await model.findOne(query).sort({ [field]: -1 }).select(field);
+      return row ? row[field] : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [lastStoryAt, lastMemoryAt, lastReflectionAt] = await Promise.all([
+    lastOf(Moment, { coupleId }),
+    lastOf(Memory, { coupleId }),
+    DailyReflection && partnerIds.length
+      ? lastOf(DailyReflection, { userId: { $in: partnerIds } })
+      : null,
+  ]);
+
+  return {
+    now,
+    partnerIds,
+    recent: {
+      messages: messages.recent,
+      calls: calls.recent,
+      stories: stories.recent,
+      memories: memories.recent,
+      reflections: reflections.recent,
+      moods: moodsRecent.length,
+      positivity: positivityRatio(moodsRecent),
+    },
+    baseline: {
+      messages: messages.baseline,
+      calls: calls.baseline,
+      stories: stories.baseline,
+      memories: memories.baseline,
+      reflections: reflections.baseline,
+      moods: moodsBaseline.length,
+      positivity: positivityRatio(moodsBaseline),
+    },
+    lastStoryAt,
+    lastMemoryAt,
+    lastReflectionAt,
+    hasEverStory: Boolean(lastStoryAt),
+    hasEverMemory: Boolean(lastMemoryAt),
+    hasEverReflection: Boolean(lastReflectionAt),
+  };
+};
+
+// ── Daily Reflection series (PER-USER) for the Personality Timeline — the
+// user's own self-reported dimensions over time. Guarded: returns [] until the
+// reflection module has data. ──
+const gatherReflectionSeries = async (userId, days = 30, now = Date.now()) => {
+  if (!DailyReflection) return [];
+  try {
+    const since = dayKey(now - days * DAY_MS);
+    const rows = await DailyReflection.find({ userId, day: { $gte: since } })
+      .sort({ day: 1 })
+      .select(
+        "day energy stress sleepQuality productivity exercise mood relationshipSatisfaction communicationRating",
+      );
+    return rows.map((r) => ({
+      day: r.day,
+      energy: r.energy ?? null,
+      stress: r.stress ?? null,
+      sleepQuality: r.sleepQuality ?? null,
+      productivity: r.productivity ?? null,
+      exercise: r.exercise ?? null,
+      mood: r.mood ?? null,
+      relationshipSatisfaction: r.relationshipSatisfaction ?? null,
+      communicationRating: r.communicationRating ?? null,
+    }));
+  } catch {
+    return [];
+  }
+};
+
 // Latest maturity snapshots for a couple's two partners (Love Meter 2.0 input).
 // Couple-symmetric: averages whatever exists regardless of which partner asks.
 const IntelSnapshot = require("../intelSnapshot.model");
@@ -557,5 +678,7 @@ module.exports = {
   gatherMemoryFeatures,
   gatherMaturityFeatures,
   gatherHealingFeatures,
+  gatherChangeFeatures,
+  gatherReflectionSeries,
   latestMaturityAvg,
 };

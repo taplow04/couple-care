@@ -22,6 +22,8 @@ import QuickActionsCard from "../../../components/dashboard/QuickActionsCard/Qui
 import RecentMemoriesCard from "../../../components/dashboard/RecentMemoriesCard/RecentMemoriesCard";
 import BucketListCard from "../../../components/dashboard/BucketListCard/BucketListCard";
 import SleepCard from "../../../components/dashboard/SleepCard/SleepCard";
+import RelationshipPulseCard from "../../../components/dashboard/RelationshipPulseCard/RelationshipPulseCard";
+import TodayReflectionCard from "../../../components/dashboard/TodayReflectionCard/TodayReflectionCard";
 import SurpriseBox from "../../../components/surprise/SurpriseBox/SurpriseBox";
 import MomentsBar from "../../../components/moments/MomentsBar/MomentsBar";
 import DailyMomentCard from "../../../components/dashboard/DailyMomentCard/DailyMomentCard";
@@ -216,6 +218,11 @@ const GrowingDashboard = () => {
           </div>
         )}
 
+        {/* AI Daily Reflection — done state or gentle CTA (one-fetch payload) */}
+        <div className="db-fade-in" style={{ animationDelay: "35ms" }}>
+          <TodayReflectionCard reflection={dashData?.todayReflection} />
+        </div>
+
         <div className="db-fade-in" style={{ animationDelay: "40ms" }}>
           <SurpriseBox />
         </div>
@@ -238,6 +245,11 @@ const GrowingDashboard = () => {
           <div className="db-fade-in" style={{ animationDelay: "110ms" }}>
             <RelationshipStatusCard relationship={dashData?.relationship} />
           </div>
+        </div>
+
+        {/* Relationship Pulse — live 7-signal analytics (socket-updated) */}
+        <div className="db-fade-in" style={{ animationDelay: "125ms" }}>
+          <RelationshipPulseCard initial={dashData?.pulse} />
         </div>
 
         <div className="db-fade-in" style={{ animationDelay: "140ms" }}>

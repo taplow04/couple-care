@@ -10,6 +10,48 @@
  */
 const PERIODS = ["daily", "weekly", "monthly", "yearly"];
 
+const { positivityRatio } = require("../lib/normalize");
+
+// Deterministic emoji highlight lines for the period recap ("Today: ❤️ 42
+// meaningful messages · 😊 positive moods · 📷 one shared story…"). Only
+// mentions what actually happened — no filler.
+const buildHighlights = (features, period) => {
+  const { memories = [], moments = [], achievements = [], moods = [] } = features;
+  const messageCount = features.messageCount || 0;
+  const callCount = features.callCount || 0;
+  const highlights = [];
+
+  if (messageCount > 0) {
+    highlights.push(`❤️ ${messageCount} meaningful message${messageCount === 1 ? "" : "s"}`);
+  }
+  const positivity = positivityRatio(moods);
+  if (positivity != null) {
+    highlights.push(
+      positivity >= 0.6
+        ? "😊 Positive moods logged"
+        : positivity >= 0.4
+          ? "😌 Mixed moods logged"
+          : "💙 Some heavier moods logged",
+    );
+  }
+  if (moments.length > 0) {
+    highlights.push(`📷 ${moments.length === 1 ? "One shared story" : `${moments.length} shared stories`}`);
+  }
+  if (memories.length > 0) {
+    highlights.push(`📔 ${memories.length === 1 ? "One new memory" : `${memories.length} new memories`}`);
+  }
+  if (callCount > 0) {
+    highlights.push(`📞 ${callCount} call${callCount === 1 ? "" : "s"} together`);
+  }
+  if (achievements.length > 0) {
+    highlights.push(`🎉 ${achievements.length === 1 ? "One milestone unlocked" : `${achievements.length} milestones unlocked`}`);
+  }
+  if (messageCount >= (period === "daily" ? 10 : 40)) {
+    highlights.push("💬 Communication looks healthy");
+  }
+  return highlights;
+};
+
 // Build deterministic chapters from already-fetched source items.
 const assemble = (features, period = "weekly") => {
   const { memories = [], moments = [], dailyMoments = [], achievements = [] } = features;
@@ -44,7 +86,11 @@ const assemble = (features, period = "weekly") => {
       moments: moments.length,
       dailyMoments: dailyMoments.length,
       achievements: achievements.length,
+      messages: features.messageCount || 0,
+      moods: (features.moods || []).length,
+      calls: features.callCount || 0,
     },
+    highlights: buildHighlights(features, period),
     chapters,
   };
 };

@@ -49,6 +49,14 @@ const createItem = async (userId, data) => {
     deadline: data.deadline || null,
   });
 
+  // Interest Engine: planning a goal in a category is a deliberate in-app
+  // interest signal (fire-and-forget, never blocks the create).
+  require("../interests/interest.service").recordBucketCategory(
+    userId,
+    item.category,
+    "bucket_add",
+  );
+
   return item;
 };
 
@@ -90,6 +98,13 @@ const setComplete = async (userId, itemId, completed) => {
       title: item.title,
       category: item.category,
     });
+
+    // Actually DOING it is the strongest interest signal (fire-and-forget).
+    require("../interests/interest.service").recordBucketCategory(
+      userId,
+      item.category,
+      "bucket_complete",
+    );
 
     try {
       const partnerId = await getPartnerId(userId);

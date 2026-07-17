@@ -1,7 +1,7 @@
 /* ── Collapse wrapper (handles height animation on delete) ── */
 
 .notif-card-wrap {
-  max-height: 180px;
+  max-height: 280px;
   opacity: 1;
   overflow: hidden;
   transition: max-height 0.32s ease, opacity 0.22s ease, margin-bottom 0.32s ease;
@@ -48,6 +48,50 @@
     rgba(255, 92, 138, 0.04) 0%,
     var(--card) 55%
   );
+}
+
+/* High-priority: a warm accent, not an alarm. */
+.notif-card--high {
+  border-left-color: var(--warning);
+}
+
+/* ── AI notification extras ── */
+
+.notif-card__subtitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--secondary);
+  margin: 1px 0 2px;
+}
+
+.notif-card__row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notif-card__why-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.notif-card__why {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
 }
 
 /* ── Type icon ── */

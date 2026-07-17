@@ -101,6 +101,30 @@ const getDashboardData = async (userId) => {
     console.error("[dashboard] daily-moment load failed:", e.message);
   }
 
+  // Relationship Pulse — latest snapshot (cheap read; the live value streams
+  // over the `pulse:update` socket event). Never let it break the dashboard.
+  let pulse = null;
+  try {
+    const IntelSnapshot = require("../../intelligence/intelSnapshot.model");
+    const snap = await IntelSnapshot.findOne({ subjectId: couple._id, engine: "pulse" })
+      .sort({ createdAt: -1 })
+      .select("score level breakdown confidence");
+    if (snap) {
+      pulse = { score: snap.score, level: snap.level, breakdown: snap.breakdown, confidence: snap.confidence };
+    }
+  } catch (e) {
+    console.error("[dashboard] pulse read failed:", e.message);
+  }
+
+  // Today's Daily Reflection (personal, optional) — so the reflection card
+  // renders its done/CTA state from one fetch.
+  let todayReflection = null;
+  try {
+    todayReflection = await require("../reflection/reflection.service").getToday(userId);
+  } catch (e) {
+    console.error("[dashboard] reflection read failed:", e.message);
+  }
+
   return {
     partner,
 
@@ -117,6 +141,10 @@ const getDashboardData = async (userId) => {
     engagement,
 
     loveMeter,
+
+    pulse,
+
+    todayReflection,
 
     dailyMoment,
 

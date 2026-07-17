@@ -51,10 +51,28 @@ const behavior = asyncHandler(async (req, res) => {
   ok(res, await intelligence.getBehavior(await requireCouple(req.user._id)));
 });
 
+// Relationship Pulse is a COUPLE engine (identical for both partners).
+const pulse = asyncHandler(async (req, res) => {
+  ok(res, await intelligence.getPulse(await requireCouple(req.user._id)));
+});
+
+// Change Detection is a COUPLE read — hedged observations vs the couple's own
+// baseline (identical for both partners).
+const changes = asyncHandler(async (req, res) => {
+  ok(res, await intelligence.getChangeObservations(await requireCouple(req.user._id)));
+});
+
+// Personality Timeline is per-USER (couple series are attached when paired).
+const personalityTimeline = asyncHandler(async (req, res) => {
+  const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 7), 365);
+  const user = await User.findById(req.user._id).select("currentCoupleId");
+  ok(res, await intelligence.getPersonalityTimeline(req.user._id, user?.currentCoupleId || null, days));
+});
+
 // Self-history series for trend charts. Couple engines resolve the couple as
 // the subject; user engines use the caller — nobody can read another subject.
 const USER_ENGINES = new Set(["emotion", "maturity", "healing"]);
-const COUPLE_ENGINES = new Set(["relationshipHealth", "trust", "growth", "behavior"]);
+const COUPLE_ENGINES = new Set(["relationshipHealth", "trust", "growth", "behavior", "pulse"]);
 
 const history = asyncHandler(async (req, res) => {
   const { engine } = req.params;
@@ -83,4 +101,18 @@ const config = asyncHandler(async (req, res) => {
   ok(res, { weights: cfg.weights, thresholds: cfg.thresholds });
 });
 
-module.exports = { health, trust, growth, emotion, memory, config, maturity, behavior, healing, history };
+module.exports = {
+  health,
+  trust,
+  growth,
+  emotion,
+  memory,
+  config,
+  maturity,
+  behavior,
+  healing,
+  history,
+  pulse,
+  changes,
+  personalityTimeline,
+};

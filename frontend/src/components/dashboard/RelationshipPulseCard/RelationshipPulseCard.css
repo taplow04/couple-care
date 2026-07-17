@@ -1,0 +1,117 @@
+.pulse-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.pulse-card:active {
+  transform: scale(0.99);
+}
+
+.pulse-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pulse-card__title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.pulse-card__conf {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--background);
+  border-radius: 999px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.pulse-card__hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.pulse-card__score {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  background: var(--gradient-romantic, linear-gradient(135deg, var(--primary), var(--secondary)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pulse-card__hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pulse-card__level {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.pulse-card__trend {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.pulse-card__trend--improving {
+  color: var(--success);
+}
+
+.pulse-card__trend--declining {
+  color: var(--warning);
+}
+
+.pulse-card__beat {
+  margin-left: auto;
+  font-size: 22px;
+  animation: pulse-beat 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-beat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.22); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.14); }
+  48% { transform: scale(1); }
+}
+
+.pulse-card__empty {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.pulse-card__basis {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-card__beat {
+    animation: none;
+  }
+}

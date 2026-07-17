@@ -326,6 +326,23 @@ Rules:
 - Output ONLY the report.`;
 };
 
+const buildReflectionReportPrompt = (period, reflectionText) => {
+  return `
+You are a gentle wellbeing coach analyzing a person's daily reflection entries
+from the last ${period === "monthly" ? "month" : "week"}. All data was
+self-reported inside CoupleCare (energy, stress, sleep, productivity, exercise,
+mood, relationship satisfaction, gratitude, appreciation, highlights,
+challenges).
+
+Reflection data:
+${reflectionText}
+
+Comment on trends only — never diagnose or claim to know how they feel. Map to
+the sections: Strengths = positive patterns worth keeping, Opportunities =
+gentle trends to watch, Suggestions = small, practical, caring next steps.
+${CONCISE_FORMAT}`;
+};
+
 const buildSleepAnalysisPrompt = (sleepText) => {
   return `
 You are a gentle wellness coach analyzing a couple's recent sleep logs.
@@ -354,4 +371,5 @@ module.exports = {
   buildSurprisePrompt,
   buildSleepAnalysisPrompt,
   buildDailyMomentSummaryPrompt,
+  buildReflectionReportPrompt,
 };

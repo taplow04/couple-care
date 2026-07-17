@@ -33,6 +33,20 @@ const HISTORY_WINDOW = 12;
  * because scoring did. Lazy require avoids a coach↔intelligence load cycle.
  * The line explicitly tells the model these are estimates, never facts.
  */
+/**
+ * Compact interest line appended to the coach system prompt so suggestions
+ * (dates, gifts, conversation starters) match what the user actually engages
+ * with INSIDE CoupleCare. Best-effort; lazy require avoids a load cycle.
+ */
+const interestContextLine = async (userId) => {
+  try {
+    const line = await require("../interests/interest.service").interestContextLine(userId);
+    return line ? `\n\n${line} Use these to personalise suggestions naturally — never recite the list.` : "";
+  } catch {
+    return "";
+  }
+};
+
 const intelligenceContextLine = async (userId, stage) => {
   try {
     const intelligence = require("../../intelligence");
@@ -65,7 +79,11 @@ const resolveCoachPersona = async (userId) => {
       stage,
       buildSystemPrompt: async () => {
         const ctx = await buildRelationshipContext(userId);
-        return buildCoachReplyPrompt(formatContext(ctx)) + (await intelligenceContextLine(userId, stage));
+        return (
+          buildCoachReplyPrompt(formatContext(ctx)) +
+          (await intelligenceContextLine(userId, stage)) +
+          (await interestContextLine(userId))
+        );
       },
       recordEngagement: () =>
         recordActivity(user.currentCoupleId, userId, ACTIVITY_TYPES.COACH, {}),
@@ -79,7 +97,11 @@ const resolveCoachPersona = async (userId) => {
     stage,
     buildSystemPrompt: async () => {
       const ctx = await buildPersonalContext(userId);
-      return buildSolo(formatPersonalContext(ctx)) + (await intelligenceContextLine(userId, stage));
+      return (
+        buildSolo(formatPersonalContext(ctx)) +
+        (await intelligenceContextLine(userId, stage)) +
+        (await interestContextLine(userId))
+      );
     },
     recordEngagement: () => recordGrowthActivity(userId, GROWTH_ACTIVITY.COACH, {}),
   };

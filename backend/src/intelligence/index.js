@@ -22,6 +22,8 @@ const memoryEngine = require("./engines/memory.engine");
 const maturityEngine = require("./engines/maturity.engine");
 const behaviorEngine = require("./engines/behavior.engine");
 const healingEngine = require("./engines/healing.engine");
+const pulseEngine = require("./engines/pulse.engine");
+const changeDetection = require("./meta/changeDetection.engine");
 
 /**
  * Relationship Health for a couple — deterministic, identical for both partners.
@@ -181,6 +183,92 @@ const getHealing = async (userId, now = Date.now()) => {
   return result;
 };
 
+/**
+ * Relationship Pulse for a COUPLE — the continuous seven-signal reading the
+ * dashboard renders (Communication / Consistency / Engagement / Support /
+ * Activity / Growth / Connection → overall Pulse). Deterministic, identical
+ * for both partners; reuses the health feature gather (zero extra queries).
+ */
+const getPulse = async (coupleId, now = Date.now()) => {
+  const feats = await features.gatherHealthFeatures(coupleId, now);
+  const history = await learning.getHistory(coupleId, "pulse", 30);
+  feats.historyDays = history.length;
+
+  const result = pulseEngine.score(feats, getConfig());
+  result.trend = learning.trend(result.score, history.map((h) => h.score).filter((n) => typeof n === "number"));
+
+  learning.recordSnapshot("couple", coupleId, "pulse", dayKey(now), result);
+  return result;
+};
+
+/**
+ * Relationship Change Detection for a COUPLE — hedged observations comparing
+ * the recent 7 days with the couple's OWN prior 3-week baseline. Observations,
+ * never accusations; positive shifts are surfaced too. Deterministic.
+ */
+const getChangeObservations = async (coupleId, now = Date.now()) => {
+  const feats = await features.gatherChangeFeatures(coupleId, now);
+  return {
+    observations: changeDetection.detect(feats),
+    windows: { recentDays: 7, baselineDays: 21 },
+    basis: "Computed only from actions performed inside CoupleCare — never from other apps or device data.",
+  };
+};
+
+/**
+ * Personality Timeline for a USER — behavioural + self-reported trends over
+ * time. NOT personality prediction: it visualises how observable dimensions
+ * (emotion / maturity / couple engines when paired) and the user's own daily
+ * reflections move week to week. Assembled purely from IntelSnapshot history +
+ * DailyReflection rows.
+ */
+const getPersonalityTimeline = async (userId, coupleId = null, days = 30, now = Date.now()) => {
+  const span = Math.min(Math.max(days, 7), 365);
+  const [emotion, maturity, reflections] = await Promise.all([
+    getHistorySeries(userId, "emotion", span),
+    getHistorySeries(userId, "maturity", span),
+    features.gatherReflectionSeries(userId, span, now),
+  ]);
+
+  let couple = null;
+  if (coupleId) {
+    const [health, trust, behavior, pulse] = await Promise.all([
+      getHistorySeries(coupleId, "relationshipHealth", span),
+      getHistorySeries(coupleId, "trust", span),
+      getHistorySeries(coupleId, "behavior", span),
+      getHistorySeries(coupleId, "pulse", span),
+    ]);
+    couple = { relationshipHealth: health, trust, behavior, pulse };
+  }
+
+  // Period comparison: mean of the most recent half vs the prior half of each
+  // engine series — deterministic "vs previous period" deltas for the UI.
+  const halves = (series) => {
+    const scores = series.map((s) => s.score).filter((n) => typeof n === "number");
+    if (scores.length < 4) return null;
+    const mid = Math.floor(scores.length / 2);
+    const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+    const prev = avg(scores.slice(0, mid));
+    const cur = avg(scores.slice(mid));
+    return { previous: Math.round(prev), current: Math.round(cur), delta: Math.round(cur - prev) };
+  };
+
+  return {
+    days: span,
+    user: { emotion, maturity },
+    couple,
+    reflections,
+    comparison: {
+      emotion: halves(emotion),
+      maturity: halves(maturity),
+      relationshipHealth: couple ? halves(couple.relationshipHealth) : null,
+      pulse: couple ? halves(couple.pulse) : null,
+    },
+    basis:
+      "Trends are visualised from your own in-app behaviour and the reflections you chose to log — this is not a personality test or prediction.",
+  };
+};
+
 // Self-history timeline for trend charts: [{day, score, confidence}] oldest-first.
 const getHistorySeries = async (subjectId, engine, days = 30) => {
   const rows = await learning.getHistory(subjectId, engine, Math.min(Math.max(days, 1), 365));
@@ -206,6 +294,9 @@ module.exports = {
   getMaturity,
   getBehavior,
   getHealing,
+  getPulse,
+  getChangeObservations,
+  getPersonalityTimeline,
   getHistorySeries,
   // pure engines (for tests / future facades)
   engines: {
@@ -217,6 +308,8 @@ module.exports = {
     maturity: maturityEngine,
     behavior: behaviorEngine,
     healing: healingEngine,
+    pulse: pulseEngine,
+    changeDetection,
   },
   getConfig,
 };

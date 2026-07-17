@@ -4,6 +4,54 @@
   background: var(--background);
 }
 
+.notif-pg__filters {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.notif-pg__filters::-webkit-scrollbar {
+  display: none;
+}
+
+.notif-pg__filter {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.notif-pg__filter--active {
+  background: var(--primary-light);
+  border-color: transparent;
+  color: var(--primary);
+}
+
+.notif-pg__none {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 28px 0;
+}
+
+.notif-pg__privacy {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .notif-pg__content {
   max-width: 640px;
   margin: 0 auto;

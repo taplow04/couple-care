@@ -26,6 +26,7 @@ const intelSnapshotSchema = new mongoose.Schema(
         "maturity", // per-user Relationship Maturity
         "behavior", // couple Behaviour Intelligence
         "healing", // per-user Healing Progress
+        "pulse", // couple Relationship Pulse (7 sub-scores)
       ],
       required: true,
     },

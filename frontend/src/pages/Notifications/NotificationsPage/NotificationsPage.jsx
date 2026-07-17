@@ -11,6 +11,21 @@ import EmptyNotifications from "../../../components/notifications/EmptyNotificat
 import BackHeader from "../../../components/common/BackHeader/BackHeader";
 import "./NotificationsPage.css";
 
+// ─── Category filter (mirror of the backend notification categories) ─────────
+
+const CATEGORY_META = [
+  { key: "all", label: "All", emoji: "✨" },
+  { key: "ai", label: "AI", emoji: "🧠" },
+  { key: "relationship", label: "Relationship", emoji: "💞" },
+  { key: "mood", label: "Mood", emoji: "😊" },
+  { key: "chat", label: "Chat", emoji: "💬" },
+  { key: "stories", label: "Stories", emoji: "📷" },
+  { key: "memories", label: "Memories", emoji: "📔" },
+  { key: "goals", label: "Goals", emoji: "🎯" },
+  { key: "calls", label: "Calls", emoji: "📞" },
+  { key: "security", label: "Security", emoji: "🛡" },
+];
+
 // ─── Date grouping ────────────────────────────────────────────────────────────
 
 const MS_DAY = 86_400_000;
@@ -63,6 +78,7 @@ const NotificationsPage = () => {
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState("all");
   // How many were unread when the page opened — used only for the page header
   // copy ("N unread"). The badge itself is cleared the moment the page opens.
   const [openedUnread, setOpenedUnread] = useState(0);
@@ -125,7 +141,16 @@ const NotificationsPage = () => {
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
-  const groups = groupByDate(notifications);
+  // Only offer categories that actually exist in the list (plus "All").
+  const present = new Set(notifications.map((n) => n.category || "system"));
+  const chips = CATEGORY_META.filter((c) => c.key === "all" || present.has(c.key));
+
+  const visible =
+    category === "all"
+      ? notifications
+      : notifications.filter((n) => (n.category || "system") === category);
+
+  const groups = groupByDate(visible);
 
   return (
     <div className="notif-pg">
@@ -141,11 +166,30 @@ const NotificationsPage = () => {
       />
       <div className="notif-pg__content">
 
+        {/* Category filter */}
+        {!loading && notifications.length > 0 && chips.length > 2 && (
+          <div className="notif-pg__filters" role="tablist" aria-label="Notification categories">
+            {chips.map((c) => (
+              <button
+                key={c.key}
+                role="tab"
+                aria-selected={category === c.key}
+                className={`notif-pg__filter ${category === c.key ? "notif-pg__filter--active" : ""}`}
+                onClick={() => setCategory(c.key)}
+              >
+                {c.emoji} {c.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Content */}
         {loading ? (
           <Skeleton />
         ) : notifications.length === 0 ? (
           <EmptyNotifications />
+        ) : visible.length === 0 ? (
+          <p className="notif-pg__none">Nothing in this category yet.</p>
         ) : (
           <div className="notif-pg__groups">
             {groups.map((g) => (
@@ -160,6 +204,10 @@ const NotificationsPage = () => {
           </div>
         )}
 
+        <p className="notif-pg__privacy">
+          🔒 AI notifications are based only on activity inside CoupleCare —
+          never on other apps, messages, or your device.
+        </p>
       </div>
     </div>
   );

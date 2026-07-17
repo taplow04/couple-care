@@ -26,6 +26,7 @@ const EVENT_ENGINES = {
   [E.LOVE_LETTER_SENT]: ["growth"],
   [E.AI_SESSION_COMPLETED]: ["growth"],
   [E.SLEEP_LOGGED]: ["relationshipHealth"],
+  [E.REFLECTION_COMPLETED]: ["relationshipHealth", "emotion", "pulse"],
 };
 
 const scheduleRecompute = (coupleId) => {
@@ -52,6 +53,26 @@ const scheduleRecompute = (coupleId) => {
         await require("../../modules/moods/aiMood.service").recomputeAndBroadcast(coupleId);
       } catch (e) {
         console.error("[ccie:subscribers] mood broadcast failed:", e.message);
+      }
+      // Recompute + push the Relationship Pulse (dashboard analytics) to both
+      // partners so it updates in real time — no manual refresh. Best-effort.
+      try {
+        const intelligence = require("../index");
+        const pulse = await intelligence.getPulse(coupleId);
+        const Couple = require("../../modules/couples/couple.model");
+        const couple = await Couple.findById(coupleId).select("partnerOneId partnerTwoId");
+        const { emitToUser } = require("../../utils/realtime");
+        for (const uid of [couple?.partnerOneId, couple?.partnerTwoId].filter(Boolean)) {
+          emitToUser(uid, "pulse:update", {
+            score: pulse.score,
+            level: pulse.level,
+            breakdown: pulse.breakdown,
+            confidence: pulse.confidence,
+            trend: pulse.trend,
+          });
+        }
+      } catch (e) {
+        console.error("[ccie:subscribers] pulse broadcast failed:", e.message);
       }
     }, DEBOUNCE_MS),
   );

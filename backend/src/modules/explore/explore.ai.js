@@ -21,8 +21,17 @@ const clean = (s) =>
  * relationship-healthy ideas — meaning is prioritised, engagement is ignored.
  * Best-effort with a deterministic fallback.
  */
-const getInspiration = async () => {
+const getInspiration = async (userId = null) => {
   let sample = [];
+  // Interest Engine personalisation — best-effort, in-app signals only.
+  let interestLine = "";
+  if (userId) {
+    try {
+      interestLine = await require("../interests/interest.service").interestContextLine(userId);
+    } catch {
+      interestLine = "";
+    }
+  }
   try {
     const { branches } = await publicScopeGate();
     if (branches.length) {
@@ -56,7 +65,7 @@ const getInspiration = async () => {
     const prompt = `You are CoupleCare's relationship-inspiration guide. Using the community activity below ONLY as loose inspiration (never rank by popularity), suggest 4 warm, specific, healthy ideas couples could try — date ideas, travel, photography, or anniversary celebrations. Prioritise meaningful connection and creative memories, not trends.
 
 Categories available: ${cats}.
-
+${interestLine ? `\n${interestLine} Lean the ideas toward these interests without mentioning that you know them.\n` : ""}
 ${context}
 
 Return ONLY a JSON array of 4 objects: {"emoji","title","text"}. Keep each "text" under 18 words. No prose, no markdown.`;

@@ -22,6 +22,7 @@ const ACTIVITY_TYPES = {
   MOMENT: "moment", // CoupleCare Moments (story share)
   DAILY_MOMENT: "daily_moment", // ❤️ Daily Couple Moment (both posted that day)
   CHALLENGE: "challenge", // future-ready (Couple Challenges)
+  REFLECTION: "reflection", // AI Daily Reflection completed
 };
 
 const ACTIVITY_TYPE_LIST = Object.values(ACTIVITY_TYPES);
@@ -40,6 +41,7 @@ const XP_VALUES = {
   moment: 12,
   daily_moment: 10, // display/parity only — XP is day-based, never double-counted
   challenge: 25,
+  reflection: 15,
 };
 
 // Streak day-counts that unlock a celebration (notification + achievement).

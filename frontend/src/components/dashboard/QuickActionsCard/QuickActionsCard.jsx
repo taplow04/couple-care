@@ -58,6 +58,20 @@ const ACTIONS = [
     color: "#FF5C8A",
     bg: "rgba(255,92,138,0.10)",
   },
+  {
+    to: "/timeline",
+    emoji: "📖",
+    label: "Our Timeline",
+    color: "#FFAA00",
+    bg: "rgba(255,170,0,0.10)",
+  },
+  {
+    to: "/personality-timeline",
+    emoji: "📈",
+    label: "Trends",
+    color: "#7C5CFF",
+    bg: "rgba(124,92,255,0.10)",
+  },
 ];
 
 const QuickActionsCard = () => {

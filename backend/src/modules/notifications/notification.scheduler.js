@@ -10,6 +10,7 @@ const ActivityLog = require("../engagement/activityLog.model");
 const { createNotification } = require("./notification.service");
 const { expireMoments } = require("../moments/moment.service");
 const { finalizeYesterday } = require("../dailyMoment/dailyMoment.service");
+const { startAiAssistantJobs } = require("./ai.assistant.jobs");
 
 // UTC YYYY-MM-DD — must match engagement.service.dayKey.
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -27,6 +28,11 @@ const daysUntilBirthday = (birthday) => {
 };
 
 const startNotificationJobs = () => {
+  // AI Relationship Assistant — proactive AI notifications (good morning /
+  // good night / reflection / conversation / nightly recap / change detection
+  // / date-night). Lives in its own file to keep this one readable.
+  startAiAssistantJobs();
+
   // Daily mood reminder.
   cron.schedule("0 20 * * *", async () => {
     console.log("Running Mood Reminder Job");
@@ -192,6 +198,9 @@ const startNotificationJobs = () => {
               await intelligence.getMaturity(uid).catch(() => {});
             }
             await intelligence.getBehavior(c._id).catch(() => {});
+            // Relationship Pulse snapshot — keeps the Pulse trend series
+            // gap-free even on quiet days (same rule as behaviour/maturity).
+            await intelligence.getPulse(c._id).catch(() => {});
             await computeCoupleHealth(c._id);
             done += 1;
           } catch {

@@ -15,6 +15,9 @@ router.get("/memory/:period", c.memory);
 router.get("/maturity", c.maturity);
 router.get("/behavior", c.behavior);
 router.get("/healing", c.healing);
+router.get("/pulse", c.pulse);
+router.get("/changes", c.changes);
+router.get("/personality-timeline", c.personalityTimeline);
 router.get("/history/:engine", c.history);
 router.get("/config", c.config);
 

@@ -1,0 +1,220 @@
+.tl-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.tl-page__content {
+  padding: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.tl-periods {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px;
+}
+
+.tl-period {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 9px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.tl-period--active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.tl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.tl-card__title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+/* ── Highlights (the nightly recap lines) ── */
+.tl-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(150deg, var(--primary-light), var(--secondary-light));
+  border: none;
+}
+
+.tl-highlight {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  animation: tl-in 0.4s var(--ease-spring, ease) both;
+}
+
+.tl-highlight:nth-child(2) { animation-delay: 60ms; }
+.tl-highlight:nth-child(3) { animation-delay: 120ms; }
+.tl-highlight:nth-child(4) { animation-delay: 180ms; }
+.tl-highlight:nth-child(5) { animation-delay: 240ms; }
+.tl-highlight:nth-child(6) { animation-delay: 300ms; }
+
+@keyframes tl-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Counts ── */
+.tl-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.tl-count {
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 10px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tl-count__emoji {
+  font-size: 16px;
+}
+
+.tl-count strong {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tl-count span:last-child {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Chapters ── */
+.tl-chapters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.tl-chapters::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--chart-grid);
+  border-radius: 2px;
+}
+
+.tl-chapter {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 7px 0;
+  position: relative;
+}
+
+.tl-chapter__dot {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.tl-chapter__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 3px;
+}
+
+.tl-chapter__title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tl-chapter__date {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ── Misc ── */
+.tl-skeleton {
+  height: 260px;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--card) 40%, var(--background) 50%, var(--card) 60%);
+  background-size: 200% 100%;
+  animation: tl-shimmer 1.4s infinite;
+}
+
+@keyframes tl-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.tl-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.tl-privacy {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-skeleton,
+  .tl-highlight {
+    animation: none;
+  }
+}

@@ -32,10 +32,82 @@ const URL_FOR_TYPE = {
   summary_ready: "/summary",
   healing_checkin: "/dashboard",
   reconnect_available: "/dashboard",
+  // AI Relationship Assistant
+  ai_insight: "/timeline",
+  behaviour_change: "/ai-center",
+  positive_progress: "/dashboard",
+  activity_drop: "/chat",
+  conversation_reminder: "/chat",
+  story_reminder: "/moments",
+  reflection_reminder: "/reflection",
+  date_night_suggestion: "/explore",
+  good_morning: "/dashboard",
+  good_night: "/reflection",
+  coach_recommendation: "/ai-center",
+};
+
+// Notification-center category per type (used when the caller doesn't set one,
+// so every existing call-site keeps working unchanged).
+const CATEGORY_FOR_TYPE = {
+  mood_reminder: "mood",
+  partner_mood_alert: "mood",
+  memory_reminder: "memories",
+  anniversary_reminder: "relationship",
+  weekly_summary_ready: "ai",
+  relationship_milestone: "relationship",
+  birthday_reminder: "relationship",
+  streak_reminder: "relationship",
+  streak_milestone: "relationship",
+  achievement_unlocked: "relationship",
+  bucket_completed: "goals",
+  surprise_ready: "relationship",
+  love_letter_received: "relationship",
+  sleep_reminder: "relationship",
+  moment_new: "stories",
+  moment_viewed: "stories",
+  moment_reaction: "stories",
+  couple_moment_ready: "stories",
+  daily_moment_ready: "relationship",
+  growth_reminder: "relationship",
+  journal_reminder: "relationship",
+  challenge_ready: "relationship",
+  readiness_progress: "relationship",
+  relationship_ended: "relationship",
+  summary_ready: "relationship",
+  healing_checkin: "relationship",
+  reconnect_available: "relationship",
+  ai_insight: "ai",
+  behaviour_change: "ai",
+  positive_progress: "ai",
+  activity_drop: "chat",
+  conversation_reminder: "chat",
+  story_reminder: "stories",
+  reflection_reminder: "ai",
+  date_night_suggestion: "ai",
+  good_morning: "ai",
+  good_night: "ai",
+  coach_recommendation: "ai",
+};
+
+const PRIORITY_FOR_TYPE = {
+  partner_mood_alert: "high",
+  behaviour_change: "high",
+  relationship_ended: "high",
+  good_morning: "low",
+  good_night: "low",
+  positive_progress: "low",
+  story_reminder: "low",
+  date_night_suggestion: "low",
 };
 
 const createNotification = async (data) => {
-  const notification = await Notification.create(data);
+  // Default the notification-center category/priority from the type so every
+  // existing call-site is upgraded for free (callers may still override).
+  const notification = await Notification.create({
+    category: CATEGORY_FOR_TYPE[data.type] || "system",
+    priority: PRIORITY_FOR_TYPE[data.type] || "normal",
+    ...data,
+  });
 
   // Push it to the recipient in real time (no-op if they're offline). Never
   // let a realtime failure break notification creation.

@@ -38,6 +38,8 @@ const growthRoutes = require("../modules/growth/growth.routes");
 const lifecycleRoutes = require("../modules/lifecycle/lifecycle.routes");
 const intelligenceRoutes = require("../modules/intelligence/intelligence.routes");
 const exploreRoutes = require("../modules/explore/explore.routes");
+const reflectionRoutes = require("../modules/reflection/reflection.routes");
+const interestRoutes = require("../modules/interests/interest.routes");
 
 router.use("/auth", authRoutes);
 
@@ -76,6 +78,8 @@ router.use("/growth", growthRoutes);
 router.use("/lifecycle", lifecycleRoutes);
 router.use("/intelligence", intelligenceRoutes);
 router.use("/explore", exploreRoutes);
+router.use("/reflection", reflectionRoutes);
+router.use("/interests", interestRoutes);
 
 router.get("/", (req, res) => {
   res.json({

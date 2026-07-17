@@ -152,7 +152,7 @@ const updateSettings = asyncHandler(async (req, res) => {
 });
 
 const aiInspiration = asyncHandler(async (req, res) => {
-  const data = await exploreAi.getInspiration();
+  const data = await exploreAi.getInspiration(req.user._id);
   res.status(200).json({ success: true, data });
 });
 

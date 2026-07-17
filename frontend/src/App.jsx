@@ -58,6 +58,11 @@ const RelationshipSummaryPage = lazy(() => import("./pages/Summary/RelationshipS
 const GrowthReportPage = lazy(() => import("./pages/GrowthReport/GrowthReportPage/GrowthReportPage"));
 const MaturityPage = lazy(() => import("./pages/Maturity/MaturityPage/MaturityPage"));
 
+// AI Relationship Intelligence surfaces.
+const ReflectionPage = lazy(() => import("./pages/Reflection/ReflectionPage/ReflectionPage"));
+const PersonalityTimelinePage = lazy(() => import("./pages/PersonalityTimeline/PersonalityTimelinePage/PersonalityTimelinePage"));
+const TimelinePage = lazy(() => import("./pages/Timeline/TimelinePage/TimelinePage"));
+
 function App() {
   return (
     <BrowserRouter>
@@ -119,6 +124,10 @@ function App() {
             <Route path="/ai-coach" element={<PrepCoachPage />} />
             {/* Relationship Maturity — behaviour-based, works in every stage. */}
             <Route path="/maturity" element={<MaturityPage />} />
+            {/* AI Daily Reflection + Personality Timeline — personal, so
+                reachable in every lifecycle stage (no partner needed). */}
+            <Route path="/reflection" element={<ReflectionPage />} />
+            <Route path="/personality-timeline" element={<PersonalityTimelinePage />} />
             {/* Stage 3 (Healing) — solo, reachable without a partner. */}
             <Route path="/summary" element={<RelationshipSummaryPage />} />
             <Route path="/growth-report" element={<GrowthReportPage />} />
@@ -139,6 +148,7 @@ function App() {
               <Route path="/bucket-list" element={<BucketListPage />} />
               <Route path="/moments" element={<Moments />} />
               <Route path="/our-day" element={<OurDayPage />} />
+              <Route path="/timeline" element={<TimelinePage />} />
               <Route path="/our-moments" element={<OurMomentsPage />} />
               <Route path="/sleep" element={<SleepPage />} />
               <Route path="/relationship" element={<RelationshipProfile />} />

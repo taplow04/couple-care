@@ -47,6 +47,21 @@ module.exports = {
     sharedGoals: 0.03,
   },
 
+  // ── Relationship Pulse engine (COUPLE — identical for both partners). The
+  // continuous "how is the relationship doing right now" reading the dashboard
+  // renders: seven observable sub-scores blended into one Pulse. Reuses
+  // gatherHealthFeatures (zero extra queries). Graceful degrade: a sub-score
+  // without data is skipped and the engine normalises by the active-weight sum.
+  pulse: {
+    communication: 0.22, // message volume + balance + regularity + reply speed
+    consistency: 0.14, // streak + steady day-to-day coverage vs own baseline
+    engagement: 0.16, // breadth of shared in-app activity
+    support: 0.14, // positive interaction ratio + conflict recovery
+    activity: 0.12, // calls / video / voice / stories / goals volume
+    growth: 0.1, // achievements + bucket progress + journey milestones
+    connection: 0.12, // recency of contact + calls + daily rituals
+  },
+
   trust: {
     communication: 0.25,
     participation: 0.25,

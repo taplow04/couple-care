@@ -587,3 +587,53 @@ Growing **BottomNav** is now Home · **Explore** · AI Center · Mood · Profile
 - **Explore is opt-in and private by default** — a couple is invisible until they set a username AND flip `exploreVisibility` to public (both enforced in `updateSettings`).
 - **Never rank by popularity** — inspiration rails are category-curated; the AI prompt is explicitly instructed to prioritise meaning over trends. Don't add engagement sorting.
 - The couple-public gate is a two-step query (`publicCoupleIds()` → posts). Fine at early scale; denormalise a `coupleExplorePublic` flag onto posts if the public-couple set grows large.
+
+---
+
+## 🧠💓 AI Relationship Intelligence Platform (Pulse · Reflection · Interests · Change Detection · AI Assistant)
+
+Turns the AI from prompt-responder into a continuous, privacy-first relationship assistant. Everything is computed **only from actions performed inside CoupleCare** (the #1 rule — every AI surface and notification states this basis); all scoring stays inside CCIE (deterministic, hedged, reproducible, no LLM in any score path — LLM only narrates).
+
+### Relationship Pulse Engine (CCIE, couple)
+- **`intelligence/engines/pulse.engine.js`** (engine key `pulse`, weights in `config/weights.pulse`) — the live 7-signal reading: Communication / Consistency / Engagement / Support / Activity / Growth / Connection → overall Pulse 0–100. Pure `score(features, cfg)`, reuses `gatherHealthFeatures` (**zero extra queries**), partner-order invariant, graceful degrade (data-less couple = neutral baseline), hedged statement naming the in-app-only basis. Facade: `intelligence.getPulse(coupleId)` (snapshots to `IntelSnapshot`, self-history trend).
+- **Real-time**: `events/subscribers.js` debounced recompute now also recomputes Pulse and emits **`pulse:update`** to both partners on every published event (mood/message/call/goal/reflection/…). Nightly 02:00 UTC cron snapshots Pulse per couple (gap-free trends). Dashboard payload embeds the latest `pulse` snapshot; `RelationshipPulseCard` seeds from it, refreshes once, then stays live over the shared socket.
+
+### AI Daily Reflection (`modules/reflection/`, `/api/v1/reflection`)
+- **`DailyReflection`** — one doc per user per UTC day (unique `{userId, day}`; `day` = `dayKey`). 8 numeric fields (energy/stress/sleepQuality/productivity/exercise/mood/relationshipSatisfaction/communicationRating) + 5 text (gratitude/partnerAppreciation/highlight/challenge/notes) — **every field optional**; payload whitelisted+coerced in `sanitize`.
+- `saveToday` is idempotent (same-day save updates; E11000 race falls back to update). **First save of the day** feeds the engagement loop (couple `ACTIVITY_TYPES.REFLECTION` when paired, `recordGrowthActivity` when solo) and publishes `REFLECTION_COMPLETED` → live health/emotion/pulse recompute.
+- Routes: `GET /today`, `POST /` (save today), `GET /history?days`, `GET /report/:period` (`weekly|monthly`) — deterministic stats (averages, deltas vs prior period, completion rate, non-punishing streak) + chart-ready series + **best-effort** AI narrative (`buildReflectionReportPrompt`, null on failure — the report never blocks).
+- Frontend: `services/reflection.service.js`, `pages/Reflection/ReflectionPage` (route `/reflection`, **no `RequireCouple`** — personal, every stage; emoji sliders + text prompts + weekly/monthly report with charts), `components/dashboard/TodayReflectionCard` (done-state or gentle CTA, fed from the dashboard payload `todayReflection` — no extra fetch).
+
+### Interest Engine (`modules/interests/`, `/api/v1/interests`)
+- **`InterestProfile`** (1/user) — per-category `{points, count, lastAt}` map + `totalSignals`. `recordSignal` is **best-effort and never throws** (same rule as `recordActivity`); `recordSignalFromText` maps free text → categories via the deterministic `KEYWORDS` map (max 3/text).
+- **Signals wired in**: Explore category browsing + search (`getFeed`), post reactions (`reactToPost`), bucket add/complete (`bucket.service` — completing is the strongest signal), memory type (`memory.service`). Weights per source in `interest.constants.SIGNAL_WEIGHTS`.
+- `getProfile` scores every category 0–100 **relative to the user's strongest interest** with a time-decay half-life (`DECAY_HALF_LIFE_DAYS`) so the profile reflects *current* interests. `GET /profile` returns it (+ the privacy `basis` line).
+- **Personalization consumers**: `coach.service` appends `interestContextLine` to every coach persona's system prompt; `explore.ai` AI-inspiration is interest-aware; the Friday date-night notification picks copy from the user's top interest.
+
+### Relationship Change Detection (CCIE meta)
+- **`intelligence/meta/changeDetection.engine.js`** — pure `detect(features)` over `gatherChangeFeatures` (recent 7 days vs the couple's OWN prior 21-day baseline). Emits **observations, never accusations**: message/call/story/memory drops (only for couples who HAVE the habit — quiet couples below the baseline floor produce nothing), mood-positivity slides, reflection-skip patterns, plus **positive_progress** for rises. Each observation carries `{type, kind, category, priority, tone, title, message, explanation}` with hedged copy ("We noticed…", "compared to your own baseline"). Facade: `intelligence.getChangeObservations(coupleId)`.
+- Nightly 03:00 UTC sweep (after the CCIE recompute) sends **at most 2 observations per couple**, deduped per `(user, type, kind)` over 5 days.
+
+### AI Relationship Assistant (`modules/notifications/ai.assistant.jobs.js`)
+- `startAiAssistantJobs()` (called from `notification.scheduler`) owns the proactive crons: **good morning** 8am (only users seen in 7d), **good night** 10pm (only users active today), **reflection reminder** 8:30pm (only users WITH the habit who skipped today), **conversation reminder** 8pm (couples who chat ≥4 of last 7 days but not today), **nightly recap** 9pm (deterministic day highlights from `memory.engine` — quiet day = no notification), **change-detection sweep** 03:00 UTC, **date-night suggestion** Fri 5pm (interest-personalised).
+- Anti-spam rules baked in: `alreadySent(user, type, kind, days)` dedupe (fails CLOSED), deterministic per-day copy pick (no randomness), habit-gating, one user's failure never stops a sweep.
+
+### Notification center upgrade
+- `Notification` gains `subtitle`, `category` (`ai|relationship|mood|security|memories|stories|calls|chat|goals|system`), `priority` (`low|normal|high`), `aiExplanation` (the plain-language "why am I seeing this" — always names the in-app-only basis). **`createNotification` defaults category+priority from `type`** (`CATEGORY_FOR_TYPE`/`PRIORITY_FOR_TYPE`) so every existing call-site upgraded for free. New types: `ai_insight, behaviour_change, positive_progress, activity_drop, conversation_reminder, story_reminder, reflection_reminder, date_night_suggestion, good_morning, good_night, coach_recommendation` (+ `URL_FOR_TYPE` deep links).
+- Frontend `NotificationsPage`: category filter chips (only categories actually present), priority accent + AI badge + expandable "Why am I seeing this?" (aiExplanation) on `NotificationCard`, and a page-footer privacy line.
+
+### Personality Timeline + AI Relationship Timeline (pages)
+- **`/personality-timeline`** (no `RequireCouple`) — NOT personality prediction: visualises trends from `intelligence.getPersonalityTimeline(userId, coupleId?, days)` = IntelSnapshot series (emotion/maturity + couple health/trust/behavior/pulse) + the user's own reflection series, with deterministic previous-vs-current period comparison. Weekly/monthly/yearly ranges.
+- **`/timeline`** (couple) — the AI Relationship Timeline page over `getRelationshipTimeline(period)` (= `/intelligence/memory/:period` daily/weekly/monthly/yearly recaps; `memory.engine` gained deterministic `highlights` used by both the page and the nightly recap notification).
+- **Charts** (`components/charts/`): `LineChart` (SVG line/area, no chart lib), `RadarChart`, `HeatmapCalendar` + shared `charts.css`; token-driven (`--chart-*` tokens added to `variables.css`), dark-mode safe. Quick Access adds **Our Timeline** + **Trends**.
+
+### API (read-only, on `/api/v1/intelligence`)
+`GET /pulse`, `GET /changes`, `GET /personality-timeline?days` (+ existing engines). Subject always resolved from the caller — nobody can read another subject.
+
+### Gotchas
+- **Pulse reuses `gatherHealthFeatures`** — add new pulse inputs there (guarded, null-degrading), never query in the engine.
+- **The assistant must stay quiet by default**: every job is habit-gated + deduped; a quiet day/quiet couple produces NO notifications. Don't add unconditional sends.
+- **`aiExplanation` is mandatory on behavioural AI notifications** — it's the privacy-transparency contract surfaced in the UI.
+- **Interest signals are fire-and-forget** (`recordSignal` never throws) — never `await`-block a user action on them, and never add signal sources outside CoupleCare data.
+- Reflection `day`, engagement `dayKey`, and `DailyCoupleMoment.day` are all UTC `YYYY-MM-DD` — keep them aligned.
+- Tests: `pulseAndChanges.test.js` covers pulse determinism/partner-order invariance/degrade + change-detection hedged-copy and habit-gating invariants. 70 specs total pass via `npm test`.

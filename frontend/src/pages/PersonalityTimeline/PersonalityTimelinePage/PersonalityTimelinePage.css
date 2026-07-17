@@ -1,0 +1,134 @@
+.ptl-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--background);
+  padding-bottom: calc(var(--bottom-nav-height) + 28px);
+}
+
+.ptl-page__content {
+  padding: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.ptl-periods {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px;
+}
+
+.ptl-period {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 9px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.ptl-period--active {
+  background: var(--secondary-light);
+  color: var(--secondary);
+}
+
+.ptl-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.ptl-card__title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.ptl-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ptl-compare {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.ptl-compare__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ptl-compare__value {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ptl-delta {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.ptl-delta--up {
+  color: var(--success);
+}
+
+.ptl-delta--down {
+  color: var(--danger);
+}
+
+.ptl-skeleton {
+  height: 260px;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, var(--card) 40%, var(--background) 50%, var(--card) 60%);
+  background-size: 200% 100%;
+  animation: ptl-shimmer 1.4s infinite;
+}
+
+@keyframes ptl-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.ptl-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ptl-basis {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ptl-skeleton {
+    animation: none;
+  }
+}
