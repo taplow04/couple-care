@@ -1,0 +1,350 @@
+/* ── AI Relationship Assistant — premium glass bottom sheet ───────────────── */
+
+.aia-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(10, 8, 20, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: cc-fade-in var(--dur) var(--ease-out) both;
+}
+
+.aia-sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 82vh;
+  max-height: 82dvh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px 28px 0 0;
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: saturate(180%) blur(var(--blur-xl));
+  backdrop-filter: saturate(180%) blur(var(--blur-xl));
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  box-shadow: var(--shadow-lg), var(--edge-highlight);
+  animation: aia-rise 0.45s var(--ease-spring) both;
+  overflow: hidden;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .aia-sheet {
+    background: var(--card);
+  }
+}
+
+@keyframes aia-rise {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.aia-grabber {
+  width: 42px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border-strong);
+  margin: 10px auto 2px;
+  flex-shrink: 0;
+}
+
+/* ── Header ── */
+.aia-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 12px;
+  flex-shrink: 0;
+}
+
+/* The AI orb — breathing aurora sphere. */
+.aia-orb {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--gradient-ai, linear-gradient(135deg, #7c5cff, #4f8dff, #2fd4c8));
+  display: grid;
+  place-items: center;
+  box-shadow: var(--glow-secondary);
+  animation: cc-breathe 3.2s ease-in-out infinite;
+}
+.aia-orb::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 92, 255, 0.35), transparent 70%);
+  animation: cc-breathe 3.2s ease-in-out infinite reverse;
+}
+.aia-orb__core {
+  font-size: 19px;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.25));
+}
+
+.aia-head__titles {
+  flex: 1;
+  min-width: 0;
+}
+.aia-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text);
+}
+.aia-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.aia-close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  transition: var(--transition-fast);
+}
+.aia-close:active {
+  transform: scale(0.9);
+}
+
+/* ── Scrollable body ── */
+.aia-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Insight card ── */
+.aia-insight {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  background: var(--gradient-romantic-soft);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--edge-highlight);
+}
+.aia-insight__text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.45;
+}
+.aia-insight__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.aia-meta-chip {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 99px;
+  padding: 3px 9px;
+}
+
+/* ── Sections ── */
+.aia-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.aia-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.aia-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.aia-source {
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 99px;
+  padding: 2px 8px;
+  background: var(--secondary-light);
+  color: var(--secondary);
+}
+.aia-source--curated {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+/* Draft */
+.aia-draft {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  line-height: 1.45;
+  max-height: 76px;
+  overflow: hidden;
+}
+.aia-notes {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.aia-note {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  padding-left: 18px;
+  position: relative;
+  line-height: 1.45;
+}
+.aia-note::before {
+  content: "💡";
+  position: absolute;
+  left: 0;
+  font-size: 11px;
+}
+
+.aia-tones {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.aia-tones::-webkit-scrollbar { display: none; }
+.aia-tone {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--secondary);
+  background: var(--secondary-light);
+  border: 1px solid transparent;
+  border-radius: 99px;
+  padding: 7px 12px;
+  transition: var(--transition-fast);
+}
+.aia-tone:active { transform: scale(0.94); }
+.aia-tone:disabled { opacity: 0.5; }
+
+/* ── Mode chips ── */
+.aia-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.aia-chip {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 99px;
+  padding: 8px 13px;
+  transition: var(--transition-fast);
+}
+.aia-chip--primary {
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 92, 138, 0.25);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+.aia-chip--on {
+  background: var(--gradient-romantic);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--glow-primary-soft);
+}
+.aia-chip:active { transform: scale(0.94); }
+
+/* ── Suggestion rows — staggered entrance ── */
+.aia-sug {
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+  animation: cc-fade-up 0.4s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+.aia-sug:active {
+  transform: scale(0.98);
+  border-color: rgba(255, 92, 138, 0.35);
+}
+
+/* Shimmer skeleton */
+.aia-skel {
+  min-height: 44px;
+  color: transparent;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: none;
+}
+.aia-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-shine);
+  background-size: 200% 100%;
+  animation: cc-shimmer 1.4s linear infinite;
+}
+
+/* ── Repair ideas ── */
+.aia-repair {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 11px 13px;
+  box-shadow: var(--shadow-sm);
+}
+.aia-repair__emoji { font-size: 19px; }
+.aia-repair__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+.aia-repair__text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.aia-error {
+  font-size: 12.5px;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Transparency footer */
+.aia-basis {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  text-align: center;
+  padding: 2px 8px 4px;
+}

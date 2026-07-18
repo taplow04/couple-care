@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { compressImage } from "../../../utils/compressImage";
 import VoiceRecorder from "../VoiceRecorder/VoiceRecorder";
-import { CHAT_SUGGESTIONS } from "../chatSuggestions";
+import AiAssistant from "../AiAssistant/AiAssistant";
 import "./MessageInput.css";
 
 const MAX_IMAGE_MB = 10;
@@ -65,7 +65,7 @@ const MessageInput = ({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [trayOpen, setTrayOpen] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   const inputRef = useRef(null);
   const cameraRef = useRef(null);
@@ -195,9 +195,9 @@ const MessageInput = ({
     }
   };
 
-  const pickSuggestion = (suggestionText) => {
+  // The AI assistant only fills the draft — the user always sends.
+  const handleUseAi = (suggestionText) => {
     setText(suggestionText);
-    setShowSuggestions(false);
     onTyping?.();
     inputRef.current?.focus();
     requestAnimationFrame(resizeField);
@@ -270,20 +270,13 @@ const MessageInput = ({
         </div>
       )}
 
-      {/* ✨ Suggestion chips */}
-      {showSuggestions && (
-        <div className="msg-input__chips" role="menu" aria-label="Message ideas">
-          {CHAT_SUGGESTIONS.map((s) => (
-            <button
-              key={s.label}
-              type="button"
-              className="msg-input__chip"
-              onClick={() => pickSuggestion(s.text)}
-            >
-              <span aria-hidden="true">{s.emoji}</span> {s.label}
-            </button>
-          ))}
-        </div>
+      {/* AI Relationship Assistant — mounted only while open (fresh state). */}
+      {aiOpen && (
+        <AiAssistant
+          draft={text}
+          onUse={handleUseAi}
+          onClose={() => setAiOpen(false)}
+        />
       )}
 
       <div className="msg-input">
@@ -375,14 +368,14 @@ const MessageInput = ({
           autoComplete="off"
         />
 
-        {/* ✨ message ideas */}
+        {/* AI orb — opens the Relationship Assistant */}
         <button
           type="button"
-          className={`msg-input__icon-btn msg-input__spark ${showSuggestions ? "msg-input__spark--on" : ""}`}
-          aria-label="Message ideas"
-          aria-pressed={showSuggestions}
+          className="msg-input__icon-btn msg-input__ai"
+          aria-label="Open AI relationship assistant"
+          aria-haspopup="dialog"
           disabled={disabled || uploading}
-          onClick={() => setShowSuggestions((v) => !v)}
+          onClick={() => setAiOpen(true)}
         >
           <SparkleIcon />
         </button>

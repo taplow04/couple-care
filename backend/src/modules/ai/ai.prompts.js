@@ -356,6 +356,55 @@ Opportunities = concerns to watch, Suggestions = practical, caring next steps.
 ${CONCISE_FORMAT}`;
 };
 
+/**
+ * Chat Assistant — context-aware message suggestions. The assistant is a
+ * communication coach for BOTH partners: it must never take sides, never blame,
+ * never state feelings as facts, and always leave the user in control.
+ */
+const ASSISTANT_RULES = `
+Hard rules:
+- Write in the FIRST PERSON, as the user themselves would text (not as an AI).
+- Each suggestion on its OWN line. No numbering, no bullets, no quotes, no emoji
+  labels, no explanations — only the message texts.
+- Keep each suggestion under 140 characters, warm and natural, like a real text.
+- NEVER blame or criticise either partner, never say who is right or wrong.
+- NEVER state what either person feels or thinks as a fact — suggestions may
+  ask or acknowledge ("I understand this matters to you"), never diagnose.
+- Match the conversation's language style (casual texting, light emoji ok).`;
+
+const buildChatSuggestionPrompt = ({ intent, contextText, conversationText, draft, count }) => {
+  return `
+You are CoupleCare's in-chat communication coach, helping one partner write
+their next message. Everything you see is in-app data the couple created.
+
+Relationship snapshot:
+${contextText}
+
+Recent conversation (oldest first, "Me" is the user you're helping):
+${conversationText || "(no recent messages)"}
+${draft ? `\nThe user has started typing: "${draft}"\nSuggestions must feel like natural completions or improvements of that draft.` : ""}
+
+Intent: ${intent}
+
+Write exactly ${count} different message suggestions for this intent.
+${ASSISTANT_RULES}`;
+};
+
+const buildRephrasePrompt = ({ draft, tone, conversationText }) => {
+  return `
+You are CoupleCare's in-chat communication coach. The user wrote a draft
+message to their partner and wants it rephrased ${tone ? `to sound ${tone}` : "more warmly"} —
+WITHOUT changing what they mean or inventing new content.
+
+Recent conversation (oldest first, "Me" is the user):
+${conversationText || "(no recent messages)"}
+
+Draft: "${draft}"
+
+Write exactly 3 rephrasings that keep the user's intent and voice.
+${ASSISTANT_RULES}`;
+};
+
 module.exports = {
   buildWeeklySummaryPrompt,
   buildMoodAnalysisPrompt,
@@ -372,4 +421,6 @@ module.exports = {
   buildSleepAnalysisPrompt,
   buildDailyMomentSummaryPrompt,
   buildReflectionReportPrompt,
+  buildChatSuggestionPrompt,
+  buildRephrasePrompt,
 };

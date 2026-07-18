@@ -40,6 +40,7 @@ const intelligenceRoutes = require("../modules/intelligence/intelligence.routes"
 const exploreRoutes = require("../modules/explore/explore.routes");
 const reflectionRoutes = require("../modules/reflection/reflection.routes");
 const interestRoutes = require("../modules/interests/interest.routes");
+const chatAssistantRoutes = require("../modules/chatAssistant/chatAssistant.routes");
 
 router.use("/auth", authRoutes);
 
@@ -80,6 +81,7 @@ router.use("/intelligence", intelligenceRoutes);
 router.use("/explore", exploreRoutes);
 router.use("/reflection", reflectionRoutes);
 router.use("/interests", interestRoutes);
+router.use("/chat-assistant", chatAssistantRoutes);
 
 router.get("/", (req, res) => {
   res.json({

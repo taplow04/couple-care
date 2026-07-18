@@ -112,18 +112,31 @@
   display: none;
 }
 
-/* ✨ suggestions toggle */
-.msg-input__spark {
-  color: var(--secondary);
+/* AI orb — a small breathing aurora sphere that opens the assistant. */
+.msg-input__ai {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  margin: 1px 2px;
+  border-radius: 50%;
+  background: var(--gradient-ai, linear-gradient(135deg, #7c5cff, #4f8dff, #2fd4c8));
+  color: #fff;
+  box-shadow: var(--glow-secondary-soft);
+  animation: ai-orb-breathe 3.4s ease-in-out infinite;
 }
-.msg-input__spark--on {
-  color: var(--secondary);
-  background: var(--secondary-light);
-  animation: spark-spin 0.5s var(--ease-bounce);
+.msg-input__ai:active {
+  color: #fff;
+  background: var(--gradient-ai, linear-gradient(135deg, #7c5cff, #4f8dff, #2fd4c8));
+  transform: scale(0.9);
 }
-@keyframes spark-spin {
-  from { transform: rotate(-40deg) scale(0.7); }
-  to   { transform: rotate(0) scale(1); }
+.msg-input__ai:disabled {
+  animation: none;
+  box-shadow: none;
+}
+
+@keyframes ai-orb-breathe {
+  0%, 100% { box-shadow: 0 4px 14px rgba(124, 92, 255, 0.28); }
+  50%      { box-shadow: 0 4px 22px rgba(124, 92, 255, 0.5); }
 }
 
 /* Growing text field — borderless inside the pill. */
@@ -196,43 +209,6 @@
 
 .msg-input__send:not(:disabled):active {
   transform: scale(0.9);
-}
-
-/* ── Suggestion chips row ── */
-.msg-input__chips {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 2px 2px;
-  animation: cc-slide-up-sheet var(--dur-slow) var(--ease-spring) both;
-}
-.msg-input__chips::-webkit-scrollbar {
-  display: none;
-}
-
-.msg-input__chip {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--radius-full);
-  background: var(--glass-bg-strong);
-  border: 1px solid var(--glass-border);
-  -webkit-backdrop-filter: blur(var(--blur-md));
-  backdrop-filter: blur(var(--blur-md));
-  box-shadow: var(--shadow-sm);
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-.msg-input__chip:active {
-  transform: scale(0.94);
-  color: var(--primary);
-  border-color: rgba(255, 92, 138, 0.35);
 }
 
 /* ── Floating preview cards above the pill ── */
