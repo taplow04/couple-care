@@ -1,7 +1,19 @@
+/* Layered "aurora glass" card — soft depth, key-light top edge, gentle
+   entrance. Consumes only tokens, so it adapts to both themes. */
 .card {
-  background: var(--card);
+  position: relative;
+  background: var(--gradient-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 18px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), var(--edge-highlight);
+  transition: transform var(--dur) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--edge-highlight);
+  }
 }

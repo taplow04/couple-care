@@ -1,8 +1,9 @@
 .qac-card {
-  background: var(--card);
-  border-radius: var(--radius);
+  background: var(--gradient-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 18px 18px 20px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), var(--edge-highlight);
 }
 
 .qac-label {
@@ -45,14 +46,14 @@
 }
 
 .qac-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
   background: var(--card);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm), var(--edge-highlight);
 }
 
 .qac-emoji {

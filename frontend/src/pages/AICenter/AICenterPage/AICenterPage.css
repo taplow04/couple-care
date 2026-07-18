@@ -148,13 +148,15 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--card);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: saturate(180%) blur(var(--blur-md));
+  backdrop-filter: saturate(180%) blur(var(--blur-md));
+  border-bottom: 1px solid var(--border);
   display: flex;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 .aic-tabs::-webkit-scrollbar { display: none; }
 

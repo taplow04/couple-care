@@ -83,6 +83,173 @@ textarea {
   border-radius: var(--radius-sm);
 }
 
+/* Slim, themed scrollbars on desktop — invisible until you need them. */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MOTION SYSTEM — one reusable animation vocabulary for the whole app.
+   Components add a class instead of writing their own keyframes.
+   Everything runs on transform/opacity only (GPU, 60fps) and is disabled
+   under prefers-reduced-motion.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes cc-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cc-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes cc-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cc-slide-up-sheet {
+  from { transform: translateY(28px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* Ultra-slow ambient float for decorative elements (orbs, illustrations). */
+@keyframes cc-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+
+/* Breathing glow for hero/AI elements. */
+@keyframes cc-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+/* Light sweep for skeletons / shine effects (background-position based). */
+@keyframes cc-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes cc-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.08); }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* ── Entrance utilities ── */
+.anim-fade-up {
+  animation: cc-fade-up var(--dur-slow) var(--ease-out) both;
+}
+.anim-fade-in {
+  animation: cc-fade-in var(--dur-slow) var(--ease-out) both;
+}
+.anim-scale-in {
+  animation: cc-scale-in var(--dur-slow) var(--ease-spring) both;
+}
+.anim-pop {
+  animation: cc-pop var(--dur-slow) var(--ease-bounce) both;
+}
+
+/* Stagger children: apply to a container whose children each animate in. */
+.stagger > * {
+  animation: cc-fade-up var(--dur-slow) var(--ease-out) both;
+}
+.stagger > *:nth-child(1)  { animation-delay: 0.03s; }
+.stagger > *:nth-child(2)  { animation-delay: 0.08s; }
+.stagger > *:nth-child(3)  { animation-delay: 0.13s; }
+.stagger > *:nth-child(4)  { animation-delay: 0.18s; }
+.stagger > *:nth-child(5)  { animation-delay: 0.23s; }
+.stagger > *:nth-child(6)  { animation-delay: 0.28s; }
+.stagger > *:nth-child(7)  { animation-delay: 0.33s; }
+.stagger > *:nth-child(8)  { animation-delay: 0.38s; }
+.stagger > *:nth-child(9)  { animation-delay: 0.43s; }
+.stagger > *:nth-child(10) { animation-delay: 0.48s; }
+.stagger > *:nth-child(n + 11) { animation-delay: 0.52s; }
+
+/* ── Ambient float (very slow, subtle — decorative only) ── */
+.float-slow {
+  animation: cc-float 6s ease-in-out infinite;
+}
+.float-slower {
+  animation: cc-float 9s ease-in-out infinite;
+}
+
+/* ── Interaction utilities ── */
+/* Tap/press feedback for any tappable element. */
+.pressable {
+  transition: transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur) var(--ease-out);
+}
+.pressable:active {
+  transform: scale(0.965);
+}
+
+/* Card lift on hover (desktop) — pairs with .pressable for touch. */
+@media (hover: hover) {
+  .hover-lift {
+    transition: transform var(--dur) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* ── Skeleton / shimmer loading ── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  color: transparent !important;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-shine);
+  background-size: 200% 100%;
+  animation: cc-shimmer 1.6s linear infinite;
+}
+
+/* Text shine (gradient text) for hero titles and brand moments. */
+.text-gradient {
+  background: var(--gradient-romantic);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 /* Honour reduced-motion globally — kill long animations/transitions. */
 @media (prefers-reduced-motion: reduce) {
   *,

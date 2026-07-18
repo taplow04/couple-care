@@ -9,17 +9,29 @@
   gap: 18px;
 }
 
+/* Breathing halo behind the heart — soft, alive, premium. */
 .loader-heart-pulse {
-  width: 64px;
-  height: 64px;
+  position: relative;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: var(--primary-light);
+  background: var(--gradient-romantic-soft);
+  box-shadow: var(--glow-primary-soft), var(--edge-highlight);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 30px;
   color: var(--primary);
   animation: heartbeat 1.3s ease-in-out infinite;
+}
+
+.loader-heart-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-light), transparent 70%);
+  animation: cc-breathe 2.4s ease-in-out infinite;
 }
 
 .loader-fullscreen-text {
@@ -27,6 +39,7 @@
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.02em;
+  animation: cc-fade-in var(--dur-slower) var(--ease-out) both;
 }
 
 @keyframes heartbeat {
@@ -49,7 +62,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--gradient-romantic);
   animation: dot-bounce 1.3s ease-in-out infinite;
 }
 

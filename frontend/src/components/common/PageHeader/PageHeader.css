@@ -1,19 +1,19 @@
 .page-header {
   margin-bottom: 24px;
+  animation: cc-fade-up var(--dur-slow) var(--ease-out) both;
 }
 
 .page-header h1 {
-  font-size: 28px;
-
-  font-weight: 700;
-
-  color: #222;
+  font-size: var(--font-display);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text);
 }
 
 .page-header p {
-  margin-top: 4px;
-
-  color: #777;
-
-  font-size: 14px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--font-sm);
+  font-weight: 500;
 }

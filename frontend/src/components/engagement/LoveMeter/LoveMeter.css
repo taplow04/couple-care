@@ -3,8 +3,8 @@
   overflow: hidden;
   background: var(--gradient-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow), var(--edge-highlight);
   padding: var(--space-4) var(--space-3);
   display: flex;
   flex-direction: column;

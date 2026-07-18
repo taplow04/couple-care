@@ -8,6 +8,7 @@
   padding: var(--space-6) var(--space-5);
   max-width: 340px;
   margin: 0 auto;
+  animation: cc-fade-up var(--dur-slow) var(--ease-out) both;
 }
 
 .empty-state__icon {
@@ -18,7 +19,9 @@
   font-size: 40px;
   border-radius: 50%;
   background: var(--gradient-romantic-soft);
+  box-shadow: var(--glow-primary-soft), var(--edge-highlight);
   margin-bottom: var(--space-2);
+  animation: cc-float 6s ease-in-out infinite;
 }
 
 .empty-state__title {
