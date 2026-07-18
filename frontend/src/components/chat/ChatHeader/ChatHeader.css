@@ -66,14 +66,15 @@
   opacity: 0.7;
 }
 
-/* Story-ring avatar */
+/* Story-ring avatar — CoupleCare aurora ring (brand identity, not IG orange). */
 .chat-header__avatar-ring {
   flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: 50%;
   padding: 2px;
-  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  background: var(--gradient-aurora, linear-gradient(120deg, #ff5c8a, #b45cff, #7c5cff, #4f8dff));
+  box-shadow: var(--glow-primary-soft);
 }
 
 .chat-header__avatar {

@@ -24,9 +24,14 @@ import MessageInput from "../../../components/chat/MessageInput/MessageInput";
 import TypingIndicator from "../../../components/chat/TypingIndicator/TypingIndicator";
 import DateDivider from "../../../components/chat/DateDivider/DateDivider";
 import DeleteConfirmModal from "../../../components/chat/DeleteConfirmModal/DeleteConfirmModal";
+import { CHAT_STARTERS } from "../../../components/chat/chatSuggestions";
 import "./ChatPage.css";
 
 const TYPING_STOP_DELAY = 2000;
+// Messages from the same sender within this window render as one visual group.
+const GROUP_WINDOW_MS = 3 * 60 * 1000;
+// "Near bottom" threshold for the smart auto-scroll (px from the end).
+const NEAR_BOTTOM_PX = 140;
 
 // Normalizes senderId to a flat string regardless of whether it's populated or raw
 const flatSenderId = (senderId) =>
@@ -71,7 +76,13 @@ const ChatPage = () => {
   const [sendError, setSendError] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [replyDraft, setReplyDraft] = useState(null);
+  // Seed text pushed into the composer by suggestion chips ({ text, ts }).
+  const [composerSeed, setComposerSeed] = useState(null);
+  const [showJump, setShowJump] = useState(false);
 
+  const bodyRef = useRef(null);
+  const nearBottomRef = useRef(true);
+  const prevCountRef = useRef(0);
   const bottomRef = useRef(null);
   const typingStopRef = useRef(null);
   const typingEmitRef = useRef(null);
@@ -205,11 +216,45 @@ const ChatPage = () => {
     };
   }, [coupleId, user?._id]);
 
-  // ─── Auto-scroll ──────────────────────────────────────────────────────────
+  // ─── Smart auto-scroll ────────────────────────────────────────────────────
+  // Follow the conversation only when the user is already at the end (or just
+  // sent a message). Reading history never gets yanked back down; a floating
+  // "jump to latest" pill appears instead.
+
+  const handleBodyScroll = useCallback(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const near = dist < NEAR_BOTTOM_PX;
+    nearBottomRef.current = near;
+    setShowJump(!near);
+  }, []);
+
+  const scrollToBottom = useCallback((behavior = "smooth") => {
+    bottomRef.current?.scrollIntoView({ behavior });
+  }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isPartnerTyping]);
+    const count = messages.length;
+    const prevCount = prevCountRef.current;
+    prevCountRef.current = count;
+    if (!count) return;
+
+    if (prevCount === 0) {
+      // Initial history load: land at the end instantly, no animation.
+      scrollToBottom("auto");
+      return;
+    }
+    if (count > prevCount) {
+      const last = messages[count - 1];
+      const lastIsMine = flatSenderId(last.senderId) === String(user?._id);
+      if (lastIsMine || nearBottomRef.current) scrollToBottom("smooth");
+    }
+  }, [messages, user?._id, scrollToBottom]);
+
+  useEffect(() => {
+    if (isPartnerTyping && nearBottomRef.current) scrollToBottom("smooth");
+  }, [isPartnerTyping, scrollToBottom]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -311,6 +356,11 @@ const ChatPage = () => {
     setReplyDraft(message);
   }, []);
 
+  // Suggestion chips (empty state) → seed the composer, don't auto-send.
+  const handleSuggestion = useCallback((text) => {
+    setComposerSeed({ text, ts: Date.now() });
+  }, []);
+
   const handleForward = useCallback(() => {
     // Forwarding is future-ready (UI present); destination picker not built yet.
     setSendError("Forwarding is coming soon. 💗");
@@ -358,7 +408,7 @@ const ChatPage = () => {
     <div className="chat-page">
       <ChatHeader partner={partner} partnerTyping={isPartnerTyping} />
 
-      <div className="chat-page__body">
+      <div className="chat-page__body" ref={bodyRef} onScroll={handleBodyScroll}>
         {loading ? (
           <div className="chat-page__skeletons">
             {["left", "right", "left", "right"].map((side, i) => (
@@ -367,22 +417,50 @@ const ChatPage = () => {
           </div>
         ) : messages.length === 0 ? (
           <div className="chat-page__empty-state">
-            <span className="chat-page__empty-emoji">💌</span>
-            <p className="chat-page__empty-title">No messages yet</p>
+            <span className="chat-page__empty-orb" aria-hidden="true">
+              <span className="chat-page__empty-emoji">💌</span>
+            </span>
+            <p className="chat-page__empty-title">Your space, just the two of you</p>
             <p className="chat-page__empty-sub">
-              Send the first message to your partner.
+              Every love story starts with a first message. Try one of these:
             </p>
+            <div className="chat-page__starters">
+              {CHAT_STARTERS.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  className="chat-page__starter"
+                  onClick={() => handleSuggestion(s.text)}
+                >
+                  <span aria-hidden="true">{s.emoji}</span> {s.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="chat-page__thread">
             {messages.map((msg, i) => {
               const prev = messages[i - 1];
+              const next = messages[i + 1];
               const showDivider = !prev || !sameDay(prev.createdAt, msg.createdAt);
+              // Visual grouping: same sender, same day, within a short window.
+              const groupedWithPrev =
+                !!prev &&
+                !showDivider &&
+                flatSenderId(prev.senderId) === flatSenderId(msg.senderId) &&
+                new Date(msg.createdAt) - new Date(prev.createdAt) < GROUP_WINDOW_MS;
+              const groupedWithNext =
+                !!next &&
+                sameDay(msg.createdAt, next.createdAt) &&
+                flatSenderId(next.senderId) === flatSenderId(msg.senderId) &&
+                new Date(next.createdAt) - new Date(msg.createdAt) < GROUP_WINDOW_MS;
               const bubble = (
                 <MessageBubble
                   message={msg}
                   isMine={flatSenderId(msg.senderId) === String(user?._id)}
                   currentUserId={user?._id}
+                  groupedWithPrev={groupedWithPrev}
+                  groupedWithNext={groupedWithNext}
                   onDelete={handleDeleteRequest}
                   onReact={handleReact}
                   onReply={handleReply}
@@ -404,6 +482,19 @@ const ChatPage = () => {
         )}
       </div>
 
+      {showJump && !loading && messages.length > 0 && (
+        <button
+          type="button"
+          className="chat-page__jump"
+          onClick={() => scrollToBottom("smooth")}
+          aria-label="Jump to latest message"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12l7 7 7-7" />
+          </svg>
+        </button>
+      )}
+
       {sendError && (
         <p className="chat-page__send-err" role="alert">
           {sendError}
@@ -417,6 +508,7 @@ const ChatPage = () => {
         disabled={false}
         replyDraft={replyDraft}
         onCancelReply={() => setReplyDraft(null)}
+        seed={composerSeed}
       />
 
       {deleteTarget && (

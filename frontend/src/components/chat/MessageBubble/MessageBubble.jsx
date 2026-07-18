@@ -127,10 +127,17 @@ const TickIcon = ({ seen, failed, pending }) => {
   );
 };
 
+// Swipe-to-reply tuning (px).
+const SWIPE_ENGAGE = 14;
+const SWIPE_MAX = 72;
+const SWIPE_TRIGGER = 52;
+
 const MessageBubble = ({
   message,
   isMine,
   currentUserId,
+  groupedWithPrev = false,
+  groupedWithNext = false,
   onDelete,
   onReact,
   onReply,
@@ -140,6 +147,10 @@ const MessageBubble = ({
   const pressTimer = useRef(null);
   const suppressClickRef = useRef(false);
   const lastTapRef = useRef(0);
+  // Swipe-to-reply: drag state + direct DOM transforms (no re-render per frame).
+  const swipeRef = useRef({ x: 0, y: 0, active: false, engaged: false, pull: 0 });
+  const wrapRef = useRef(null);
+  const hintRef = useRef(null);
 
   const reactions = message.reactions || [];
   const myReaction = reactions.find((r) => flatId(r.userId) === String(currentUserId))?.emoji;
@@ -160,6 +171,64 @@ const MessageBubble = ({
   const cancelPress = useCallback(() => {
     clearTimeout(pressTimer.current);
   }, []);
+
+  // ── Swipe-to-reply (touch): drag any bubble to the right, release to reply.
+  const handleTouchStart = useCallback(
+    (e) => {
+      startPress();
+      const t = e.touches?.[0];
+      if (!t) return;
+      swipeRef.current = { x: t.clientX, y: t.clientY, active: true, engaged: false, pull: 0 };
+    },
+    [startPress],
+  );
+
+  const handleTouchMove = useCallback((e) => {
+    clearTimeout(pressTimer.current);
+    const s = swipeRef.current;
+    const t = e.touches?.[0];
+    if (!s.active || !t) return;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (!s.engaged) {
+      // Engage only on a clearly horizontal right-drag so scrolling stays free.
+      if (Math.abs(dx) < SWIPE_ENGAGE || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      if (dx < 0) {
+        s.active = false;
+        return;
+      }
+      s.engaged = true;
+    }
+    const pull = Math.min(Math.max(dx - SWIPE_ENGAGE, 0), SWIPE_MAX);
+    s.pull = pull;
+    const el = wrapRef.current;
+    if (el) {
+      el.style.transition = "none";
+      el.style.transform = `translateX(${Math.round(pull * 0.8)}px)`;
+    }
+    if (hintRef.current) {
+      hintRef.current.style.opacity = String(Math.min(pull / SWIPE_TRIGGER, 1));
+      hintRef.current.style.transform = `scale(${0.7 + Math.min(pull / SWIPE_TRIGGER, 1) * 0.3})`;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    clearTimeout(pressTimer.current);
+    const s = swipeRef.current;
+    const el = wrapRef.current;
+    if (el) {
+      el.style.transition = "transform 0.32s var(--ease-spring)";
+      el.style.transform = "translateX(0)";
+    }
+    if (hintRef.current) {
+      hintRef.current.style.opacity = "0";
+      hintRef.current.style.transform = "scale(0.7)";
+    }
+    if (s.engaged && s.pull >= SWIPE_TRIGGER) onReply?.(message);
+    s.active = false;
+    s.engaged = false;
+    s.pull = 0;
+  }, [onReply, message]);
 
   const handleMediaClick = useCallback((e, url, isFile) => {
     if (suppressClickRef.current) {
@@ -222,6 +291,8 @@ const MessageBubble = ({
   const cls = [
     "msg-bubble",
     isMine ? "msg-bubble--mine" : "msg-bubble--theirs",
+    groupedWithPrev ? "msg-bubble--gp" : "",
+    groupedWithNext ? "msg-bubble--gn" : "",
     message.pending ? "msg-bubble--pending" : "",
     message.failed ? "msg-bubble--failed" : "",
     reactions.length ? "msg-bubble--reacted" : "",
@@ -229,18 +300,32 @@ const MessageBubble = ({
     .filter(Boolean)
     .join(" ");
 
+  const rowCls = [
+    "msg-bubble-row",
+    isMine ? "msg-bubble-row--mine" : "",
+    groupedWithPrev ? "msg-bubble-row--gp" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className={`msg-bubble-row ${isMine ? "msg-bubble-row--mine" : ""}`}
-      onTouchStart={startPress}
-      onTouchEnd={cancelPress}
-      onTouchMove={cancelPress}
+      className={rowCls}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
       onMouseDown={startPress}
       onMouseUp={cancelPress}
       onMouseLeave={cancelPress}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <div className="msg-bubble-wrap">
+      <span className="msg-swipe-hint" ref={hintRef} aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 17 4 12 9 7" />
+          <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+        </svg>
+      </span>
+      <div className="msg-bubble-wrap" ref={wrapRef}>
         {showOptions && (
           <MessageOptions
             isMine={isMine}

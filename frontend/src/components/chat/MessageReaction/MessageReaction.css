@@ -16,12 +16,26 @@
   font-size: 22px;
   border-radius: 50%;
   background: transparent;
-  transition: transform 0.15s var(--ease-spring), background 0.15s ease;
+  transition: transform 0.2s var(--ease-bounce), background 0.15s ease;
+  animation: reaction-pop 0.4s var(--ease-bounce) both;
+}
+
+/* Emojis burst in one after another. */
+.reaction-picker__btn:nth-child(1) { animation-delay: 0.02s; }
+.reaction-picker__btn:nth-child(2) { animation-delay: 0.06s; }
+.reaction-picker__btn:nth-child(3) { animation-delay: 0.10s; }
+.reaction-picker__btn:nth-child(4) { animation-delay: 0.14s; }
+.reaction-picker__btn:nth-child(5) { animation-delay: 0.18s; }
+
+@keyframes reaction-pop {
+  from { transform: scale(0) rotate(-30deg); opacity: 0; }
+  70%  { transform: scale(1.15) rotate(4deg); }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
 }
 
 .reaction-picker__btn:hover,
 .reaction-picker__btn:active {
-  transform: scale(1.25);
+  transform: scale(1.35) translateY(-3px);
 }
 
 .reaction-picker__btn--active {
@@ -36,13 +50,23 @@
   align-items: center;
   gap: 3px;
   padding: 2px 7px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(var(--blur-sm));
+  backdrop-filter: blur(var(--blur-sm));
   border-radius: 99px;
   box-shadow: var(--shadow-sm);
   font-size: 13px;
   line-height: 1;
   z-index: 2;
+  cursor: pointer;
+  animation: badge-bloom 0.4s var(--ease-bounce) both;
+}
+
+@keyframes badge-bloom {
+  from { transform: scale(0.3); opacity: 0; }
+  65%  { transform: scale(1.15); }
+  to   { transform: scale(1); opacity: 1; }
 }
 
 /* Mine (right-aligned bubbles) put the badge on the left edge; theirs on right. */

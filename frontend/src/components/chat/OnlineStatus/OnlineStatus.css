@@ -16,6 +16,13 @@
 .online-status--online .online-status__dot {
   background: var(--success);
   box-shadow: 0 0 0 2px rgba(50, 195, 108, 0.22);
+  animation: online-pulse 2.4s ease-in-out infinite;
+}
+
+/* Soft breathing glow — "they're here with you". */
+@keyframes online-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(50, 195, 108, 0.22); }
+  50%      { box-shadow: 0 0 0 4px rgba(50, 195, 108, 0.10), 0 0 8px rgba(50, 195, 108, 0.5); }
 }
 
 .online-status__text {

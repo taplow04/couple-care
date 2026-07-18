@@ -2,13 +2,30 @@
   position: absolute;
   z-index: 100;
   width: max-content;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: saturate(180%) blur(var(--blur-lg));
+  backdrop-filter: saturate(180%) blur(var(--blur-lg));
+  border-radius: 20px;
   padding: 6px;
-  box-shadow: var(--shadow-md);
-  animation: msg-options-in 0.14s var(--ease-spring);
+  box-shadow: var(--shadow-lg), var(--edge-highlight);
+  animation: msg-options-in 0.28s var(--ease-bounce) both;
 }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .msg-options {
+    background: var(--card);
+  }
+}
+
+/* Staggered action reveal. */
+.msg-options__actions > * {
+  animation: cc-fade-up 0.3s var(--ease-out) both;
+}
+.msg-options__actions > *:nth-child(1) { animation-delay: 0.03s; }
+.msg-options__actions > *:nth-child(2) { animation-delay: 0.07s; }
+.msg-options__actions > *:nth-child(3) { animation-delay: 0.11s; }
+.msg-options__actions > *:nth-child(4) { animation-delay: 0.15s; }
 
 /* Open above the bubble by default; below it when near the top of the screen. */
 .msg-options--above { bottom: calc(100% + 8px); }
@@ -18,8 +35,8 @@
 .msg-options--theirs { left: 0; }
 
 @keyframes msg-options-in {
-  from { opacity: 0; transform: scale(0.9) translateY(6px); }
-  to   { opacity: 1; transform: scale(1)   translateY(0);   }
+  from { opacity: 0; transform: scale(0.82) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
 }
 
 .msg-options__actions {
